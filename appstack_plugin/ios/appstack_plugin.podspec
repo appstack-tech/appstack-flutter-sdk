@@ -5,17 +5,21 @@
 Pod::Spec.new do |s|
   s.name             = 'appstack_plugin'
   s.version          = '0.0.1'
-  s.summary          = 'A new Flutter plugin project.'
+  s.summary          = 'Track events and revenue with Apple Search Ads attribution for Flutter apps.'
   s.description      = <<-DESC
-A new Flutter plugin project.
+Flutter plugin for Appstack Attribution SDK. Track app installs, user events, and revenue with Apple Search Ads attribution support.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'https://appstack.tech'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'Appstack' => 'support@appstack.tech' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
-  s.platform = :ios, '13.0'
+  
+  # Include Appstack XCFramework (supports all architectures)
+  s.ios.vendored_frameworks = 'AppstackSDK.xcframework'
+  
+  s.platform = :ios, '14.3'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }

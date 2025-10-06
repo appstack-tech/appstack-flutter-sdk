@@ -10,8 +10,39 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
   final methodChannel = const MethodChannel('appstack_plugin');
 
   @override
-  Future<String?> getPlatformVersion() async {
-    final version = await methodChannel.invokeMethod<String>('getPlatformVersion');
-    return version;
+  Future<bool> configure(
+    String apiKey,
+    bool isDebug,
+    String? endpointBaseUrl,
+    int logLevel,
+  ) async {
+    final result = await methodChannel.invokeMethod<bool>('configure', {
+      'apiKey': apiKey,
+      'isDebug': isDebug,
+      'endpointBaseUrl': endpointBaseUrl,
+      'logLevel': logLevel,
+    });
+    return result ?? false;
+  }
+
+  @override
+  Future<bool> sendEvent(
+    String eventType,
+    String? eventName,
+    double revenue,
+  ) async {
+    final result = await methodChannel.invokeMethod<bool>('sendEvent', {
+      'eventType': eventType,
+      'eventName': eventName,
+      'revenue': revenue,
+    });
+    return result ?? false;
+  }
+
+  @override
+  Future<bool> enableAppleAdsAttribution() async {
+    final result = await methodChannel
+        .invokeMethod<bool>('enableAppleAdsAttribution');
+    return result ?? false;
   }
 }

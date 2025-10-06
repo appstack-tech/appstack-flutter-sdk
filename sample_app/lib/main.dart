@@ -1,6 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:appstack_plugin/appstack_plugin.dart';
+import 'dart:io' show Platform;
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Configure Appstack SDK
+  // Replace with your actual API keys
+  final apiKey = Platform.isIOS 
+      ? 'your-ios-api-key-here' 
+      : 'your-android-api-key-here';
+  
+  try {
+    await AppstackPlugin.configure(
+      apiKey,
+      isDebug: true,
+      logLevel: 0, // DEBUG
+    );
+    
+    // Enable Apple Search Ads attribution on iOS
+    if (Platform.isIOS) {
+      await AppstackPlugin.enableAppleAdsAttribution();
+    }
+    
+    print('Appstack SDK configured successfully');
+  } catch (e) {
+    print('Failed to configure Appstack SDK: $e');
+  }
+  
   runApp(const MyApp());
 }
 
@@ -55,16 +82,31 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  String _lastEvent = 'None';
 
   void _incrementCounter() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
       _counter++;
     });
+    
+    // Track the button press event
+    _trackEvent(EventType.custom, eventName: 'button_pressed');
+  }
+  
+  void _trackEvent(EventType eventType, {String? eventName, double? revenue}) async {
+    try {
+      await AppstackPlugin.sendEvent(
+        eventType,
+        eventName: eventName,
+        revenue: revenue,
+      );
+      setState(() {
+        _lastEvent = eventName ?? eventType.name;
+      });
+      print('Event tracked: ${eventName ?? eventType.name}');
+    } catch (e) {
+      print('Failed to track event: $e');
+    }
   }
 
   @override
@@ -86,30 +128,62 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Text(
+                'Appstack SDK Demo',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              const Text('You have pushed the button this many times:'),
+              Text(
+                '$_counter',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 20),
+              Text('Last event tracked: $_lastEvent'),
+              const SizedBox(height: 40),
+              const Text(
+                'Try these events:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () => _trackEvent(EventType.signUp),
+                    child: const Text('Sign Up'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => _trackEvent(EventType.login),
+                    child: const Text('Login'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => _trackEvent(EventType.purchase, revenue: 29.99),
+                    child: const Text('Purchase \$29.99'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => _trackEvent(EventType.addToCart, revenue: 15.99),
+                    child: const Text('Add to Cart \$15.99'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => _trackEvent(EventType.viewItem),
+                    child: const Text('View Item'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => _trackEvent(EventType.custom, eventName: 'custom_event'),
+                    child: const Text('Custom Event'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(

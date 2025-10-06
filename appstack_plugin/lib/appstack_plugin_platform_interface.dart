@@ -23,7 +23,28 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<String?> getPlatformVersion() {
-    throw UnimplementedError('platformVersion() has not been implemented.');
+  /// Configure Appstack SDK with your API key and optional parameters
+  Future<bool> configure(
+    String apiKey,
+    bool isDebug,
+    String? endpointBaseUrl,
+    int logLevel,
+  ) {
+    throw UnimplementedError('configure() has not been implemented.');
+  }
+
+  /// Send an event with optional revenue parameter
+  Future<bool> sendEvent(
+    String eventType,
+    String? eventName,
+    double revenue,
+  ) {
+    throw UnimplementedError('sendEvent() has not been implemented.');
+  }
+
+  /// Enable Apple Search Ads Attribution tracking (iOS only)
+  Future<bool> enableAppleAdsAttribution() {
+    throw UnimplementedError(
+        'enableAppleAdsAttribution() has not been implemented.');
   }
 }
