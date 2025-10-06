@@ -8,14 +8,19 @@ void main() async {
   // Configure Appstack SDK
   // Replace with your actual API keys
   final apiKey = Platform.isIOS 
-      ? 'your-ios-api-key-here' 
-      : 'your-android-api-key-here';
+      ? 'mff1e8e083990ep2p80bdnbc' 
+      : 'yfueim3gw78vbhitonesie6w';
+
+  final endpointBaseUrl = Platform.isIOS 
+      ? 'https://api.event.dev.appstack.tech'
+      : 'https://api.event.dev.appstack.tech/android/';
   
   try {
     await AppstackPlugin.configure(
       apiKey,
       isDebug: true,
       logLevel: 0, // DEBUG
+      endpointBaseUrl: endpointBaseUrl,
     );
     
     // Enable Apple Search Ads attribution on iOS

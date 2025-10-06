@@ -1,0 +1,22 @@
+PODS:
+  - appstack_plugin (0.0.1):
+    - Flutter
+  - Flutter (1.0.0)
+
+DEPENDENCIES:
+  - appstack_plugin (from `.symlinks/plugins/appstack_plugin/ios`)
+  - Flutter (from `Flutter`)
+
+EXTERNAL SOURCES:
+  appstack_plugin:
+    :path: ".symlinks/plugins/appstack_plugin/ios"
+  Flutter:
+    :path: Flutter
+
+SPEC CHECKSUMS:
+  appstack_plugin: 4d1e114bc0e241c402a917a1785e24840b894626
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+
+PODFILE CHECKSUM: d864e66b2a164a096cf9b0d6387f0a775a4fce91
+
+COCOAPODS: 1.16.2

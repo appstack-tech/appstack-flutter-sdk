@@ -34,25 +34,26 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
     let logLevel = args["logLevel"] as? Int ?? 1
     
     // Map log level to AppstackSDK.LogLevel
+    // SDK supports: .off (0), .error (1), .debug (2), .info (3)
     let sdkLogLevel: AppstackSDK.LogLevel
     switch logLevel {
     case 0:
-      sdkLogLevel = .debug
+      sdkLogLevel = .off
     case 1:
-      sdkLogLevel = .info
-    case 2:
-      sdkLogLevel = .warning
-    case 3:
       sdkLogLevel = .error
+    case 2:
+      sdkLogLevel = .debug
+    case 3:
+      sdkLogLevel = .info
     default:
       sdkLogLevel = .info
     }
     
     // Configure the SDK
     if let endpointBaseUrl = endpointBaseUrl {
-      Appstack.shared.configure(apiKey: apiKey, isDebug: isDebug, endpointBaseUrl: endpointBaseUrl, logLevel: sdkLogLevel)
+      AppstackAttributionSdk.shared.configure(apiKey: apiKey, isDebug: isDebug, endpointBaseUrl: endpointBaseUrl, logLevel: sdkLogLevel)
     } else {
-      Appstack.shared.configure(apiKey: apiKey, isDebug: isDebug, logLevel: sdkLogLevel)
+      AppstackAttributionSdk.shared.configure(apiKey: apiKey, isDebug: isDebug, logLevel: sdkLogLevel)
     }
     
     result(true)
@@ -75,17 +76,19 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
     }
     
     // Send the event
-    Appstack.shared.sendEvent(event: eventType, name: eventName, revenue: revenue)
+    AppstackAttributionSdk.shared.sendEvent(event: eventType, name: eventName, revenue: revenue)
     
     result(true)
   }
   
   private func handleEnableAppleAdsAttribution(result: @escaping FlutterResult) {
-    Appstack.shared.enableAppleAdsAttribution()
+    if #available(iOS 15.0, *) {
+      AppstackASAAttribution.shared.enableAppleAdsAttribution()
+    }
     result(true)
   }
   
-  private func stringToEventType(_ string: String) -> EventType? {
+  private func stringToEventType(_ string: String) -> AppstackSDK.EventType? {
     switch string {
     case "INSTALL":
       return .INSTALL
