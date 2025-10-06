@@ -10,7 +10,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  appstack_plugin: ^1.0.0
+  appstack_plugin: ^0.0.1
 ```
 
 Then run:

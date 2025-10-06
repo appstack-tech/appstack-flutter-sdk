@@ -19,8 +19,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  appstack_plugin:
-    path: ../appstack_plugin  # or use pub.dev version when published
+  appstack_plugin: ^0.0.1 # or use pub.dev version when published
 ```
 
 ## Basic Usage
