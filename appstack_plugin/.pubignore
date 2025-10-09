@@ -1,0 +1,42 @@
+# Files to ignore when publishing to pub.dev
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+
+# Build artifacts
+build/
+.dart_tool/
+
+# Test coverage
+coverage/
+
+# Documentation (keep README.md, CHANGELOG.md, LICENSE)
+.github/PUBLISHING.md
+
+# Android example/test files (keep the native implementation)
+android_native/
+
+# iOS README (internal documentation)
+ios/README.md
+
+# Temporary files
+*.log
+*.tmp
+
+# macOS
+.DS_Store
+
+# Example app build artifacts (if any)
+example/build/
+example/.dart_tool/
+example/ios/Pods/
+example/ios/.symlinks/
+example/android/.gradle/
+example/android/app/build/

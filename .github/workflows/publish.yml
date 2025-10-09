@@ -1,0 +1,83 @@
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish to pub.dev
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v1
+        with:
+          sdk: stable
+          version: 3.35.5
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: appstack_plugin
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          create_credentials_file: true
+          export_environment_variables: true
+
+      - name: Set up pub.dev credentials
+        run: |
+          gcloud auth print-identity-token --audiences=https://pub.dev | flutter pub token add https://pub.dev
+
+      - name: Publish - dry run
+        run: flutter pub publish --dry-run
+        working-directory: appstack_plugin
+
+      # Enforce version changes in all files, just in case we missed to change some
+      - name: Update version in files
+        run: |
+          VERSION=${{ steps.get_version.outputs.version }}
+          echo "Updating version to $VERSION"
+          
+          # Update pubspec.yaml files
+          sed -i "s/^version: .*/version: $VERSION/" appstack_plugin/pubspec.yaml
+          
+          # Update podspec files
+          sed -i "s/s\.version.*=.*/s.version          = '$VERSION'/" appstack_plugin/ios/appstack_plugin.podspec
+          
+          # Update build.gradle files
+          sed -i "s/^version .*/version '$VERSION'/" appstack_plugin/android/build.gradle
+          
+          # Update documentation files
+          sed -i "s/appstack_plugin: \^[0-9]\+\.[0-9]\+\.[0-9]\+/appstack_plugin: ^$VERSION/" appstack_plugin/README.md
+          sed -i "s/appstack_plugin: \^[0-9]\+\.[0-9]\+\.[0-9]\+/appstack_plugin: ^$VERSION/" appstack_plugin/USAGE.md
+          sed -i "s/appstack_plugin: \^[0-9]\+\.[0-9]\+\.[0-9]\+/appstack_plugin: ^$VERSION/" README.md
+          
+          echo "Version updated in all files"
+
+      - name: Publish to pub.dev
+        run: flutter pub publish -f
+        working-directory: appstack_plugin
