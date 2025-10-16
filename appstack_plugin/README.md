@@ -19,6 +19,23 @@ Then run:
 flutter pub get
 ```
 
+### ⚠️ Important: Enable Swift Package Manager
+
+The plugin requires Swift Package Manager support to be enabled in Flutter. Run this command **once**:
+
+```bash
+flutter config --enable-swift-package-manager
+```
+
+After enabling SPM, clean and regenerate your project:
+
+```bash
+flutter clean
+flutter pub get
+```
+
+> **Note:** If you skip this step, you'll get a "No such module 'AppstackSDK'" error when building for iOS. See [SPM_SETUP_GUIDE.md](./SPM_SETUP_GUIDE.md) for detailed troubleshooting.
+
 ### Platform Configuration
 
 **iOS Configuration:**
