@@ -19,9 +19,21 @@ Then run:
 flutter pub get
 ```
 
-### ⚠️ Important: Enable Swift Package Manager
+### iOS Setup Options
 
-The plugin requires Swift Package Manager support to be enabled in Flutter. Run this command **once**:
+The plugin supports two iOS integration methods:
+
+#### Option 1: CocoaPods (Not Recommended)
+
+**WARNING** : This feature will be removed as soon as this ticket will be completed and we will go back to SPM usage to have a much cleaner repository ([deprecation on flutter's side of cocoapods](https://github.com/flutter/flutter/issues/168015))
+
+This is the default method that works out of the box. The XCFramework is bundled with the plugin but that is not recommanded anymore.
+
+Simply run `pod install` in your `ios` directory (see Platform Configuration below).
+
+#### Option 2: Swift Package Manager
+
+If you need to use SPM instead, enable it with:
 
 ```bash
 flutter config --enable-swift-package-manager
@@ -34,14 +46,15 @@ flutter clean
 flutter pub get
 ```
 
-> **Note:** If you skip this step, you'll get a "No such module 'AppstackSDK'" error when building for iOS. See [SPM_SETUP_GUIDE.md](./SPM_SETUP_GUIDE.md) for detailed troubleshooting.
+> **Note:** SPM support requires additional configuration. See [SPM_SETUP_GUIDE.md](./SPM_SETUP_GUIDE.md) for detailed instructions.
 
 ### Platform Configuration
 
 **iOS Configuration:**
 
-- **iOS version** 14.3+ recommended to use Apple Search Ads 
-- The plugin uses Swift Package Manager to fetch the AppstackSDK from GitHub
+- **iOS version** 13.0+ minimum (14.3+ recommended for Apple Search Ads)
+- The plugin includes the AppstackSDK XCFramework for CocoaPods users
+- SPM users can reference the SDK from GitHub (requires `flutter config --enable-swift-package-manager`)
 
 Add to `ios/Runner/Info.plist`:
 ```xml
@@ -54,7 +67,7 @@ Run `pod install` in the `ios` directory:
 cd ios && pod install
 ```
 
-**Note:** The iOS AppstackSDK is automatically fetched from the [official GitHub repository](https://github.com/appstack-tech/ios-appstack-sdk) via Swift Package Manager. No manual XCFramework installation is required.
+**Note:** For CocoaPods users, the AppstackSDK XCFramework is bundled with the plugin. For SPM users, see [SPM_SETUP_GUIDE.md](./SPM_SETUP_GUIDE.md).
 
 **Android Configuration:**
 

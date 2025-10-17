@@ -16,11 +16,10 @@ Flutter plugin for Appstack Attribution SDK. Track app installs, user events, an
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
   
-  # Note: This plugin uses Swift Package Manager for the iOS SDK dependency.
-  # The AppstackSDK is referenced via Package.swift in ios/appstack_plugin/Package.swift
-  # CocoaPods users: The XCFramework will be resolved via SPM integration
+  # Include Appstack XCFramework (supports all architectures)
+  s.ios.vendored_frameworks = 'AppstackSDK.xcframework'
   
-  s.platform = :ios, '14.3'
+  s.platform = :ios, '13.0'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }

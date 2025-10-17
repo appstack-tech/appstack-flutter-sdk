@@ -5,6 +5,10 @@ All notable changes to the Appstack Flutter Plugin will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.12] - 2025-10-17
+- **IMPORTANT** : Add the support to be able to install the SDK with CocoaPods
+- **WARNING** : This support feature will be removed as soon as this ticket will be completed and we will go back to SPM usage to have a much cleaner repository ([deprecation on flutter's side of cocoapods](https://github.com/flutter/flutter/issues/168015))
+
 ## [0.0.11] - 2025-10-16
 - Update the documentation to reference the SPM setup needed to make works the SDK
 
