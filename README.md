@@ -19,7 +19,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  appstack_plugin: ^0.0.1 # or use pub.dev version when published
+  appstack_plugin: ^0.0.13 # or use pub.dev version when published
 ```
 
 ## Basic Usage
@@ -37,6 +37,10 @@ await AppstackPlugin.configure(
 if (Platform.isIOS) {
   await AppstackPlugin.enableAppleAdsAttribution();
 }
+
+// Get the Appstack ID
+final appstackId = await AppstackPlugin.getAppstackId();
+print('Appstack ID: $appstackId');
 
 // Track events
 await AppstackPlugin.sendEvent(EventType.purchase, revenue: 29.99);

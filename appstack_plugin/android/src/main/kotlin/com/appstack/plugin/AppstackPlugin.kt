@@ -30,6 +30,7 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler {
         // Apple Ads Attribution is iOS-only, return false on Android
         result.success(false)
       }
+      "getAppstackId" -> handleGetAppstackId(result)
       else -> result.notImplemented()
     }
   }
@@ -103,6 +104,15 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler {
       result.success(true)
     } catch (e: Exception) {
       result.error("EVENT_SEND_ERROR", "Failed to send event: ${e.message}", null)
+    }
+  }
+
+  private fun handleGetAppstackId(result: Result) {
+    try {
+      val appstackId = AppstackAttributionSdk.getAppstackId()
+      result.success(appstackId)
+    } catch (e: Exception) {
+      result.error("GET_ID_ERROR", "Failed to get Appstack ID: ${e.message}", null)
     }
   }
 

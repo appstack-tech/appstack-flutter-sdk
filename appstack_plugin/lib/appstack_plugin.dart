@@ -93,4 +93,15 @@ class AppstackPlugin {
       throw Exception('Failed to enable Apple Ads Attribution: $error');
     }
   }
+
+  /// Get the Appstack ID for the current user
+  ///
+  /// Returns: Future that resolves to the Appstack ID string, or null if not available
+  static Future<String?> getAppstackId() async {
+    try {
+      return await AppstackPluginPlatform.instance.getAppstackId();
+    } catch (error) {
+      throw Exception('Failed to get Appstack ID: $error');
+    }
+  }
 }

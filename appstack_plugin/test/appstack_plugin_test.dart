@@ -8,7 +8,23 @@ class MockAppstackPluginPlatform
     with MockPlatformInterfaceMixin
     implements AppstackPluginPlatform {
   @override
-  Future<String?> getPlatformVersion() => Future.value('42');
+  Future<bool> configure(
+    String apiKey,
+    bool isDebug,
+    String? endpointBaseUrl,
+    int logLevel,
+  ) =>
+      Future.value(true);
+
+  @override
+  Future<bool> sendEvent(String eventType, String? eventName, double revenue) =>
+      Future.value(true);
+
+  @override
+  Future<bool> enableAppleAdsAttribution() => Future.value(true);
+
+  @override
+  Future<String?> getAppstackId() => Future.value('mock-appstack-id-456');
 }
 
 void main() {
@@ -19,11 +35,34 @@ void main() {
     expect(initialPlatform, isInstanceOf<MethodChannelAppstackPlugin>());
   });
 
-  test('getPlatformVersion', () async {
-    AppstackPlugin appstackPlugin = AppstackPlugin();
+  test('configure', () async {
     MockAppstackPluginPlatform fakePlatform = MockAppstackPluginPlatform();
     AppstackPluginPlatform.instance = fakePlatform;
 
-    expect(await appstackPlugin.getPlatformVersion(), '42');
+    expect(await AppstackPlugin.configure('test-api-key'), true);
+  });
+
+  test('sendEvent', () async {
+    MockAppstackPluginPlatform fakePlatform = MockAppstackPluginPlatform();
+    AppstackPluginPlatform.instance = fakePlatform;
+
+    expect(
+      await AppstackPlugin.sendEvent(EventType.purchase, revenue: 19.99),
+      true,
+    );
+  });
+
+  test('enableAppleAdsAttribution', () async {
+    MockAppstackPluginPlatform fakePlatform = MockAppstackPluginPlatform();
+    AppstackPluginPlatform.instance = fakePlatform;
+
+    expect(await AppstackPlugin.enableAppleAdsAttribution(), true);
+  });
+
+  test('getAppstackId', () async {
+    MockAppstackPluginPlatform fakePlatform = MockAppstackPluginPlatform();
+    AppstackPluginPlatform.instance = fakePlatform;
+
+    expect(await AppstackPlugin.getAppstackId(), 'mock-appstack-id-456');
   });
 }

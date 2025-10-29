@@ -88,6 +88,13 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   String _lastEvent = 'None';
+  String? _appstackId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAppstackId();
+  }
 
   void _incrementCounter() {
     setState(() {
@@ -96,6 +103,32 @@ class _MyHomePageState extends State<MyHomePage> {
     
     // Track the button press event
     _trackEvent(EventType.custom, eventName: 'button_pressed');
+  }
+
+  Future<void> _loadAppstackId() async {
+    try {
+      final id = await AppstackPlugin.getAppstackId();
+      setState(() {
+        _appstackId = id;
+      });
+      print('Appstack ID: $id');
+    } catch (e) {
+      print('Failed to get Appstack ID: $e');
+    }
+  }
+
+  Future<void> _refreshAppstackId() async {
+    await _loadAppstackId();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_appstackId != null 
+            ? 'Appstack ID: $_appstackId' 
+            : 'Appstack ID not available'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
   
   void _trackEvent(EventType eventType, {String? eventName, double? revenue}) async {
@@ -141,6 +174,37 @@ class _MyHomePageState extends State<MyHomePage> {
               const Text(
                 'Appstack SDK Demo',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Appstack ID',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _appstackId ?? 'Loading...',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                        onPressed: _refreshAppstackId,
+                        icon: const Icon(Icons.refresh, size: 16),
+                        label: const Text('Refresh ID'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 20),
               const Text('You have pushed the button this many times:'),

@@ -11,8 +11,19 @@ void main() {
   setUp(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-          return '42';
-        });
+      switch (methodCall.method) {
+        case 'configure':
+          return true;
+        case 'sendEvent':
+          return true;
+        case 'enableAppleAdsAttribution':
+          return true;
+        case 'getAppstackId':
+          return 'test-appstack-id-123';
+        default:
+          return null;
+      }
+    });
   });
 
   tearDown(() {
@@ -20,7 +31,19 @@ void main() {
         .setMockMethodCallHandler(channel, null);
   });
 
-  test('getPlatformVersion', () async {
-    expect(await platform.getPlatformVersion(), '42');
+  test('configure', () async {
+    expect(await platform.configure('test-api-key', false, null, 1), true);
+  });
+
+  test('sendEvent', () async {
+    expect(await platform.sendEvent('PURCHASE', 'test-event', 9.99), true);
+  });
+
+  test('enableAppleAdsAttribution', () async {
+    expect(await platform.enableAppleAdsAttribution(), true);
+  });
+
+  test('getAppstackId', () async {
+    expect(await platform.getAppstackId(), 'test-appstack-id-123');
   });
 }

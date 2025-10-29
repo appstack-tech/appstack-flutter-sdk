@@ -46,4 +46,10 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
     );
     return result ?? false;
   }
+
+  @override
+  Future<String?> getAppstackId() async {
+    final result = await methodChannel.invokeMethod<String>('getAppstackId');
+    return result;
+  }
 }

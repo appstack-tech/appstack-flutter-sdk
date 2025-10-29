@@ -5,6 +5,19 @@ All notable changes to the Appstack Flutter Plugin will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.13] - 2025-10-29
+
+### Added
+- New `getAppstackId()` method to retrieve the unique Appstack ID for the current user
+- Updated example app to demonstrate the new `getAppstackId()` functionality
+- Comprehensive test coverage for the new method across all platform layers
+- Retrieve IDFA automatically on iOS
+
+### Changed
+- Updated iOS native implementation to expose `getAppstackId()` from AppstackSDK
+- Updated Android native implementation to expose `getAppstackId()` from AppstackSDK
+- Enhanced documentation with usage examples for the new method
+
 ## [0.0.12] - 2025-10-17
 - **IMPORTANT** : Add the support to be able to install the SDK with CocoaPods
 - **WARNING** : This support feature will be removed as soon as this ticket will be completed and we will go back to SPM usage to have a much cleaner repository ([deprecation on flutter's side of cocoapods](https://github.com/flutter/flutter/issues/168015))

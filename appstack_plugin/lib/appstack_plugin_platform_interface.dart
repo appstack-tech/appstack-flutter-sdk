@@ -44,4 +44,9 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
       'enableAppleAdsAttribution() has not been implemented.',
     );
   }
+
+  /// Get the Appstack ID for the current user
+  Future<String?> getAppstackId() {
+    throw UnimplementedError('getAppstackId() has not been implemented.');
+  }
 }

@@ -109,6 +109,28 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  Future<void> _getAppstackId() async {
+    if (!_isConfigured) {
+      setState(() {
+        _status = 'Please configure the SDK first';
+      });
+      return;
+    }
+
+    try {
+      final appstackId = await AppstackPlugin.getAppstackId();
+      setState(() {
+        _status = appstackId != null 
+          ? 'Appstack ID: $appstackId'
+          : 'Appstack ID not available';
+      });
+    } catch (e) {
+      setState(() {
+        _status = 'Error getting Appstack ID: $e';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -267,14 +289,34 @@ class _MyAppState extends State<MyApp> {
                 
                 const SizedBox(height: 16),
                 
-                // Apple Ads Attribution (iOS only)
-                ElevatedButton(
-                  onPressed: _enableAppleAdsAttribution,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Enable Apple Ads Attribution (iOS only)'),
+                // SDK Features
+                const Text(
+                  'SDK Features',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _enableAppleAdsAttribution,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Enable Apple Ads Attribution (iOS)'),
+                    ),
+                    ElevatedButton(
+                      onPressed: _getAppstackId,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Get Appstack ID'),
+                    ),
+                  ],
                 ),
               ],
             ],

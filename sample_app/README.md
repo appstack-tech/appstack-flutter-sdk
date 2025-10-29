@@ -60,6 +60,8 @@ The sample app shows how to:
 
 - Configure the Appstack SDK on app startup
 - Enable Apple Search Ads attribution (iOS only)
+- Retrieve and display the Appstack ID
+- Refresh the Appstack ID on demand
 - Track various event types:
   - Sign Up
   - Login
@@ -74,8 +76,10 @@ The sample app shows how to:
 
 - `main.dart` - Main application with SDK initialization and event tracking examples
 - SDK is configured in `main()` before the app runs
+- Appstack ID is loaded automatically when the app starts
 - Events are tracked through button presses in the UI
 - Last tracked event is displayed in the UI
+- Appstack ID can be refreshed with a button press
 
 ## Troubleshooting
 
