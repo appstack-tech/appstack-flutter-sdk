@@ -1,4 +1,4 @@
-import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart';
 
 import 'appstack_plugin_platform_interface.dart';
 import 'event_type.dart';
@@ -55,19 +55,15 @@ class AppstackPlugin {
       // Check if SDK is disabled after configuration and log status
       try {
         final result = await AppstackPluginPlatform.instance.isSdkDisabled();
-        if (result == null) {
-          print('[AppstackPlugin] ❌ ERROR: Native platform returned null for isSdkDisabled check');
-          return; // Don't continue with configuration if we can't determine SDK state
-        }
-        print('[AppstackPlugin] isSdkDisabled: $result');
+        debugPrint('[AppstackPlugin] isSdkDisabled: $result');
         if (result) {
-          print('[AppstackPlugin] ⚠️  WARNING: The SDK is disabled. Please check your API key and ensure it is valid.');
+          debugPrint('[AppstackPlugin] ⚠️  WARNING: The SDK is disabled. Please check your API key and ensure it is valid.');
         } else {
-          print('[AppstackPlugin] ✅ SUCCESS: The SDK is enabled and ready to track events.');
+          debugPrint('[AppstackPlugin] ✅ SUCCESS: The SDK is enabled and ready to track events.');
         }
       } catch (e) {
         // Silently ignore errors when checking isSdkDisabled to prevent crashes
-        print('[AppstackPlugin] ❌ ERROR: Could not check SDK disabled status: $e');
+        debugPrint('[AppstackPlugin] ❌ ERROR: Could not check SDK disabled status: $e');
       }
     } catch (error) {
       throw Exception('Failed to configure Appstack SDK: $error');
@@ -142,11 +138,7 @@ class AppstackPlugin {
   /// Returns: Future that resolves to true if SDK is disabled, false otherwise
   static Future<bool> isSdkDisabled() async {
     try {
-      final result = await AppstackPluginPlatform.instance.isSdkDisabled();
-      if (result == null) {
-        throw Exception('Native platform returned null for isSdkDisabled check');
-      }
-      return result;
+      return await AppstackPluginPlatform.instance.isSdkDisabled();
     } catch (error) {
       throw Exception('Failed to check SDK disabled status: $error');
     }
