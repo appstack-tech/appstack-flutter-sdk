@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'appstack_plugin_platform_interface.dart';
 import 'event_type.dart';
 
@@ -27,8 +29,8 @@ class AppstackPlugin {
   /// - [endpointBaseUrl]: Custom endpoint base URL (optional)
   /// - [logLevel]: Log level: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR (optional, default 1)
   ///
-  /// Returns: Future that resolves to true if configuration was successful
-  static Future<bool> configure(
+  /// Returns: Future that completes when configuration is done
+  static Future<void> configure(
     String apiKey, {
     bool isDebug = false,
     String? endpointBaseUrl,
@@ -43,13 +45,30 @@ class AppstackPlugin {
     }
 
     try {
-      final result = await AppstackPluginPlatform.instance.configure(
+      await AppstackPluginPlatform.instance.configure(
         apiKey,
         isDebug,
         endpointBaseUrl,
         logLevel,
       );
-      return result;
+
+      // Check if SDK is disabled after configuration and log status
+      try {
+        final result = await AppstackPluginPlatform.instance.isSdkDisabled();
+        if (result == null) {
+          print('[AppstackPlugin] ❌ ERROR: Native platform returned null for isSdkDisabled check');
+          return; // Don't continue with configuration if we can't determine SDK state
+        }
+        print('[AppstackPlugin] isSdkDisabled: $result');
+        if (result) {
+          print('[AppstackPlugin] ⚠️  WARNING: The SDK is disabled. Please check your API key and ensure it is valid.');
+        } else {
+          print('[AppstackPlugin] ✅ SUCCESS: The SDK is enabled and ready to track events.');
+        }
+      } catch (e) {
+        // Silently ignore errors when checking isSdkDisabled to prevent crashes
+        print('[AppstackPlugin] ❌ ERROR: Could not check SDK disabled status: $e');
+      }
     } catch (error) {
       throw Exception('Failed to configure Appstack SDK: $error');
     }
@@ -102,6 +121,34 @@ class AppstackPlugin {
       return await AppstackPluginPlatform.instance.getAppstackId();
     } catch (error) {
       throw Exception('Failed to get Appstack ID: $error');
+    }
+  }
+
+  /// Check if the SDK is disabled
+  ///
+  /// This method can be called after [configure] to verify that the SDK
+  /// was configured successfully. Returns true if the SDK is disabled
+  /// (e.g., due to invalid API key), false otherwise.
+  ///
+  /// Example:
+  /// ```dart
+  /// await AppstackPlugin.configure('your-api-key');
+  /// final isSdkDisabled = await AppstackPlugin.isSdkDisabled();
+  /// if (isSdkDisabled) {
+  ///   print('SDK is disabled - check your API key');
+  /// }
+  /// ```
+  ///
+  /// Returns: Future that resolves to true if SDK is disabled, false otherwise
+  static Future<bool> isSdkDisabled() async {
+    try {
+      final result = await AppstackPluginPlatform.instance.isSdkDisabled();
+      if (result == null) {
+        throw Exception('Native platform returned null for isSdkDisabled check');
+      }
+      return result;
+    } catch (error) {
+      throw Exception('Failed to check SDK disabled status: $error');
     }
   }
 }

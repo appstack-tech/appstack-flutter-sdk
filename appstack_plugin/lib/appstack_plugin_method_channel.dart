@@ -10,19 +10,18 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
   final methodChannel = const MethodChannel('appstack_plugin');
 
   @override
-  Future<bool> configure(
+  Future<void> configure(
     String apiKey,
     bool isDebug,
     String? endpointBaseUrl,
     int logLevel,
   ) async {
-    final result = await methodChannel.invokeMethod<bool>('configure', {
+    await methodChannel.invokeMethod<void>('configure', {
       'apiKey': apiKey,
       'isDebug': isDebug,
       'endpointBaseUrl': endpointBaseUrl,
       'logLevel': logLevel,
     });
-    return result ?? false;
   }
 
   @override
@@ -50,6 +49,15 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
   @override
   Future<String?> getAppstackId() async {
     final result = await methodChannel.invokeMethod<String>('getAppstackId');
+    return result;
+  }
+
+  @override
+  Future<bool> isSdkDisabled() async {
+    final result = await methodChannel.invokeMethod<bool>('isSdkDisabled');
+    if (result == null) {
+      throw Exception('Native platform did not return a value for isSdkDisabled check');
+    }
     return result;
   }
 }

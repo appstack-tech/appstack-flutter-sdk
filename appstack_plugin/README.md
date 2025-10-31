@@ -126,7 +126,7 @@ class MyApp extends StatelessWidget {
 
 ## API
 
-### `configure(String apiKey, {bool isDebug, String? endpointBaseUrl, int logLevel}): Future<bool>`
+### `configure(String apiKey, {bool isDebug, String? endpointBaseUrl, int logLevel}): Future<void>`
 Initializes the SDK with your API key. Must be called before any other SDK methods.
 
 **Parameters:**
@@ -135,14 +135,15 @@ Initializes the SDK with your API key. Must be called before any other SDK metho
 - `endpointBaseUrl` - Custom endpoint base URL (optional)
 - `logLevel` - Log level: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR (optional, default 1)
 
-**Returns:** Future that resolves to `true` if configuration was successful
+**Returns:** Future that completes when configuration is done
+
+**Logging:** The SDK automatically checks its status after configuration and prints to console:
+- ✅ "The SDK is enabled and ready to track events."
+- ⚠️  "The SDK is disabled. Please check your API key and ensure it is valid."
 
 **Example:**
 ```dart
-final success = await AppstackPlugin.configure('your-api-key-here');
-if (!success) {
-  print('SDK configuration failed');
-}
+await AppstackPlugin.configure('your-api-key-here');
 
 // With all parameters
 await AppstackPlugin.configure(
@@ -222,6 +223,28 @@ if (appstackId != null) {
 ```
 
 **Note:** The Appstack ID is generated after the SDK is configured. Make sure to call `configure()` before attempting to retrieve the ID.
+
+### `isSdkDisabled(): Future<bool>`
+Checks if the SDK is currently disabled. This can be useful for debugging or handling cases where the SDK configuration failed.
+
+**Returns:** Future that resolves to `true` if the SDK is disabled (e.g., due to invalid API key), `false` otherwise
+
+**Example:**
+```dart
+// After configuration, you can check if the SDK is working properly
+await AppstackPlugin.configure('your-api-key');
+
+// Check if SDK is disabled (e.g., invalid API key)
+final isDisabled = await AppstackPlugin.isSdkDisabled();
+if (isDisabled) {
+  print('Warning: SDK is disabled - please check your API key');
+  // Handle the error appropriately in your app
+} else {
+  print('SDK is enabled and ready');
+}
+```
+
+**Note:** The SDK automatically logs warning messages when disabled, but this method allows you to programmatically check the status.
 
 ---
 

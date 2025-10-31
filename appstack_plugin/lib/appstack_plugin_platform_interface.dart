@@ -24,7 +24,7 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
   }
 
   /// Configure Appstack SDK with your API key and optional parameters
-  Future<bool> configure(
+  Future<void> configure(
     String apiKey,
     bool isDebug,
     String? endpointBaseUrl,
@@ -48,5 +48,14 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
   /// Get the Appstack ID for the current user
   Future<String?> getAppstackId() {
     throw UnimplementedError('getAppstackId() has not been implemented.');
+  }
+
+  /// Check if the SDK is disabled
+  ///
+  /// Returns true if the SDK is disabled (e.g., due to invalid API key),
+  /// false otherwise. This can be called after configure() to verify
+  /// that the configuration was successful.
+  Future<bool> isSdkDisabled() {
+    throw UnimplementedError('isSdkDisabled() has not been implemented.');
   }
 }

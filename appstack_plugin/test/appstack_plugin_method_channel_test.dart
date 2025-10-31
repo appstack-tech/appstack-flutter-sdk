@@ -20,6 +20,8 @@ void main() {
           return true;
         case 'getAppstackId':
           return 'test-appstack-id-123';
+        case 'isSdkDisabled':
+          return false;
         default:
           return null;
       }
@@ -32,7 +34,7 @@ void main() {
   });
 
   test('configure', () async {
-    expect(await platform.configure('test-api-key', false, null, 1), true);
+    await platform.configure('test-api-key', false, null, 1);
   });
 
   test('sendEvent', () async {
@@ -45,5 +47,9 @@ void main() {
 
   test('getAppstackId', () async {
     expect(await platform.getAppstackId(), 'test-appstack-id-123');
+  });
+
+  test('isSdkDisabled', () async {
+    expect(await platform.isSdkDisabled(), false);
   });
 }

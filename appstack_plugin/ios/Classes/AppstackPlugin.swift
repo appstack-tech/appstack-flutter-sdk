@@ -19,6 +19,8 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
       handleEnableAppleAdsAttribution(result: result)
     case "getAppstackId":
       handleGetAppstackId(result: result)
+    case "isSdkDisabled":
+      handleIsSdkDisabled(result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -93,6 +95,11 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
   private func handleGetAppstackId(result: @escaping FlutterResult) {
     let appstackId = AppstackAttributionSdk.shared.getAppstackId()
     result(appstackId)
+  }
+  
+  private func handleIsSdkDisabled(result: @escaping FlutterResult) {
+    let isSdkDisabled = AppstackAttributionSdk.shared.isSdkDisabled()
+    result(isSdkDisabled)
   }
   
   private func stringToEventType(_ string: String) -> AppstackSDK.EventType? {

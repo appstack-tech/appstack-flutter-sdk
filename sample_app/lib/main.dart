@@ -27,8 +27,6 @@ void main() async {
     if (Platform.isIOS) {
       await AppstackPlugin.enableAppleAdsAttribution();
     }
-    
-    print('Appstack SDK configured successfully');
   } catch (e) {
     print('Failed to configure Appstack SDK: $e');
   }
@@ -166,7 +164,7 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

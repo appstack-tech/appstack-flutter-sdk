@@ -19,7 +19,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  appstack_plugin: ^0.0.13 # or use pub.dev version when published
+  appstack_plugin: ^0.0.14 # or use pub.dev version when published
 ```
 
 ## Basic Usage
@@ -32,6 +32,12 @@ import 'dart:io' show Platform;
 await AppstackPlugin.configure(
   Platform.isIOS ? 'ios-api-key' : 'android-api-key'
 );
+
+// Check if SDK is disabled (optional - for debugging)
+final isDisabled = await AppstackPlugin.isSdkDisabled();
+if (isDisabled) {
+  print('Warning: SDK is disabled - check your API key');
+}
 
 // Enable Apple Search Ads attribution (iOS only)
 if (Platform.isIOS) {

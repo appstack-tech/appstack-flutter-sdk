@@ -31,6 +31,7 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler {
         result.success(false)
       }
       "getAppstackId" -> handleGetAppstackId(result)
+      "isSdkDisabled" -> handleIsSdkDisabled(result)
       else -> result.notImplemented()
     }
   }
@@ -113,6 +114,15 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler {
       result.success(appstackId)
     } catch (e: Exception) {
       result.error("GET_ID_ERROR", "Failed to get Appstack ID: ${e.message}", null)
+    }
+  }
+
+  private fun handleIsSdkDisabled(result: Result) {
+    try {
+      val isSdkDisabled = AppstackAttributionSdk.isSdkDisabled()
+      result.success(isSdkDisabled)
+    } catch (e: Exception) {
+      result.error("IS_SDK_DISABLED_ERROR", "Failed to check SDK disabled status: ${e.message}", null)
     }
   }
 

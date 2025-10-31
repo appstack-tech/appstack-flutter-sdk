@@ -43,15 +43,15 @@ class _MyAppState extends State<MyApp> {
     });
 
     try {
-      final success = await AppstackPlugin.configure(
+      await AppstackPlugin.configure(
         _apiKeyController.text,
         isDebug: true, // Enable debug mode for this example
         logLevel: 0, // DEBUG level
       );
 
       setState(() {
-        _isConfigured = success;
-        _status = success ? 'SDK configured successfully!' : 'Failed to configure SDK';
+        _isConfigured = true;
+        _status = 'SDK configured successfully!';
       });
     } catch (e) {
       setState(() {

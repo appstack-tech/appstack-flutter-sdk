@@ -8,13 +8,13 @@ class MockAppstackPluginPlatform
     with MockPlatformInterfaceMixin
     implements AppstackPluginPlatform {
   @override
-  Future<bool> configure(
+  Future<void> configure(
     String apiKey,
     bool isDebug,
     String? endpointBaseUrl,
     int logLevel,
   ) =>
-      Future.value(true);
+      Future.value();
 
   @override
   Future<bool> sendEvent(String eventType, String? eventName, double revenue) =>
@@ -25,6 +25,9 @@ class MockAppstackPluginPlatform
 
   @override
   Future<String?> getAppstackId() => Future.value('mock-appstack-id-456');
+
+  @override
+  Future<bool> isSdkDisabled() => Future.value(false);
 }
 
 void main() {
@@ -39,7 +42,7 @@ void main() {
     MockAppstackPluginPlatform fakePlatform = MockAppstackPluginPlatform();
     AppstackPluginPlatform.instance = fakePlatform;
 
-    expect(await AppstackPlugin.configure('test-api-key'), true);
+    await AppstackPlugin.configure('test-api-key');
   });
 
   test('sendEvent', () async {
