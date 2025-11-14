@@ -60,7 +60,11 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _sendEvent(EventType eventType, {String? eventName, double? revenue}) async {
+  Future<void> _sendEvent(
+    EventType eventType, {
+    String? eventName,
+    double? revenue,
+  }) async {
     if (!_isConfigured) {
       setState(() {
         _status = 'Please configure the SDK first';
@@ -76,9 +80,9 @@ class _MyAppState extends State<MyApp> {
       );
 
       setState(() {
-        _status = success 
-          ? 'Event sent: ${eventType.name}${eventName != null ? ' ($eventName)' : ''}${revenue != null ? ' (Revenue: \$${revenue.toStringAsFixed(2)})' : ''}'
-          : 'Failed to send event';
+        _status = success
+            ? 'Event sent: ${eventType.name}${eventName != null ? ' ($eventName)' : ''}${revenue != null ? ' (Revenue: \$${revenue.toStringAsFixed(2)})' : ''}'
+            : 'Failed to send event';
       });
     } catch (e) {
       setState(() {
@@ -98,9 +102,9 @@ class _MyAppState extends State<MyApp> {
     try {
       final success = await AppstackPlugin.enableAppleAdsAttribution();
       setState(() {
-        _status = success 
-          ? 'Apple Ads Attribution enabled successfully!'
-          : 'Failed to enable Apple Ads Attribution';
+        _status = success
+            ? 'Apple Ads Attribution enabled successfully!'
+            : 'Failed to enable Apple Ads Attribution';
       });
     } catch (e) {
       setState(() {
@@ -120,9 +124,9 @@ class _MyAppState extends State<MyApp> {
     try {
       final appstackId = await AppstackPlugin.getAppstackId();
       setState(() {
-        _status = appstackId != null 
-          ? 'Appstack ID: $appstackId'
-          : 'Appstack ID not available';
+        _status = appstackId != null
+            ? 'Appstack ID: $appstackId'
+            : 'Appstack ID not available';
       });
     } catch (e) {
       setState(() {
@@ -158,7 +162,10 @@ class _MyAppState extends State<MyApp> {
                     children: [
                       const Text(
                         'SDK Configuration',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       TextField(
@@ -178,9 +185,9 @@ class _MyAppState extends State<MyApp> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Status Display
               Card(
                 child: Padding(
@@ -190,7 +197,10 @@ class _MyAppState extends State<MyApp> {
                     children: [
                       const Text(
                         'Status',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(_status),
@@ -198,9 +208,9 @@ class _MyAppState extends State<MyApp> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Event Buttons
               if (_isConfigured) ...[
                 const Text(
@@ -208,7 +218,7 @@ class _MyAppState extends State<MyApp> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                
+
                 // Lifecycle Events
                 Wrap(
                   spacing: 8,
@@ -228,16 +238,17 @@ class _MyAppState extends State<MyApp> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Monetization Events
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
                     ElevatedButton(
-                      onPressed: () => _sendEvent(EventType.purchase, revenue: 29.99),
+                      onPressed: () =>
+                          _sendEvent(EventType.purchase, revenue: 29.99),
                       child: const Text('Purchase (\$29.99)'),
                     ),
                     ElevatedButton(
@@ -245,14 +256,15 @@ class _MyAppState extends State<MyApp> {
                       child: const Text('Add to Cart'),
                     ),
                     ElevatedButton(
-                      onPressed: () => _sendEvent(EventType.subscribe, revenue: 9.99),
+                      onPressed: () =>
+                          _sendEvent(EventType.subscribe, revenue: 9.99),
                       child: const Text('Subscribe (\$9.99)'),
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Engagement Events
                 Wrap(
                   spacing: 8,
@@ -263,39 +275,48 @@ class _MyAppState extends State<MyApp> {
                       child: const Text('Tutorial Complete'),
                     ),
                     ElevatedButton(
-                      onPressed: () => _sendEvent(EventType.viewItem, eventName: 'Product View'),
+                      onPressed: () => _sendEvent(
+                        EventType.viewItem,
+                        eventName: 'Product View',
+                      ),
                       child: const Text('View Item'),
                     ),
                     ElevatedButton(
-                      onPressed: () => _sendEvent(EventType.search, eventName: 'Search Query'),
+                      onPressed: () => _sendEvent(
+                        EventType.search,
+                        eventName: 'Search Query',
+                      ),
                       child: const Text('Search'),
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Custom Event
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
                     ElevatedButton(
-                      onPressed: () => _sendEvent(EventType.custom, eventName: 'Custom Event'),
+                      onPressed: () => _sendEvent(
+                        EventType.custom,
+                        eventName: 'Custom Event',
+                      ),
                       child: const Text('Custom Event'),
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // SDK Features
                 const Text(
                   'SDK Features',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                
+
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,

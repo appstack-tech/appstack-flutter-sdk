@@ -13,12 +13,14 @@ class MockAppstackPluginPlatform
     bool isDebug,
     String? endpointBaseUrl,
     int logLevel,
-  ) =>
-      Future.value();
+  ) => Future.value();
 
   @override
-  Future<bool> sendEvent(String eventType, String? eventName, Map<String, dynamic>? parameters) =>
-      Future.value(true);
+  Future<bool> sendEvent(
+    String eventType,
+    String? eventName,
+    Map<String, dynamic>? parameters,
+  ) => Future.value(true);
 
   @override
   Future<bool> enableAppleAdsAttribution() => Future.value(true);
@@ -50,7 +52,10 @@ void main() {
     AppstackPluginPlatform.instance = fakePlatform;
 
     expect(
-      await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 19.99, 'currency': 'USD'}),
+      await AppstackPlugin.sendEvent(
+        EventType.purchase,
+        parameters: {'revenue': 19.99, 'currency': 'USD'},
+      ),
       true,
     );
   });

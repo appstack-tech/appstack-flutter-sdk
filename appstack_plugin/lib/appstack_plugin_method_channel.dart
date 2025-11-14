@@ -56,7 +56,9 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
   Future<bool> isSdkDisabled() async {
     final result = await methodChannel.invokeMethod<bool>('isSdkDisabled');
     if (result == null) {
-      throw Exception('Native platform did not return a value for isSdkDisabled check');
+      throw Exception(
+        'Native platform did not return a value for isSdkDisabled check',
+      );
     }
     return result;
   }

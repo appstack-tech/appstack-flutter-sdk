@@ -34,7 +34,11 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
   }
 
   /// Send an event with optional parameters
-  Future<bool> sendEvent(String eventType, String? eventName, Map<String, dynamic>? parameters) {
+  Future<bool> sendEvent(
+    String eventType,
+    String? eventName,
+    Map<String, dynamic>? parameters,
+  ) {
     throw UnimplementedError('sendEvent() has not been implemented.');
   }
 

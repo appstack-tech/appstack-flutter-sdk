@@ -57,13 +57,19 @@ class AppstackPlugin {
         final result = await AppstackPluginPlatform.instance.isSdkDisabled();
         debugPrint('[AppstackPlugin] isSdkDisabled: $result');
         if (result) {
-          debugPrint('[AppstackPlugin] ⚠️  WARNING: The SDK is disabled. Please check your API key and ensure it is valid.');
+          debugPrint(
+            '[AppstackPlugin] ⚠️  WARNING: The SDK is disabled. Please check your API key and ensure it is valid.',
+          );
         } else {
-          debugPrint('[AppstackPlugin] ✅ SUCCESS: The SDK is enabled and ready to track events.');
+          debugPrint(
+            '[AppstackPlugin] ✅ SUCCESS: The SDK is enabled and ready to track events.',
+          );
         }
       } catch (e) {
         // Silently ignore errors when checking isSdkDisabled to prevent crashes
-        debugPrint('[AppstackPlugin] ❌ ERROR: Could not check SDK disabled status: $e');
+        debugPrint(
+          '[AppstackPlugin] ❌ ERROR: Could not check SDK disabled status: $e',
+        );
       }
     } catch (error) {
       throw Exception('Failed to configure Appstack SDK: $error');
