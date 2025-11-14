@@ -17,7 +17,7 @@ class MockAppstackPluginPlatform
       Future.value();
 
   @override
-  Future<bool> sendEvent(String eventType, String? eventName, double revenue) =>
+  Future<bool> sendEvent(String eventType, String? eventName, Map<String, dynamic>? parameters) =>
       Future.value(true);
 
   @override
@@ -50,7 +50,7 @@ void main() {
     AppstackPluginPlatform.instance = fakePlatform;
 
     expect(
-      await AppstackPlugin.sendEvent(EventType.purchase, revenue: 19.99),
+      await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 19.99, 'currency': 'USD'}),
       true,
     );
   });

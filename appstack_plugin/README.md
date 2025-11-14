@@ -114,7 +114,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   void trackPurchase() {
-    AppstackPlugin.sendEvent(EventType.purchase, revenue: 29.99);
+    AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 29.99, 'currency': 'USD'});
   }
 
   @override
@@ -153,13 +153,13 @@ await AppstackPlugin.configure(
 );
 ```
 
-### `sendEvent(EventType eventType, {String? eventName, double? revenue}): Future<bool>`
-Tracks custom events with optional revenue data. Use this for all user actions you want to measure.
+### `sendEvent(EventType eventType, {String? eventName, Map<String, dynamic>? parameters}): Future<bool>`
+Tracks custom events with optional parameters. Use this for all user actions you want to measure.
 
 **Parameters:**
 - `eventType` - Event type from the EventType enum (required)
 - `eventName` - Event name for custom events (optional)
-- `revenue` - Optional revenue amount in dollars (e.g., 29.99 for $29.99)
+- `parameters` - Optional map of parameters to include with the event (e.g., `{'revenue': 29.99, 'currency': 'USD'}`)
 
 **Returns:** Future that resolves to `true` if event was sent successfully
 
@@ -168,15 +168,15 @@ Tracks custom events with optional revenue data. Use this for all user actions y
 import 'package:appstack_plugin/appstack_plugin.dart';
 
 // Using EventType enum (recommended)
-await AppstackPlugin.sendEvent(EventType.purchase, revenue: 29.99);
+await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 29.99, 'currency': 'USD'});
 await AppstackPlugin.sendEvent(EventType.signUp);
 await AppstackPlugin.sendEvent(EventType.addToCart);
 
 // Custom events with custom names
 await AppstackPlugin.sendEvent(
-  EventType.custom, 
-  eventName: 'my_custom_event', 
-  revenue: 15.50
+  EventType.custom,
+  eventName: 'my_custom_event',
+  parameters: {'revenue': 15.50, 'currency': 'USD', 'category': 'premium'}
 );
 ```
 

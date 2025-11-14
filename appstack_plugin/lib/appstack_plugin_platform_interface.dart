@@ -33,8 +33,8 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
     throw UnimplementedError('configure() has not been implemented.');
   }
 
-  /// Send an event with optional revenue parameter
-  Future<bool> sendEvent(String eventType, String? eventName, double revenue) {
+  /// Send an event with optional parameters
+  Future<bool> sendEvent(String eventType, String? eventName, Map<String, dynamic>? parameters) {
     throw UnimplementedError('sendEvent() has not been implemented.');
   }
 

@@ -38,7 +38,7 @@ void main() {
   });
 
   test('sendEvent', () async {
-    expect(await platform.sendEvent('PURCHASE', 'test-event', 9.99), true);
+    expect(await platform.sendEvent('PURCHASE', 'test-event', {'revenue': 9.99, 'currency': 'USD'}), true);
   });
 
   test('enableAppleAdsAttribution', () async {

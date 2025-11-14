@@ -5,6 +5,24 @@ All notable changes to the Appstack Flutter Plugin will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2025-11-14
+
+### Changed
+- **BREAKING CHANGE**: Modified `sendEvent()` method to accept `parameters` map instead of `revenue` parameter
+- Updated iOS SDK reference to 3.0.0
+- Updated Android SDK reference to 1.0.0
+- Both SDK versions now use parameters dictionary for event data instead of separate revenue parameter
+- Updated all examples and documentation to use the new parameters-based API
+
+### Migration Guide
+```dart
+// Old API (deprecated)
+await AppstackPlugin.sendEvent(EventType.purchase, revenue: 29.99);
+
+// New API (current)
+await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 29.99, 'currency': 'USD'});
+```
+
 ## [0.0.14] - 2025-10-31
 
 ### Changed

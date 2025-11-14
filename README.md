@@ -49,7 +49,7 @@ final appstackId = await AppstackPlugin.getAppstackId();
 print('Appstack ID: $appstackId');
 
 // Track events
-await AppstackPlugin.sendEvent(EventType.purchase, revenue: 29.99);
+await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 29.99, 'currency': 'USD'});
 ```
 
 ## Documentation

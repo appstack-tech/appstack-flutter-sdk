@@ -90,7 +90,7 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler {
       }
 
       val eventName = call.argument<String>("eventName")
-      val revenue = call.argument<Double>("revenue")
+      val parameters = call.argument<Map<String, Any>>("parameters")
 
       // Convert string to EventType
       val eventType = stringToEventType(eventTypeString)
@@ -100,7 +100,7 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler {
       }
 
       // Send the event
-      AppstackAttributionSdk.sendEvent(eventType, eventName, revenue)
+      AppstackAttributionSdk.sendEvent(eventType, eventName, parameters)
 
       result.success(true)
     } catch (e: Exception) {

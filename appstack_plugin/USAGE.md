@@ -42,7 +42,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   void trackPurchase() {
-    AppstackPlugin.sendEvent(EventType.purchase, revenue: 29.99);
+    AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 29.99, 'currency': 'USD'});
   }
 
   @override
@@ -94,13 +94,13 @@ allprojects {
 await AppstackPlugin.sendEvent(EventType.viewItem);
 
 // User adds item to cart
-await AppstackPlugin.sendEvent(EventType.addToCart, revenue: 15.99);
+await AppstackPlugin.sendEvent(EventType.addToCart, parameters: {'revenue': 15.99, 'currency': 'USD'});
 
 // User initiates checkout
-await AppstackPlugin.sendEvent(EventType.initiateCheckout, revenue: 89.97);
+await AppstackPlugin.sendEvent(EventType.initiateCheckout, parameters: {'revenue': 89.97, 'currency': 'USD'});
 
 // User completes purchase
-await AppstackPlugin.sendEvent(EventType.purchase, revenue: 89.97);
+await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 89.97, 'currency': 'USD'});
 ```
 
 ### Gaming Events
@@ -113,7 +113,7 @@ await AppstackPlugin.sendEvent(EventType.levelStart);
 await AppstackPlugin.sendEvent(EventType.levelComplete);
 
 // In-app purchase
-await AppstackPlugin.sendEvent(EventType.purchase, revenue: 4.99);
+await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 4.99, 'currency': 'USD'});
 ```
 
 ### User Authentication
@@ -135,11 +135,11 @@ await AppstackPlugin.sendEvent(
   eventName: 'user_completed_tutorial',
 );
 
-// Custom event with revenue
+// Custom event with parameters
 await AppstackPlugin.sendEvent(
-  EventType.custom, 
+  EventType.custom,
   eventName: 'premium_feature_used',
-  revenue: 9.99,
+  parameters: {'revenue': 9.99, 'currency': 'USD'},
 );
 ```
 
@@ -170,11 +170,11 @@ flutter pub get
 **Wrong revenue values:**
 ```dart
 // ✅ Use decimal dollars
-await AppstackPlugin.sendEvent(EventType.purchase, revenue: 29.99);
+await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 29.99, 'currency': 'USD'});
 
-// ✅ Convert cents to dollars  
+// ✅ Convert cents to dollars
 final cents = 2999;
-await AppstackPlugin.sendEvent(EventType.purchase, revenue: cents / 100);
+await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': cents / 100, 'currency': 'USD'});
 ```
 
 **Platform-specific code:**

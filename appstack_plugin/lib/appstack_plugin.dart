@@ -15,7 +15,7 @@ export 'event_type.dart';
 /// await AppstackPlugin.configure('your-api-key');
 ///
 /// // Send events
-/// await AppstackPlugin.sendEvent(EventType.purchase, revenue: 29.99);
+/// await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 29.99, 'currency': 'USD'});
 ///
 /// // Enable Apple Ads Attribution (iOS only)
 /// await AppstackPlugin.enableAppleAdsAttribution();
@@ -70,24 +70,24 @@ class AppstackPlugin {
     }
   }
 
-  /// Send an event with optional revenue parameter
+  /// Send an event with optional parameters
   ///
   /// Parameters:
   /// - [eventType]: Event type from EventType enum (required)
   /// - [eventName]: Event name for custom events (optional)
-  /// - [revenue]: Optional revenue value (can be double or int)
+  /// - [parameters]: Optional map of parameters to include with the event (e.g., {'revenue': 29.99, 'currency': 'USD'})
   ///
   /// Returns: Future that resolves to true if event was sent successfully
   static Future<bool> sendEvent(
     EventType eventType, {
     String? eventName,
-    double? revenue,
+    Map<String, dynamic>? parameters,
   }) async {
     try {
       return await AppstackPluginPlatform.instance.sendEvent(
         eventType.name,
         eventName,
-        revenue ?? 0.0,
+        parameters,
       );
     } catch (error) {
       throw Exception(

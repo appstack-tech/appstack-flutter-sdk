@@ -8,7 +8,7 @@ void main() async {
   // Configure Appstack SDK
   // Replace with your actual API keys
   final apiKey = Platform.isIOS 
-      ? 'your-ios-api-key' 
+      ? 'blehR' 
       : 'your-android-api-key';
 
   final endpointBaseUrl = Platform.isIOS 
@@ -129,12 +129,12 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
   
-  void _trackEvent(EventType eventType, {String? eventName, double? revenue}) async {
+  void _trackEvent(EventType eventType, {String? eventName, Map<String, dynamic>? parameters}) async {
     try {
       await AppstackPlugin.sendEvent(
         eventType,
         eventName: eventName,
-        revenue: revenue,
+        parameters: parameters,
       );
       setState(() {
         _lastEvent = eventName ?? eventType.name;
@@ -232,11 +232,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: const Text('Login'),
                   ),
                   ElevatedButton(
-                    onPressed: () => _trackEvent(EventType.purchase, revenue: 29.99),
+                    onPressed: () => _trackEvent(EventType.purchase, parameters: {'revenue': 29.99, 'currency': 'USD'}),
                     child: const Text('Purchase \$29.99'),
                   ),
                   ElevatedButton(
-                    onPressed: () => _trackEvent(EventType.addToCart, revenue: 15.99),
+                    onPressed: () => _trackEvent(EventType.addToCart, parameters: {'revenue': 15.99, 'currency': 'USD'}),
                     child: const Text('Add to Cart \$15.99'),
                   ),
                   ElevatedButton(
@@ -246,6 +246,21 @@ class _MyHomePageState extends State<MyHomePage> {
                   ElevatedButton(
                     onPressed: () => _trackEvent(EventType.custom, eventName: 'custom_event'),
                     child: const Text('Custom Event'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => _trackEvent(EventType.levelStart, parameters: {'level': 5, 'difficulty': 'hard'}),
+                    child: const Text('Level Start'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => _trackEvent(EventType.search, parameters: {'query': 'flutter tutorial', 'results_count': 25}),
+                    child: const Text('Search Event'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => _trackEvent(EventType.custom,
+                      eventName: 'user_engagement',
+                      parameters: {'time_spent': 120, 'feature': 'dashboard', 'interaction_type': 'scroll'}
+                    ),
+                    child: const Text('Engagement Event'),
                   ),
                 ],
               ),

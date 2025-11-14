@@ -69,19 +69,19 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
       result(FlutterError(code: "INVALID_ARGUMENTS", message: "Event type is required", details: nil))
       return
     }
-    
+
     let eventName = args["eventName"] as? String
-    let revenue = args["revenue"] as? Double
-    
+    let parameters = args["parameters"] as? [String: Any]
+
     // Convert string to EventType
     guard let eventType = stringToEventType(eventTypeString) else {
       result(FlutterError(code: "INVALID_EVENT_TYPE", message: "Invalid event type: \(eventTypeString)", details: nil))
       return
     }
-    
+
     // Send the event
-    AppstackAttributionSdk.shared.sendEvent(event: eventType, name: eventName, revenue: revenue)
-    
+    AppstackAttributionSdk.shared.sendEvent(event: eventType, name: eventName, parameters: parameters)
+
     result(true)
   }
   

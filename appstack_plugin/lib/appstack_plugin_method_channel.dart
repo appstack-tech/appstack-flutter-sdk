@@ -28,12 +28,12 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
   Future<bool> sendEvent(
     String eventType,
     String? eventName,
-    double revenue,
+    Map<String, dynamic>? parameters,
   ) async {
     final result = await methodChannel.invokeMethod<bool>('sendEvent', {
       'eventType': eventType,
       'eventName': eventName,
-      'revenue': revenue,
+      'parameters': parameters,
     });
     return result ?? false;
   }

@@ -62,15 +62,19 @@ The sample app shows how to:
 - Enable Apple Search Ads attribution (iOS only)
 - Retrieve and display the Appstack ID
 - Refresh the Appstack ID on demand
-- Track various event types:
-  - Sign Up
-  - Login
-  - Purchase (with revenue)
-  - Add to Cart (with revenue)
-  - View Item
-  - Custom events
+- Track various event types with different parameters:
+  - Sign Up (no parameters)
+  - Login (no parameters)
+  - Purchase (with revenue and currency parameters)
+  - Add to Cart (with revenue and currency parameters)
+  - View Item (no parameters)
+  - Custom events (no parameters)
+  - Level Start (with level and difficulty parameters)
+  - Search (with query and results count parameters)
+  - User Engagement (with multiple custom parameters)
 - Handle errors gracefully
 - Display tracked events in the UI
+- Demonstrate the new parameters-based event tracking API
 
 ## Code Structure
 
@@ -80,6 +84,39 @@ The sample app shows how to:
 - Events are tracked through button presses in the UI
 - Last tracked event is displayed in the UI
 - Appstack ID can be refreshed with a button press
+
+## Event Parameters
+
+The sample app demonstrates the new parameters-based event tracking API introduced in version 0.0.15:
+
+```dart
+// Simple event without parameters
+await AppstackPlugin.sendEvent(EventType.login);
+
+// Event with revenue parameters
+await AppstackPlugin.sendEvent(EventType.purchase, parameters: {
+  'revenue': 29.99,
+  'currency': 'USD'
+});
+
+// Event with custom parameters
+await AppstackPlugin.sendEvent(EventType.search, parameters: {
+  'query': 'flutter tutorial',
+  'results_count': 25
+});
+
+// Complex custom event
+await AppstackPlugin.sendEvent(EventType.custom,
+  eventName: 'user_engagement',
+  parameters: {
+    'time_spent': 120,
+    'feature': 'dashboard',
+    'interaction_type': 'scroll'
+  }
+);
+```
+
+Parameters can include any data relevant to your analytics needs, such as revenue, currency, product IDs, categories, user segments, etc.
 
 ## Troubleshooting
 

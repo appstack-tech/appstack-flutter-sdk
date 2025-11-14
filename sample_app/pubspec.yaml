@@ -36,7 +36,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   
   # Appstack Plugin
-  appstack_plugin: ^0.0.13
+  appstack_plugin:
+    path: ../appstack_plugin
 
 dev_dependencies:
   flutter_test:
