@@ -8,7 +8,7 @@ void main() async {
   // Configure Appstack SDK
   // Replace with your actual API keys
   final apiKey = Platform.isIOS 
-      ? 'blehR' 
+      ? 'o37wrexa3uub3pkanbp0axqi' 
       : 'your-android-api-key';
 
   final endpointBaseUrl = Platform.isIOS 
