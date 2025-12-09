@@ -87,11 +87,16 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   String _lastEvent = 'None';
   String? _appstackId;
+  Map<String, dynamic>? _attributionParams;
 
   @override
   void initState() {
     super.initState();
-    _loadAppstackId();
+    // Add a small delay to ensure SDK is fully initialized
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _loadAppstackId();
+      _loadAttributionParams();
+    });
   }
 
   void _incrementCounter() {
@@ -112,6 +117,18 @@ class _MyHomePageState extends State<MyHomePage> {
       print('Appstack ID: $id');
     } catch (e) {
       print('Failed to get Appstack ID: $e');
+    }
+  }
+
+  Future<void> _loadAttributionParams() async {
+    try {
+      final params = await AppstackPlugin.getAttributionParams();
+      setState(() {
+        _attributionParams = params;
+      });
+      print('Attribution Params: $params');
+    } catch (e) {
+      print('Failed to get Attribution Params: $e');
     }
   }
 
@@ -196,6 +213,50 @@ class _MyHomePageState extends State<MyHomePage> {
                         onPressed: _refreshAppstackId,
                         icon: const Icon(Icons.refresh, size: 16),
                         label: const Text('Refresh ID'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Attribution Params',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          _attributionParams != null
+                              ? _attributionParams!.isEmpty
+                                  ? 'No attribution params available'
+                                  : _attributionParams.toString()
+                              : 'Loading...',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontFamily: 'monospace',
+                          ),
+                          maxLines: 5,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                        onPressed: _loadAttributionParams,
+                        icon: const Icon(Icons.refresh, size: 16),
+                        label: const Text('Refresh Params'),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),

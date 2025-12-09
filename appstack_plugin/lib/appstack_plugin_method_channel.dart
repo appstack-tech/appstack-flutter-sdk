@@ -62,4 +62,15 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
     }
     return result;
   }
+
+  @override
+  Future<Map<String, dynamic>?> getAttributionParams() async {
+    final result = await methodChannel.invokeMethod<Map<dynamic, dynamic>?>(
+      'getAttributionParams',
+    );
+    if (result == null) {
+      return null;
+    }
+    return Map<String, dynamic>.from(result);
+  }
 }

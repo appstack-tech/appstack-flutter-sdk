@@ -32,6 +32,7 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler {
       }
       "getAppstackId" -> handleGetAppstackId(result)
       "isSdkDisabled" -> handleIsSdkDisabled(result)
+      "getAttributionParams" -> handleGetAttributionParams(result)
       else -> result.notImplemented()
     }
   }
@@ -123,6 +124,15 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler {
       result.success(isSdkDisabled)
     } catch (e: Exception) {
       result.error("IS_SDK_DISABLED_ERROR", "Failed to check SDK disabled status: ${e.message}", null)
+    }
+  }
+
+  private fun handleGetAttributionParams(result: Result) {
+    try {
+      val attributionParams = AppstackAttributionSdk.getAttributionParams(rawReferrer = null)
+      result.success(attributionParams)
+    } catch (e: Exception) {
+      result.error("GET_ATTRIBUTION_PARAMS_ERROR", "Failed to get attribution params: ${e.message}", null)
     }
   }
 

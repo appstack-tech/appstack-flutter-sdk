@@ -48,6 +48,10 @@ if (Platform.isIOS) {
 final appstackId = await AppstackPlugin.getAppstackId();
 print('Appstack ID: $appstackId');
 
+// Get attribution parameters
+final attributionParams = await AppstackPlugin.getAttributionParams();
+print('Attribution Params: $attributionParams');
+
 // Track events
 await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 29.99, 'currency': 'USD'});
 ```

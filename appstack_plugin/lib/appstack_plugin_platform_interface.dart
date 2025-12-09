@@ -62,4 +62,11 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
   Future<bool> isSdkDisabled() {
     throw UnimplementedError('isSdkDisabled() has not been implemented.');
   }
+
+  /// Get attribution parameters
+  ///
+  /// Returns a map containing attribution parameters from the SDK
+  Future<Map<String, dynamic>?> getAttributionParams() {
+    throw UnimplementedError('getAttributionParams() has not been implemented.');
+  }
 }

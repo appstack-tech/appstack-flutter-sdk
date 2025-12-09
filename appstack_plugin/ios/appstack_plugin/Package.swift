@@ -15,7 +15,7 @@ let package = Package(
     dependencies: [
         // Reference the official Appstack iOS SDK from GitHub
         // Using exact version to ensure consistency across builds
-        .package(url: "https://github.com/appstack-tech/ios-appstack-sdk.git", exact: "3.0.2"),
+        .package(url: "https://github.com/appstack-tech/ios-appstack-sdk.git", exact: "3.1.0"),
     ],
     targets: [
         .target(

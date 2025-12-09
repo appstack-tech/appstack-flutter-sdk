@@ -149,4 +149,26 @@ class AppstackPlugin {
       throw Exception('Failed to check SDK disabled status: $error');
     }
   }
+
+  /// Get attribution parameters from the SDK
+  ///
+  /// Returns a map containing attribution parameters collected by the SDK.
+  /// These parameters include information about the attribution source and other metadata.
+  ///
+  /// Example:
+  /// ```dart
+  /// final params = await AppstackPlugin.getAttributionParams();
+  /// if (params != null) {
+  ///   print('Attribution params: $params');
+  /// }
+  /// ```
+  ///
+  /// Returns: Future that resolves to a map of attribution parameters, or null if not available
+  static Future<Map<String, dynamic>?> getAttributionParams() async {
+    try {
+      return await AppstackPluginPlatform.instance.getAttributionParams();
+    } catch (error) {
+      throw Exception('Failed to get attribution params: $error');
+    }
+  }
 }

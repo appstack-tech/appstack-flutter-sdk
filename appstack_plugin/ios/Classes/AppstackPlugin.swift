@@ -21,6 +21,8 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
       handleGetAppstackId(result: result)
     case "isSdkDisabled":
       handleIsSdkDisabled(result: result)
+    case "getAttributionParams":
+      handleGetAttributionParams(result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -180,6 +182,28 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
         // Always return result on the main thread to prevent hanging
         DispatchQueue.main.async {
           result(false)
+        }
+      }
+    }
+  }
+  
+  private func handleGetAttributionParams(result: @escaping FlutterResult) {
+    // Execute SDK getAttributionParams on a background thread to avoid blocking the main thread
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        let attributionParams = AppstackAttributionSdk.shared.getAttributionParams()
+
+        // Always return result on the main thread to prevent hanging
+        DispatchQueue.main.async {
+          result(attributionParams)
+        }
+      } catch {
+        // Log the error but don't crash - return nil to prevent hanging
+        print("[AppstackPlugin] Error getting attribution params: \(error.localizedDescription)")
+
+        // Always return result on the main thread to prevent hanging
+        DispatchQueue.main.async {
+          result(nil)
         }
       }
     }
