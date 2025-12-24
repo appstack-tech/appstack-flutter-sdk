@@ -67,6 +67,8 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
   ///
   /// Returns a map containing attribution parameters from the SDK
   Future<Map<String, dynamic>?> getAttributionParams() {
-    throw UnimplementedError('getAttributionParams() has not been implemented.');
+    throw UnimplementedError(
+      'getAttributionParams() has not been implemented.',
+    );
   }
 }
