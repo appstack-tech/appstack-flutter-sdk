@@ -4,13 +4,75 @@ Track events and revenue with Apple Search Ads attribution in your Flutter app.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
+## Overview
+
+The Appstack Flutter Plugin lets you:
+
+- Track standardized and custom events
+- Track revenue events with currency (for ROAS / optimization)
+- Enable Apple Ads attribution on iOS
+- Retrieve the Appstack installation ID and attribution parameters
+
+## Features (with examples)
+
+### SDK initialization
+
+```dart
+import 'dart:io' show Platform;
+import 'package:appstack_plugin/appstack_plugin.dart';
+
+final apiKey = Platform.isIOS ? 'your-ios-api-key' : 'your-android-api-key';
+await AppstackPlugin.configure(apiKey);
+```
+
+### Event tracking (standard + custom)
+
+```dart
+// Standard
+await AppstackPlugin.sendEvent(EventType.signUp);
+
+// Custom
+await AppstackPlugin.sendEvent(
+  EventType.custom,
+  eventName: 'level_completed',
+  parameters: {'level': 12},
+);
+```
+
+### Revenue tracking (recommended for all ad networks)
+
+```dart
+await AppstackPlugin.sendEvent(
+  EventType.purchase,
+  parameters: {'revenue': 29.99, 'currency': 'EUR'},
+);
+// `price` is also accepted instead of `revenue`
+```
+
+### Installation ID + attribution parameters
+
+```dart
+final appstackId = await AppstackPlugin.getAppstackId();
+final attributionParams = await AppstackPlugin.getAttributionParams();
+```
+
+### Apple Ads attribution (iOS)
+
+```dart
+import 'dart:io' show Platform;
+
+if (Platform.isIOS) {
+  await AppstackPlugin.enableAppleAdsAttribution();
+}
+```
+
 ## Installation
 
 Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  appstack_plugin: ^0.0.1
+  appstack_plugin: ^1.2.0
 ```
 
 Then run:
@@ -224,6 +286,19 @@ if (appstackId != null) {
 
 **Note:** The Appstack ID is generated after the SDK is configured. Make sure to call `configure()` before attempting to retrieve the ID.
 
+### `getAttributionParams(): Future<Map<String, dynamic>?>`
+Retrieves attribution parameters collected by the SDK (if available).
+
+**Returns:** Future that resolves to a map of attribution parameters, or `null` if not available
+
+**Example:**
+```dart
+final params = await AppstackPlugin.getAttributionParams();
+if (params != null) {
+  print('Attribution params: $params');
+}
+```
+
 ### `isSdkDisabled(): Future<bool>`
 Checks if the SDK is currently disabled. This can be useful for debugging or handling cases where the SDK configuration failed.
 
@@ -280,11 +355,39 @@ if (isDisabled) {
 
 **Event Tracking:**
 - Event names are case-sensitive and standardized
-- Revenue values need to be in USD
+- For revenue events, always pass a `revenue` (or `price`) and a `currency` parameter
 - SDK must be initialized before any tracking calls
 - `enableAppleAdsAttribution` only works on iOS and will return false on Android
 - Network connectivity required for event transmission (events are queued offline)
 </details>
+
+---
+
+## EAC recommendations
+
+### Revenue events (all ad networks)
+
+For any event that represents revenue, we recommend sending:
+
+- `revenue` **or** `price` (number)
+- `currency` (string, e.g. `EUR`, `USD`)
+
+```dart
+await AppstackPlugin.sendEvent(
+  EventType.purchase,
+  parameters: {'revenue': 4.99, 'currency': 'EUR'},
+);
+```
+
+### Meta matching (send once per installation, as early as possible)
+
+For Meta, we recommend sending **one time** (because the information will then be associated to every event sent with the same **installation ID**), **as early as possible**, the following parameters (if you have them):
+
+- `email`
+- `name` (first name + last name in the same parameter)
+- `phone_number`
+- `date_of_birth`
+```
 
 ## Documentation
 

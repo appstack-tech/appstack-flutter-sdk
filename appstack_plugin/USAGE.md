@@ -2,13 +2,22 @@
 
 Track events and revenue with Apple Search Ads attribution in your Flutter app.
 
+## Overview
+
+This guide follows the same structure across Appstack SDKs:
+
+- Features (with examples)
+- Installation & platform configuration
+- Quick start
+- EAC recommendations
+
 ## Installation
 
 Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  appstack_plugin: ^0.0.1
+  appstack_plugin: ^1.2.0
 ```
 
 Then run:
@@ -50,6 +59,15 @@ class MyApp extends StatelessWidget {
     // ... your app
   }
 }
+```
+
+## Installation ID + attribution parameters
+
+```dart
+final appstackId = await AppstackPlugin.getAppstackId();
+final attributionParams = await AppstackPlugin.getAttributionParams();
+print('Appstack ID: $appstackId');
+print('Attribution params: $attributionParams');
 ```
 
 ## iOS Configuration (Required)
@@ -144,6 +162,32 @@ await AppstackPlugin.sendEvent(
 ```
 
 ---
+
+## EAC recommendations
+
+### Revenue events (all ad networks)
+
+For any event that represents revenue, we recommend sending:
+
+- `revenue` **or** `price` (number)
+- `currency` (string, e.g. `EUR`, `USD`)
+
+```dart
+await AppstackPlugin.sendEvent(
+  EventType.purchase,
+  parameters: {'revenue': 4.99, 'currency': 'EUR'},
+);
+```
+
+### Meta matching (send once per installation, as early as possible)
+
+For Meta, we recommend sending **one time** (because the information will then be associated to every event sent with the same **installation ID**), **as early as possible**, the following parameters (if you have them):
+
+- `email`
+- `name` (first name + last name in the same parameter)
+- `phone_number`
+- `date_of_birth`
+```
 
 ### Troubleshooting
 

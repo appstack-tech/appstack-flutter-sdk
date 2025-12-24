@@ -2,6 +2,12 @@
 
 Flutter plugin for tracking events and revenue with Apple Search Ads attribution.
 
+## Overview
+
+This repository contains the Flutter SDK and a sample app. For a consistent “one page” reference (features + EAC recommendations), see the plugin README:
+
+- `appstack_plugin/README.md`
+
 ## Structure
 
 This repository contains:
@@ -19,7 +25,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  appstack_plugin: ^0.0.14 # or use pub.dev version when published
+  appstack_plugin: ^1.2.0
 ```
 
 ## Basic Usage
