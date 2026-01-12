@@ -62,6 +62,32 @@ print('Attribution Params: $attributionParams');
 await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 29.99, 'currency': 'USD'});
 ```
 
+### `getAttributionParams(): Future<Map<String, dynamic>?>`
+Retrieve attribution parameters from the SDK. This returns all available attribution data that the SDK has collected.
+
+**Returns:** A map containing attribution parameters (key-value pairs), or `null` if not available yet.
+
+**Example:**
+```dart
+final attributionParams = await AppstackPlugin.getAttributionParams();
+print('Attribution parameters: $attributionParams');
+
+// Example output (varies by platform):
+// {
+//   "attribution_source": "google_play",
+//   "install_timestamp": "1733629800",
+//   "attributed": "true",
+//   ...
+// }
+```
+
+**Use Cases:**
+- Retrieve attribution data for analytics
+- Check if the app was attributed to a specific campaign
+- Log attribution parameters for debugging
+- Send attribution data to your backend server
+- Analyze user acquisition sources
+
 ## Documentation
 
 - [Plugin README](./appstack_plugin/README.md) - Complete API documentation
