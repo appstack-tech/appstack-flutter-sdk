@@ -3,6 +3,8 @@ import UIKit
 import AppstackSDK
 
 public class AppstackPlugin: NSObject, FlutterPlugin {
+  private let sdkQueue = DispatchQueue(label: "com.appstack.plugin.sdk", qos: .userInitiated)
+
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "appstack_plugin", binaryMessenger: registrar.messenger())
     let instance = AppstackPlugin()
@@ -25,6 +27,16 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
       handleGetAttributionParams(result: result)
     default:
       result(FlutterMethodNotImplemented)
+    }
+  }
+
+  private func deliverResult(_ result: @escaping FlutterResult, _ value: Any?) {
+    if Thread.isMainThread {
+      result(value)
+    } else {
+      DispatchQueue.main.async {
+        result(value)
+      }
     }
   }
   
@@ -56,7 +68,8 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
     }
 
     // Execute SDK configuration on a background thread to avoid blocking the main thread
-    DispatchQueue.global(qos: .userInitiated).async {
+    sdkQueue.async { [weak self] in
+      guard let self = self else { return }
       do {
         // Configure the SDK
         if let endpointBaseUrl = endpointBaseUrl {
@@ -66,17 +79,13 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
         }
 
         // Always return success on the main thread to prevent hanging
-        DispatchQueue.main.async {
-          result(true)
-        }
+        self.deliverResult(result, true)
       } catch {
         // Log the error but don't crash - return success to prevent hanging
         print("[AppstackPlugin] Error configuring SDK: \(error.localizedDescription)")
 
         // Always return success on the main thread to prevent hanging
-        DispatchQueue.main.async {
-          result(true)
-        }
+        self.deliverResult(result, true)
       }
     }
   }
@@ -98,113 +107,89 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
     }
 
     // Execute SDK sendEvent on a background thread to avoid blocking the main thread
-    DispatchQueue.global(qos: .userInitiated).async {
+    sdkQueue.async { [weak self] in
+      guard let self = self else { return }
       do {
         // Send the event
         AppstackAttributionSdk.shared.sendEvent(event: eventType, name: eventName, parameters: parameters)
 
         // Always return success on the main thread to prevent hanging
-        DispatchQueue.main.async {
-          result(true)
-        }
+        self.deliverResult(result, true)
       } catch {
         // Log the error but don't crash - return success to prevent hanging
         print("[AppstackPlugin] Error sending event: \(error.localizedDescription)")
 
         // Always return success on the main thread to prevent hanging
-        DispatchQueue.main.async {
-          result(true)
-        }
+        self.deliverResult(result, true)
       }
     }
   }
   
   private func handleEnableAppleAdsAttribution(result: @escaping FlutterResult) {
     // Execute SDK enableAppleAdsAttribution on a background thread to avoid blocking the main thread
-    DispatchQueue.global(qos: .userInitiated).async {
+    sdkQueue.async { [weak self] in
+      guard let self = self else { return }
       do {
         if #available(iOS 15.0, *) {
           AppstackASAAttribution.shared.enableAppleAdsAttribution()
         }
 
         // Always return success on the main thread to prevent hanging
-        DispatchQueue.main.async {
-          result(true)
-        }
+        self.deliverResult(result, true)
       } catch {
         // Log the error but don't crash - return success to prevent hanging
         print("[AppstackPlugin] Error enabling Apple Ads Attribution: \(error.localizedDescription)")
 
         // Always return success on the main thread to prevent hanging
-        DispatchQueue.main.async {
-          result(true)
-        }
+        self.deliverResult(result, true)
       }
     }
   }
   
   private func handleGetAppstackId(result: @escaping FlutterResult) {
     // Execute SDK getAppstackId on a background thread to avoid blocking the main thread
-    DispatchQueue.global(qos: .userInitiated).async {
+    sdkQueue.async { [weak self] in
+      guard let self = self else { return }
       do {
         let appstackId = AppstackAttributionSdk.shared.getAppstackId()
 
         // Always return result on the main thread to prevent hanging
-        DispatchQueue.main.async {
-          result(appstackId)
-        }
+        self.deliverResult(result, appstackId)
       } catch {
         // Log the error but don't crash - return nil to prevent hanging
         print("[AppstackPlugin] Error getting Appstack ID: \(error.localizedDescription)")
 
         // Always return result on the main thread to prevent hanging
-        DispatchQueue.main.async {
-          result(nil)
-        }
+        self.deliverResult(result, nil)
       }
     }
   }
   
   private func handleIsSdkDisabled(result: @escaping FlutterResult) {
     // Execute SDK isSdkDisabled on a background thread to avoid blocking the main thread
-    DispatchQueue.global(qos: .userInitiated).async {
+    sdkQueue.async { [weak self] in
+      guard let self = self else { return }
       do {
         let isSdkDisabled = AppstackAttributionSdk.shared.isSdkDisabled()
 
         // Always return result on the main thread to prevent hanging
-        DispatchQueue.main.async {
-          result(isSdkDisabled)
-        }
+        self.deliverResult(result, isSdkDisabled)
       } catch {
         // Log the error but don't crash - return false to prevent hanging
         print("[AppstackPlugin] Error checking SDK disabled status: \(error.localizedDescription)")
 
         // Always return result on the main thread to prevent hanging
-        DispatchQueue.main.async {
-          result(false)
-        }
+        self.deliverResult(result, false)
       }
     }
   }
   
   private func handleGetAttributionParams(result: @escaping FlutterResult) {
     // Execute SDK getAttributionParams on a background thread to avoid blocking the main thread
-    DispatchQueue.global(qos: .userInitiated).async {
-      do {
-        let attributionParams = AppstackAttributionSdk.shared.getAttributionParams()
-
-        // Always return result on the main thread to prevent hanging
-        DispatchQueue.main.async {
-          result(attributionParams)
-        }
-      } catch {
-        // Log the error but don't crash - return nil to prevent hanging
-        print("[AppstackPlugin] Error getting attribution params: \(error.localizedDescription)")
-
-        // Always return result on the main thread to prevent hanging
-        DispatchQueue.main.async {
-          result(nil)
-        }
+    sdkQueue.async { [weak self] in
+      guard let self = self else { return }
+      AppstackAttributionSdk.shared.getAttributionParams { attributionParams in
+        self.deliverResult(result, attributionParams)
       }
     }
   }
