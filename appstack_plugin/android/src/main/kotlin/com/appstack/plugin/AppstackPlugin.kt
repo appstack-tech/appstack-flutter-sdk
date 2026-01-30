@@ -48,6 +48,7 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler {
       val isDebug = call.argument<Boolean>("isDebug") ?: false
       val endpointBaseUrl = call.argument<String>("endpointBaseUrl")
       val logLevelInt = call.argument<Int>("logLevel") ?: 1
+      val customerUserId = call.argument<String>("customerUserId")
 
       // Map log level to LogLevel enum
       val logLevel = when (logLevelInt) {
@@ -65,14 +66,16 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler {
           apiKey = apiKey,
           isDebug = isDebug,
           endpointBaseUrl = endpointBaseUrl,
-          logLevel = logLevel
+          logLevel = logLevel,
+          customerUserId = customerUserId
         )
       } else {
         AppstackAttributionSdk.configure(
           context = context,
           apiKey = apiKey,
           isDebug = isDebug,
-          logLevel = logLevel
+          logLevel = logLevel,
+          customerUserId = customerUserId
         )
       }
 

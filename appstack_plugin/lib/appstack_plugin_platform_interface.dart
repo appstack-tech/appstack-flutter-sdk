@@ -29,6 +29,7 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
     bool isDebug,
     String? endpointBaseUrl,
     int logLevel,
+    String? customerUserId,
   ) {
     throw UnimplementedError('configure() has not been implemented.');
   }

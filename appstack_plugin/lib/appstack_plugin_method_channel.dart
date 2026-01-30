@@ -15,12 +15,14 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
     bool isDebug,
     String? endpointBaseUrl,
     int logLevel,
+    String? customerUserId,
   ) async {
     await methodChannel.invokeMethod<void>('configure', {
       'apiKey': apiKey,
       'isDebug': isDebug,
       'endpointBaseUrl': endpointBaseUrl,
       'logLevel': logLevel,
+      'customerUserId': customerUserId,
     });
   }
 

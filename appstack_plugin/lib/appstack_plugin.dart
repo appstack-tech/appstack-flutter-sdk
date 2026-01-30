@@ -28,6 +28,7 @@ class AppstackPlugin {
   /// - [isDebug]: Enable debug mode (optional, default false)
   /// - [endpointBaseUrl]: Custom endpoint base URL (optional)
   /// - [logLevel]: Log level: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR (optional, default 1)
+  /// - [customerUserId]: Optional customer user ID to pass to the native SDKs
   ///
   /// Returns: Future that completes when configuration is done
   static Future<void> configure(
@@ -35,6 +36,7 @@ class AppstackPlugin {
     bool isDebug = false,
     String? endpointBaseUrl,
     int logLevel = 1,
+    String? customerUserId,
   }) async {
     if (apiKey.isEmpty) {
       throw ArgumentError('API key must be a non-empty string');
@@ -50,6 +52,7 @@ class AppstackPlugin {
         isDebug,
         endpointBaseUrl,
         logLevel,
+        customerUserId,
       );
 
       // Check if SDK is disabled after configuration and log status
