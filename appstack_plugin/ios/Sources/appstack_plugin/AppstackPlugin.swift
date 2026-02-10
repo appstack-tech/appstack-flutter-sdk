@@ -186,12 +186,10 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
   }
   
   private func handleGetAttributionParams(result: @escaping FlutterResult) {
-    // Execute SDK getAttributionParams on a background thread to avoid blocking the main thread
-    sdkQueue.async { [weak self] in
+    Task { [weak self] in
       guard let self = self else { return }
-      AppstackAttributionSdk.shared.getAttributionParams { attributionParams in
-        self.deliverResult(result, attributionParams)
-      }
+      let attributionParams = await AppstackAttributionSdk.shared.getAttributionParams()
+      self.deliverResult(result, attributionParams)
     }
   }
   
