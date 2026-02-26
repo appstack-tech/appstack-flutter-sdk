@@ -90,9 +90,12 @@ print('Attribution parameters: $attributionParams');
 
 ## Documentation
 
-- [Plugin README](./appstack_plugin/README.md) - Complete API documentation
-- [Usage Guide](./appstack_plugin/USAGE.md) - Detailed usage examples
-- [Changelog](./appstack_plugin/CHANGELOG.md) - Version history
+- **[Full docs (docs.appstack.tech)](https://docs.appstack.tech)** – Flutter SDK guide on the main docs site
+- [Plugin README](./appstack_plugin/README.md) – Complete API documentation
+- [Usage Guide](./appstack_plugin/USAGE.md) – Detailed usage examples
+- [Changelog](./appstack_plugin/CHANGELOG.md) – Version history
+
+To keep the published docs in sync, see [docs/README.md](./docs/README.md).
 
 ## Platform Support
 
