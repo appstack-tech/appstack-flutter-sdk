@@ -33,7 +33,7 @@ Here, you will find the [pub.dev appstack_plugin documentation](https://pub.dev/
 
     ```
     dependencies:
-      appstack_plugin: ^1.2.0
+      appstack_plugin: ^2.0.2
     ```
 
     Then run:
