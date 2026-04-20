@@ -2,13 +2,17 @@ import Flutter
 import UIKit
 import AppstackSDK
 
-public class AppstackPlugin: NSObject, FlutterPlugin {
+public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   private let sdkQueue = DispatchQueue(label: "com.appstack.plugin.sdk", qos: .userInitiated)
+  private var attributionEventSink: FlutterEventSink?
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "appstack_plugin", binaryMessenger: registrar.messenger())
     let instance = AppstackPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
+
+    let eventChannel = FlutterEventChannel(name: "appstack_plugin/attribution_params", binaryMessenger: registrar.messenger())
+    eventChannel.setStreamHandler(instance)
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -191,6 +195,24 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
       let attributionParams = await AppstackAttributionSdk.shared.getAttributionParams()
       self.deliverResult(result, attributionParams)
     }
+  }
+
+  public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    attributionEventSink = events
+    Task.detached(priority: .background) { [weak self] in
+      let params = await AppstackAttributionSdk.shared.getAttributionParams()
+      await MainActor.run {
+        self?.attributionEventSink?(params)
+        self?.attributionEventSink?(FlutterEndOfEventStream)
+        self?.attributionEventSink = nil
+      }
+    }
+    return nil
+  }
+
+  public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    attributionEventSink = nil
+    return nil
   }
   
   private func stringToEventType(_ string: String) -> AppstackSDK.EventType? {

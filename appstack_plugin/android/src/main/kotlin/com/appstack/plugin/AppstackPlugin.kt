@@ -6,20 +6,25 @@ import com.appstack.attribution.AppstackAttributionSdk
 import com.appstack.attribution.EventType
 import com.appstack.attribution.LogLevel
 import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 
 /** AppstackPlugin */
-class AppstackPlugin: FlutterPlugin, MethodCallHandler {
+class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandler {
   private lateinit var channel: MethodChannel
+  private lateinit var attributionEventChannel: EventChannel
   private lateinit var context: Context
+  private var attributionEventSink: EventChannel.EventSink? = null
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     context = flutterPluginBinding.applicationContext
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "appstack_plugin")
     channel.setMethodCallHandler(this)
+    attributionEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "appstack_plugin/attribution_params")
+    attributionEventChannel.setStreamHandler(this)
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -163,7 +168,31 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler {
     }
   }
 
+  override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+    attributionEventSink = events
+    Thread {
+      try {
+        val params = AppstackAttributionSdk.getAttributionParams(rawReferrer = null)
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+          events?.success(params)
+          events?.endOfStream()
+          attributionEventSink = null
+        }
+      } catch (e: Exception) {
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+          events?.error("GET_ATTRIBUTION_PARAMS_ERROR", "Failed to get attribution params: ${e.message}", null)
+          attributionEventSink = null
+        }
+      }
+    }.start()
+  }
+
+  override fun onCancel(arguments: Any?) {
+    attributionEventSink = null
+  }
+
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
+    attributionEventChannel.setStreamHandler(null)
   }
 }

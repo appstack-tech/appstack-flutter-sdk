@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 
 import 'appstack_plugin_platform_interface.dart';
 
+const _attributionParamsEventChannel = EventChannel('appstack_plugin/attribution_params');
+
 /// An implementation of [AppstackPluginPlatform] that uses method channels.
 class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
   /// The method channel used to interact with the native platform.
@@ -74,5 +76,12 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
       return null;
     }
     return Map<String, dynamic>.from(result);
+  }
+
+  @override
+  Stream<Map<String, dynamic>?> getAttributionParamsWithCallback() {
+    return _attributionParamsEventChannel
+        .receiveBroadcastStream()
+        .map((event) => event != null ? Map<String, dynamic>.from(event as Map) : null);
   }
 }

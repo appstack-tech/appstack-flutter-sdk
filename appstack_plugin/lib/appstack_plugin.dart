@@ -153,10 +153,11 @@ class AppstackPlugin {
     }
   }
 
-  /// Get attribution parameters from the SDK
+  /// Get attribution parameters from the SDK.
   ///
-  /// Returns a map containing attribution parameters collected by the SDK.
-  /// These parameters include information about the attribution source and other metadata.
+  /// Request-response call over the method channel. On Android, runs synchronously
+  /// on the platform thread. Prefer [getAttributionParamsWithCallback] when
+  /// attribution retrieval time may vary.
   ///
   /// Example:
   /// ```dart
@@ -165,13 +166,28 @@ class AppstackPlugin {
   ///   print('Attribution params: $params');
   /// }
   /// ```
-  ///
-  /// Returns: Future that resolves to a map of attribution parameters, or null if not available
   static Future<Map<String, dynamic>?> getAttributionParams() async {
     try {
       return await AppstackPluginPlatform.instance.getAttributionParams();
     } catch (error) {
       throw Exception('Failed to get attribution params: $error');
     }
+  }
+
+  /// Get attribution parameters via a push-style stream backed by a native background thread.
+  ///
+  /// On iOS, the native SDK is called inside a detached Swift Task. On Android, it runs
+  /// on a dedicated Thread — freeing the platform thread immediately rather than blocking
+  /// it until the SDK responds. The stream emits exactly one value then closes.
+  ///
+  /// Example:
+  /// ```dart
+  /// AppstackPlugin.getAttributionParamsWithCallback().listen(
+  ///   (params) => print('Attribution params: $params'),
+  ///   onError: (e) => print('Error: $e'),
+  /// );
+  /// ```
+  static Stream<Map<String, dynamic>?> getAttributionParamsWithCallback() {
+    return AppstackPluginPlatform.instance.getAttributionParamsWithCallback();
   }
 }

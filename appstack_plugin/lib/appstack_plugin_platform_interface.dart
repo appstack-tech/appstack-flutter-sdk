@@ -72,4 +72,14 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
       'getAttributionParams() has not been implemented.',
     );
   }
+
+  /// Get attribution parameters via a background-native stream
+  ///
+  /// Spawns a native background thread and emits a single result when ready,
+  /// then closes. Use this when attribution retrieval time may vary.
+  Stream<Map<String, dynamic>?> getAttributionParamsWithCallback() {
+    throw UnimplementedError(
+      'getAttributionParamsWithCallback() has not been implemented.',
+    );
+  }
 }

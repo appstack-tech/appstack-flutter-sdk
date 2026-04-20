@@ -222,6 +222,39 @@ Here, you will find the [pub.dev appstack_plugin documentation](https://pub.dev/
 
 ## **Advanced usage**
 
+### **Attribution parameters**
+
+Two methods are available to retrieve attribution parameters:
+
+| Method | Mechanism | When to use |
+|---|---|---|
+| `getAttributionParams()` | `Future` — request/response over method channel | Simple use cases where timing is predictable |
+| `getAttributionParamsWithCallback()` | `Stream` — native background thread pushes result | When retrieval time may vary; frees the platform thread immediately |
+
+**`getAttributionParams()`**
+
+```dart
+final params = await AppstackPlugin.getAttributionParams();
+if (params != null) {
+  print('Attribution params: $params');
+}
+```
+
+**`getAttributionParamsWithCallback()`**
+
+Spawns a native background thread (Swift `Task.detached` on iOS, `Thread` on Android). The stream emits exactly one value then closes.
+
+```dart
+AppstackPlugin.getAttributionParamsWithCallback().listen(
+  (params) {
+    if (params != null) {
+      print('Attribution params: $params');
+    }
+  },
+  onError: (e) => print('Error: $e'),
+);
+```
+
 ### **Environment-based configuration**
 
 Set up different API keys for different environments:
