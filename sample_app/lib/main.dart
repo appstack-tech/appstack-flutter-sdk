@@ -122,11 +122,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _loadAttributionParams() async {
     try {
-      final params = await AppstackPlugin.getAttributionParams();
-      setState(() {
-        _attributionParams = params;
+      final params = await AppstackPlugin.getAttributionParamsWithCallback();
+      params.listen((params) {
+        setState(() {
+          _attributionParams = params;
+        });
+        print('Attribution Params: $params');
       });
-      print('Attribution Params: $params');
     } catch (e) {
       print('Failed to get Attribution Params: $e');
     }
