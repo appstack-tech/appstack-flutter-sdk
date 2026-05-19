@@ -2,13 +2,17 @@ import Flutter
 import UIKit
 import AppstackSDK
 
-public class AppstackPlugin: NSObject, FlutterPlugin {
+public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   private let sdkQueue = DispatchQueue(label: "com.appstack.plugin.sdk", qos: .userInitiated)
+  private var attributionEventSink: FlutterEventSink?
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "appstack_plugin", binaryMessenger: registrar.messenger())
     let instance = AppstackPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
+
+    let eventChannel = FlutterEventChannel(name: "appstack_plugin/attribution_params", binaryMessenger: registrar.messenger())
+    eventChannel.setStreamHandler(instance)
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -51,6 +55,7 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
     let endpointBaseUrl = args["endpointBaseUrl"] as? String
     let logLevel = args["logLevel"] as? Int ?? 1
     let customerUserId = args["customerUserId"] as? String
+    let wrapperVersion = args["wrapperVersion"] as? String
 
     // Map log level to AppstackSDK.LogLevel
     // SDK supports: .off (0), .error (1), .debug (2), .info (3)
@@ -74,9 +79,9 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
       do {
         // Configure the SDK
         if let endpointBaseUrl = endpointBaseUrl {
-          AppstackAttributionSdk.shared.configure(apiKey: apiKey, isDebug: isDebug, endpointBaseUrl: endpointBaseUrl, logLevel: sdkLogLevel, customerUserId: customerUserId)
+          AppstackAttributionSdk.shared.configure(apiKey: apiKey, isDebug: isDebug, endpointBaseUrl: endpointBaseUrl, logLevel: sdkLogLevel, customerUserId: customerUserId, wrapperVersion: wrapperVersion)
         } else {
-          AppstackAttributionSdk.shared.configure(apiKey: apiKey, isDebug: isDebug, logLevel: sdkLogLevel, customerUserId: customerUserId)
+          AppstackAttributionSdk.shared.configure(apiKey: apiKey, isDebug: isDebug, logLevel: sdkLogLevel, customerUserId: customerUserId, wrapperVersion: wrapperVersion)
         }
 
         // Always return success on the main thread to prevent hanging
@@ -191,6 +196,24 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
       let attributionParams = await AppstackAttributionSdk.shared.getAttributionParams()
       self.deliverResult(result, attributionParams)
     }
+  }
+
+  public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    attributionEventSink = events
+    Task.detached(priority: .background) { [weak self] in
+      let params = await AppstackAttributionSdk.shared.getAttributionParams()
+      await MainActor.run {
+        self?.attributionEventSink?(params)
+        self?.attributionEventSink?(FlutterEndOfEventStream)
+        self?.attributionEventSink = nil
+      }
+    }
+    return nil
+  }
+
+  public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    attributionEventSink = nil
+    return nil
   }
   
   private func stringToEventType(_ string: String) -> AppstackSDK.EventType? {
