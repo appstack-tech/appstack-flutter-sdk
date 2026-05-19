@@ -55,6 +55,7 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     let endpointBaseUrl = args["endpointBaseUrl"] as? String
     let logLevel = args["logLevel"] as? Int ?? 1
     let customerUserId = args["customerUserId"] as? String
+    let wrapperVersion = args["wrapperVersion"] as? String
 
     // Map log level to AppstackSDK.LogLevel
     // SDK supports: .off (0), .error (1), .debug (2), .info (3)
@@ -78,9 +79,9 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       do {
         // Configure the SDK
         if let endpointBaseUrl = endpointBaseUrl {
-          AppstackAttributionSdk.shared.configure(apiKey: apiKey, isDebug: isDebug, endpointBaseUrl: endpointBaseUrl, logLevel: sdkLogLevel, customerUserId: customerUserId)
+          AppstackAttributionSdk.shared.configure(apiKey: apiKey, isDebug: isDebug, endpointBaseUrl: endpointBaseUrl, logLevel: sdkLogLevel, customerUserId: customerUserId, wrapperVersion: wrapperVersion)
         } else {
-          AppstackAttributionSdk.shared.configure(apiKey: apiKey, isDebug: isDebug, logLevel: sdkLogLevel, customerUserId: customerUserId)
+          AppstackAttributionSdk.shared.configure(apiKey: apiKey, isDebug: isDebug, logLevel: sdkLogLevel, customerUserId: customerUserId, wrapperVersion: wrapperVersion)
         }
 
         // Always return success on the main thread to prevent hanging

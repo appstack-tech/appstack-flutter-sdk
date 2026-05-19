@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "ios-appstack-sdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/appstack-tech/ios-appstack-sdk.git",
+      "state" : {
+        "revision" : "132902e1ebbef86b553082537c07413db3107bc3",
+        "version" : "4.1.0"
+      }
+    }
+  ],
+  "version" : 2
+}

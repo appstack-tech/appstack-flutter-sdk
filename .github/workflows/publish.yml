@@ -71,6 +71,9 @@ jobs:
           # Update build.gradle files
           sed -i "s/^version .*/version '$VERSION'/" appstack_plugin/android/build.gradle
           
+          # Update wrapper version constant
+          sed -i "s/const _kWrapperVersion = 'flutter-[^']*'/const _kWrapperVersion = 'flutter-$VERSION'/" appstack_plugin/lib/appstack_plugin_method_channel.dart
+
           # Update documentation files
           sed -i "s/appstack_plugin: \^[0-9]\+\.[0-9]\+\.[0-9]\+/appstack_plugin: ^$VERSION/" appstack_plugin/README.md
           sed -i "s/appstack_plugin: \^[0-9]\+\.[0-9]\+\.[0-9]\+/appstack_plugin: ^$VERSION/" appstack_plugin/USAGE.md

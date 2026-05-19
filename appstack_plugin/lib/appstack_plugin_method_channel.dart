@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'appstack_plugin_platform_interface.dart';
 
 const _attributionParamsEventChannel = EventChannel('appstack_plugin/attribution_params');
+const _kWrapperVersion = 'flutter-0.0.1';
 
 /// An implementation of [AppstackPluginPlatform] that uses method channels.
 class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
@@ -25,6 +26,7 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
       'endpointBaseUrl': endpointBaseUrl,
       'logLevel': logLevel,
       'customerUserId': customerUserId,
+      'wrapperVersion': _kWrapperVersion,
     });
   }
 
