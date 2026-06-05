@@ -34,6 +34,10 @@ class MockAppstackPluginPlatform
 
   @override
   Future<Map<String, dynamic>?> getAttributionParams() => Future.value(null);
+
+  @override
+  Stream<Map<String, dynamic>?> getAttributionParamsWithCallback() =>
+      Stream.value(null);
 }
 
 void main() {
