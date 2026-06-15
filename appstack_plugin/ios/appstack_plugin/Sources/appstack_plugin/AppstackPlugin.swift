@@ -202,10 +202,11 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     attributionEventSink = events
     Task.detached(priority: .background) { [weak self] in
       let params = await AppstackAttributionSdk.shared.getAttributionParams()
-      await MainActor.run {
-        self?.attributionEventSink?(params)
-        self?.attributionEventSink?(FlutterEndOfEventStream)
-        self?.attributionEventSink = nil
+      await MainActor.run { [weak self] in
+        guard let self = self else { return }
+        self.attributionEventSink?(params)
+        self.attributionEventSink?(FlutterEndOfEventStream)
+        self.attributionEventSink = nil
       }
     }
     return nil
