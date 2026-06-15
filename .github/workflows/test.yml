@@ -8,7 +8,7 @@ on:
 
 # Pin Flutter for deterministic runs. Keep in sync with publish.yml.
 env:
-  FLUTTER_VERSION: '3.35.5'
+  FLUTTER_VERSION: '3.44.1'
 
 jobs:
   analyze-and-test:

@@ -27,7 +27,7 @@ jobs:
         uses: flutter-actions/setup-flutter@v1
         with:
           sdk: stable
-          version: 3.35.5
+          version: 3.44.1
 
       - name: Extract version from tag
         id: get_version

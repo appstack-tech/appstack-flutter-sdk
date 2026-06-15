@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
 
 env:
-  FLUTTER_VERSION: '3.35.5'
+  FLUTTER_VERSION: '3.44.1'
   # Optional: set an org secret APPSTACK_API_KEY to also validate delivery.
   APPSTACK_API_KEY: ${{ secrets.APPSTACK_API_KEY }}
 
