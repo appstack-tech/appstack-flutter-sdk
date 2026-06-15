@@ -1,0 +1,38 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+# Pin Flutter for deterministic runs. Keep in sync with publish.yml.
+env:
+  FLUTTER_VERSION: '3.35.5'
+
+jobs:
+  analyze-and-test:
+    name: Analyze & unit test (Dart)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: appstack_plugin
+
+      - name: Analyze
+        run: flutter analyze
+        working-directory: appstack_plugin
+
+      - name: Run unit tests
+        run: flutter test
+        working-directory: appstack_plugin

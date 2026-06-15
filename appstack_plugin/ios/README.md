@@ -4,43 +4,44 @@ This directory contains the iOS native implementation for the Appstack Flutter P
 
 ## Structure
 
-- `Classes/AppstackPlugin.swift` - Flutter plugin bridge implementation
 - `appstack_plugin/` - Swift Package Manager module
   - `Package.swift` - SPM package definition with GitHub dependency
-  - `Sources/appstack_plugin/` - Plugin source code
-- `appstack_plugin.podspec` - CocoaPods specification
+  - `Sources/appstack_plugin/AppstackPlugin.swift` - **single source of truth** for the
+    Flutter plugin bridge implementation
+- `appstack_plugin.podspec` - CocoaPods specification; its `source_files` points at the
+  SPM `Sources/` directory above so both integration paths compile the same file (no
+  duplicated copies). See
+  https://docs.flutter.dev/packages-and-plugins/swift-package-manager/for-plugin-authors
 
 ## AppstackSDK Dependency
 
-The iOS AppstackSDK is **automatically fetched from GitHub** via Swift Package Manager. The dependency is defined in `appstack_plugin/Package.swift`:
+The native AppstackSDK reaches the app through **two different mechanisms, one per
+integration path** — they must be kept on the same version:
 
-```swift
-dependencies: [
-    .package(url: "https://github.com/appstack-tech/ios-appstack-sdk.git", exact: "2.3.0"),
-]
-```
+- **Swift Package Manager** fetches `ios-appstack-sdk` from GitHub, pinned in
+  `appstack_plugin/Package.swift`:
+  ```swift
+  dependencies: [
+      .package(url: "https://github.com/appstack-tech/ios-appstack-sdk.git", exact: "4.2.1"),
+  ]
+  ```
+- **CocoaPods** links the **bundled `AppstackSDK.xcframework`** committed in this
+  directory, via `s.ios.vendored_frameworks` in `appstack_plugin.podspec`. CocoaPods
+  cannot consume a Swift Package, so the binary has to ship in the repo for this path.
 
-### Why Swift Package Manager?
-
-- ✅ **No bundled binaries**: Reduces repository size and maintenance overhead
-- ✅ **Always up-to-date**: Automatically fetches the specified version from the official repository
-- ✅ **Single source of truth**: Uses the same SDK as native iOS apps
-- ✅ **Better version management**: Semantic versioning with easy updates
+We pin with `exact:` (not `from:`) so SPM builds are reproducible.
 
 ### Updating the SDK Version
 
-To update the AppstackSDK to a newer version:
+Both paths must be bumped together, or the two integrations ship different SDK builds:
 
-1. Edit `appstack_plugin/Package.swift` and update the exact version:
+1. Edit `appstack_plugin/Package.swift` and update the exact version (SPM path):
    ```swift
-   .package(url: "https://github.com/appstack-tech/ios-appstack-sdk.git", exact: "2.4.0"),
+   .package(url: "https://github.com/appstack-tech/ios-appstack-sdk.git", exact: "4.3.0"),
    ```
-
-2. The framework will be automatically fetched during the next build
-
-3. No need to commit any XCFramework files
-
-**Note:** We use `exact:` instead of `from:` to pin to a specific release version, ensuring consistent builds across all environments.
+2. Replace `AppstackSDK.xcframework/` with the matching build of the same release
+   (CocoaPods path), and commit it.
+3. Verify both paths still link — see `sample_app/integration_test/README.md`.
 
 ## Implementation Details
 
@@ -54,5 +55,8 @@ All EventType enum values are mapped from Dart strings to Swift EventType enum v
 
 ## CocoaPods Integration
 
-For Flutter apps using CocoaPods (default), the SPM dependency is automatically resolved when running `pod install`. Flutter's build system handles the integration of Swift Package Manager dependencies with CocoaPods.
+For Flutter apps on the CocoaPods path, `pod install` reads `appstack_plugin.podspec`,
+compiles `appstack_plugin/Sources/appstack_plugin/AppstackPlugin.swift`, and links the
+bundled `AppstackSDK.xcframework`. (The SPM path does not use CocoaPods at all — Flutter
+resolves the package directly.)
 
