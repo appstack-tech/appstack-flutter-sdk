@@ -1,5 +1,9 @@
 # Swift Package Manager Setup Guide
 
+> **Flutter 3.44+ users:** Swift Package Manager is the **default** and is enabled automatically — you do **not** need this guide. Just add the plugin and run your app. This guide applies only to **Flutter < 3.44**, where SPM support is experimental and must be enabled manually. On those versions you can also skip SPM entirely and use the bundled CocoaPods XCFramework instead (see the README).
+>
+> Note: CocoaPods is in maintenance mode and its registry becomes read-only on **December 2, 2026** — upgrading to Flutter 3.44+ is the recommended long-term path.
+
 ## Problem
 
 When using `appstack_plugin` in a Flutter app, you may encounter this error:

@@ -33,7 +33,7 @@ Here, you will find the [pub.dev appstack_plugin documentation](https://pub.dev/
 
     ```
     dependencies:
-      appstack_plugin: ^2.0.2
+      appstack_plugin: ^2.2.0
     ```
 
     Then run:
@@ -53,13 +53,18 @@ Here, you will find the [pub.dev appstack_plugin documentation](https://pub.dev/
 
     **iOS Configuration**
 
-    Run pod install:
+    How the native iOS SDK is resolved depends on your Flutter version:
 
-    ```
-    cd ios && pod install
-    ```
+    - **Flutter 3.44+ (recommended):** Swift Package Manager is the default and is enabled automatically — the AppstackSDK is fetched from GitHub during the build. No manual setup is required; just run your app.
+    - **Flutter < 3.44:** The plugin falls back to CocoaPods using a bundled `AppstackSDK.xcframework`, so no additional dependencies are needed. Run:
 
-    **Note:** The iOS AppstackSDK.xcframework is bundled with the plugin; no additional dependencies are needed.
+      ```
+      cd ios && pod install
+      ```
+
+      To use Swift Package Manager on pre-3.44 Flutter, see the [SPM Setup Guide](SPM_SETUP_GUIDE.md).
+
+    > **Note:** CocoaPods is in maintenance mode and its package registry becomes read-only on **December 2, 2026**. Upgrading to Flutter 3.44+ (SwiftPM by default) is the recommended long-term path.
 
     **Android Configuration**
 
@@ -125,15 +130,18 @@ Here, you will find the [pub.dev appstack_plugin documentation](https://pub.dev/
     - `isDebug` - Optional debug mode flag (default: false)
     - `endpointBaseUrl` - Optional custom endpoint
     - `logLevel` - Optional log level: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR (default: 1)
+    - `customerUserId` - Optional customer user ID passed through to the native SDKs
 
-    Returns: A future that resolves to `true` if configuration was successful
+    Returns: A `Future<void>` that completes when configuration is done. It throws on failure (e.g. an empty API key or an invalid `logLevel`). To check whether the SDK was actually enabled after configuring, call `isSdkDisabled()`.
 
     **Example:**
 
     ```dart
-    final success = await AppstackPlugin.configure('your-api-key-here');
-    if (!success) {
-      print('SDK configuration failed');
+    await AppstackPlugin.configure('your-api-key-here');
+
+    // Verify the SDK is enabled (e.g. the API key is valid)
+    if (await AppstackPlugin.isSdkDisabled()) {
+      print('SDK is disabled - check your API key');
     }
     
     // With all parameters
@@ -141,6 +149,7 @@ Here, you will find the [pub.dev appstack_plugin documentation](https://pub.dev/
       'your-api-key-here',
       isDebug: true,
       logLevel: 0, // DEBUG
+      customerUserId: 'your-customer-user-id',
     );
     ```
   </Step>
@@ -255,6 +264,26 @@ AppstackPlugin.getAttributionParamsWithCallback().listen(
 );
 ```
 
+### **Checking SDK status**
+
+After calling `configure()`, you can verify the SDK was enabled (for example, that the API key is valid). `isSdkDisabled()` returns `true` when the SDK is disabled.
+
+```dart
+await AppstackPlugin.configure('your-api-key');
+if (await AppstackPlugin.isSdkDisabled()) {
+  print('SDK is disabled - check your API key');
+}
+```
+
+### **Getting the Appstack ID**
+
+Retrieve the unique Appstack ID for the current user. Returns `null` if it is not available yet.
+
+```dart
+final appstackId = await AppstackPlugin.getAppstackId();
+print('Appstack ID: $appstackId');
+```
+
 ### **Environment-based configuration**
 
 Set up different API keys for different environments:
@@ -301,11 +330,12 @@ Future<void> initializeSDK() async {
       ? 'your-ios-api-key' 
       : 'your-android-api-key';
 
-  final configured = await AppstackPlugin.configure(apiKey);
-  
-  if (configured && Platform.isIOS) {
+  await AppstackPlugin.configure(apiKey);
+
+  if (Platform.isIOS) {
     await AppstackPlugin.enableAppleAdsAttribution();
   }
+}
 ```
 
 ## **Limitations**

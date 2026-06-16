@@ -17,7 +17,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  appstack_plugin: ^1.2.0
+  appstack_plugin: ^2.2.0
 ```
 
 Then run:
@@ -70,22 +70,30 @@ print('Appstack ID: $appstackId');
 print('Attribution params: $attributionParams');
 ```
 
-## iOS Configuration (Required)
+Alternatively, retrieve attribution parameters via a stream backed by a native background thread (emits one value then closes). Prefer this when attribution retrieval time may vary, as it frees the platform thread immediately:
 
-Add to your `ios/Runner/Info.plist`:
+```dart
+AppstackPlugin.getAttributionParamsWithCallback().listen(
+  (params) => print('Attribution params: $params'),
+  onError: (e) => print('Error: $e'),
+);
+```
+
+## iOS Configuration
+
+Optionally configure the SKAdNetwork attribution report endpoint in `ios/Runner/Info.plist`:
 
 ```xml
 <key>NSAdvertisingAttributionReportEndpoint</key>
 <string>https://ios-appstack.com/</string>
 ```
 
-Then run:
+**How the native iOS SDK is resolved:**
 
-```bash
-cd ios && pod install
-```
+- **Flutter 3.44+ (recommended):** Swift Package Manager is the default and is enabled automatically. The AppstackSDK is fetched from the [official GitHub repository](https://github.com/appstack-tech/ios-appstack-sdk) via SPM during the build — no manual setup required.
+- **Flutter < 3.44:** The plugin falls back to CocoaPods using a bundled `AppstackSDK.xcframework`. Run `cd ios && pod install`. To opt into SPM on pre-3.44 Flutter, see the [SPM Setup Guide](SPM_SETUP_GUIDE.md).
 
-**Note:** The iOS AppstackSDK is automatically fetched from the [official GitHub repository](https://github.com/appstack-tech/ios-appstack-sdk) via Swift Package Manager during the build process.
+> **Note:** CocoaPods is in maintenance mode and its package registry becomes read-only on **December 2, 2026**. Upgrading to Flutter 3.44+ (SwiftPM by default) is the recommended long-term path.
 
 ## Android Configuration (Required)
 
