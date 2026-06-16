@@ -76,7 +76,9 @@ class _MyAppState extends State<MyApp> {
       final success = await AppstackPlugin.sendEvent(
         eventType,
         eventName: eventName,
-        revenue: revenue,
+        parameters: revenue != null
+            ? {'revenue': revenue, 'currency': 'USD'}
+            : null,
       );
 
       setState(() {

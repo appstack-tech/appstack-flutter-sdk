@@ -43,6 +43,12 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  # Drives the full Dart -> native -> SDK round trip on a real device/simulator.
+  # Used by the integration_test/ suite, which is run once per iOS integration
+  # path (SwiftPM and CocoaPods/XCFramework) in CI. See integration_test/README.md.
+  integration_test:
+    sdk: flutter
+
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your

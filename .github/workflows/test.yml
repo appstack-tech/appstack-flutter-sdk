@@ -1,0 +1,44 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+# Least privilege: analyze + unit tests only read the repo.
+permissions:
+  contents: read
+
+# Pin Flutter for deterministic runs. Keep in sync with publish.yml.
+env:
+  FLUTTER_VERSION: '3.44.1'
+
+jobs:
+  analyze-and-test:
+    name: Analyze & unit test (Dart)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2  # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: appstack_plugin
+
+      - name: Analyze
+        run: flutter analyze
+        working-directory: appstack_plugin
+
+      - name: Run unit tests
+        run: flutter test
+        working-directory: appstack_plugin

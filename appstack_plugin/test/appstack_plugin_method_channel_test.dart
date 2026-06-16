@@ -12,9 +12,14 @@ void main() {
     platform = MethodChannelAppstackPlugin();
   });
 
+  const EventChannel attributionParamsEventChannel =
+      EventChannel('appstack_plugin/attribution_params');
+
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockStreamHandler(attributionParamsEventChannel, null);
   });
 
   group('configure', () {
@@ -259,6 +264,66 @@ void main() {
       expect(result, isA<Map<String, dynamic>>());
       expect(result!['key'], 42);
       expect(result['nested'], true);
+    });
+  });
+
+  group('getAttributionParamsWithCallback', () {
+    test('emits a single mapped value then closes', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockStreamHandler(
+        attributionParamsEventChannel,
+        MockStreamHandler.inline(
+          onListen: (arguments, sink) {
+            sink.success(<dynamic, dynamic>{
+              'source': 'apple',
+              'campaign': 'x',
+            });
+            sink.endOfStream();
+          },
+        ),
+      );
+
+      final events =
+          await platform.getAttributionParamsWithCallback().toList();
+
+      expect(events, hasLength(1));
+      expect(events.first, isA<Map<String, dynamic>>());
+      expect(events.first, {'source': 'apple', 'campaign': 'x'});
+    });
+
+    test('maps a null event to null', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockStreamHandler(
+        attributionParamsEventChannel,
+        MockStreamHandler.inline(
+          onListen: (arguments, sink) {
+            sink.success(null);
+            sink.endOfStream();
+          },
+        ),
+      );
+
+      final events =
+          await platform.getAttributionParamsWithCallback().toList();
+
+      expect(events, [null]);
+    });
+
+    test('forwards platform errors on the stream', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockStreamHandler(
+        attributionParamsEventChannel,
+        MockStreamHandler.inline(
+          onListen: (arguments, sink) {
+            sink.error(code: 'ERR', message: 'boom', details: null);
+          },
+        ),
+      );
+
+      expect(
+        platform.getAttributionParamsWithCallback(),
+        emitsError(isA<PlatformException>()),
+      );
     });
   });
 }

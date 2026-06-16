@@ -13,7 +13,11 @@ Flutter plugin for Appstack Attribution SDK. Track app installs, user events, an
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Appstack' => 'support@appstack.tech' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
+  # Single source of truth shared with Swift Package Manager. The native
+  # implementation lives in the SPM package dir (ios/appstack_plugin/Sources/…)
+  # and BOTH integration paths compile the same file — no duplicated copies.
+  # See https://docs.flutter.dev/packages-and-plugins/swift-package-manager/for-plugin-authors
+  s.source_files = 'appstack_plugin/Sources/appstack_plugin/**/*.swift'
   s.dependency 'Flutter'
   
   # Include Appstack XCFramework (supports all architectures)

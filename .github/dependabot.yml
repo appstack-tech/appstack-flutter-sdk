@@ -1,0 +1,24 @@
+version: 2
+updates:
+  # Keep the SHA-pinned GitHub Actions in .github/workflows current so we still
+  # receive their security patches despite pinning. Grouped into one PR to cut noise.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # Dart/Flutter dependencies for the published plugin.
+  - package-ecosystem: pub
+    directory: /appstack_plugin
+    schedule:
+      interval: weekly
+
+  # Dart/Flutter dependencies for the integration-test sample app.
+  - package-ecosystem: pub
+    directory: /sample_app
+    schedule:
+      interval: weekly

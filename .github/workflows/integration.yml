@@ -1,0 +1,121 @@
+name: Integration
+
+# Integration tests build and launch the sample app on a real simulator/emulator
+# and exercise the native bridge. The iOS job runs the SAME suite twice — once
+# per integration path (SwiftPM and CocoaPods/XCFramework) — so a link failure on
+# either path fails CI. See sample_app/integration_test/README.md.
+#
+# These are heavier than the unit-test workflow (macOS runners, simulators), so
+# they run on PRs into main and on demand rather than on every push.
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Least privilege: this workflow only reads the repo and runs tests — it never
+# pushes, comments, or publishes.
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: '3.44.1'
+  # Optional: set an org secret APPSTACK_API_KEY to also validate delivery.
+  APPSTACK_API_KEY: ${{ secrets.APPSTACK_API_KEY }}
+
+jobs:
+  ios:
+    name: iOS (${{ matrix.integration }})
+    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        # Both must build, link and pass — this is the SPM-vs-CocoaPods guard.
+        integration: [spm, cocoapods]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2  # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Select iOS integration path
+        run: |
+          if [ "${{ matrix.integration }}" = "spm" ]; then
+            flutter config --enable-swift-package-manager
+          else
+            flutter config --no-enable-swift-package-manager
+          fi
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: sample_app
+
+      - name: Pod install (CocoaPods path only)
+        if: matrix.integration == 'cocoapods'
+        run: pod install
+        working-directory: sample_app/ios
+
+      - name: Boot an iOS simulator
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available -j \
+            | python3 -c "import sys,json;d=json.load(sys.stdin)['devices'];print(next(x['udid'] for v in d.values() for x in v if 'iPhone' in x['name']))")
+          echo "DEVICE_ID=$DEVICE_ID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$DEVICE_ID" || true
+
+      - name: Run integration tests
+        run: |
+          flutter test integration_test \
+            --dart-define=APPSTACK_API_KEY="${APPSTACK_API_KEY:-integration-test-placeholder-key}" \
+            -d "$DEVICE_ID"
+        working-directory: sample_app
+
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Java
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9  # v4.8.0
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2  # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: sample_app
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run integration tests on emulator
+        uses: reactivecircus/android-emulator-runner@e89f39f1abbbd05b1113a29cf4db69e7540cae5a  # v2.37.0
+        with:
+          api-level: 30
+          arch: x86_64
+          working-directory: sample_app
+          script: >
+            flutter test integration_test
+            --dart-define=APPSTACK_API_KEY="${APPSTACK_API_KEY:-integration-test-placeholder-key}"
