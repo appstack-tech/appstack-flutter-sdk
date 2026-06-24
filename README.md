@@ -25,7 +25,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  appstack_plugin: ^1.2.0
+  appstack_plugin: ^2.2.2
 ```
 
 ## Basic Usage
