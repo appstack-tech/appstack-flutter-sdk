@@ -25,18 +25,34 @@ class AppstackPlugin {
   ///
   /// Parameters:
   /// - [apiKey]: Your Appstack API key obtained from the dashboard
-  /// - [isDebug]: Enable debug mode (optional, default false)
-  /// - [endpointBaseUrl]: Custom endpoint base URL (optional)
   /// - [logLevel]: Log level: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR (optional, default 1)
   /// - [customerUserId]: Optional customer user ID to pass to the native SDKs
+  /// - [isDebug]: **Deprecated** — no longer has any effect. The native debug
+  ///   overlay was removed from the Appstack SDKs; use [logLevel] `0` (DEBUG)
+  ///   for verbose logging instead. Will be removed in a future release.
+  /// - [endpointBaseUrl]: **Deprecated** — no longer has any effect. The custom
+  ///   endpoint / dev-proxy override was removed from the public API; it is now
+  ///   applied natively only from a repo-only host-app key (`APPSTACK_DEV_PROXY_URL`
+  ///   in the iOS Info.plist / Android manifest). Will be removed in a future
+  ///   release.
   ///
   /// Returns: Future that completes when configuration is done
   static Future<void> configure(
     String apiKey, {
-    bool isDebug = false,
-    String? endpointBaseUrl,
     int logLevel = 1,
     String? customerUserId,
+    @Deprecated(
+      'Has no effect: the native debug overlay was removed. '
+      'Use logLevel: 0 (DEBUG) for verbose logging. '
+      'Will be removed in a future release.',
+    )
+    bool isDebug = false,
+    @Deprecated(
+      'Has no effect: the custom endpoint override was removed from the public '
+      'API. The dev proxy is applied natively from the repo-only '
+      'APPSTACK_DEV_PROXY_URL host-app key. Will be removed in a future release.',
+    )
+    String? endpointBaseUrl,
   }) async {
     if (apiKey.isEmpty) {
       throw ArgumentError('API key must be a non-empty string');
@@ -46,11 +62,23 @@ class AppstackPlugin {
       throw ArgumentError('logLevel must be a number between 0 and 3');
     }
 
+    if (isDebug) {
+      debugPrint(
+        '[AppstackPlugin] ⚠️  configure(isDebug:) is deprecated and has no '
+        'effect. Use logLevel: 0 (DEBUG) for verbose logging.',
+      );
+    }
+    if (endpointBaseUrl != null) {
+      debugPrint(
+        '[AppstackPlugin] ⚠️  configure(endpointBaseUrl:) is deprecated and has '
+        'no effect. The dev proxy is applied natively from the repo-only '
+        'APPSTACK_DEV_PROXY_URL host-app key.',
+      );
+    }
+
     try {
       await AppstackPluginPlatform.instance.configure(
         apiKey,
-        isDebug,
-        endpointBaseUrl,
         logLevel,
         customerUserId,
       );

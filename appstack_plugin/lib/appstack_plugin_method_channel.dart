@@ -15,15 +15,11 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
   @override
   Future<void> configure(
     String apiKey,
-    bool isDebug,
-    String? endpointBaseUrl,
     int logLevel,
     String? customerUserId,
   ) async {
     await methodChannel.invokeMethod<void>('configure', {
       'apiKey': apiKey,
-      'isDebug': isDebug,
-      'endpointBaseUrl': endpointBaseUrl,
       'logLevel': logLevel,
       'customerUserId': customerUserId,
       'wrapperVersion': _kWrapperVersion,

@@ -10,8 +10,6 @@ class MockAppstackPluginPlatform
   @override
   Future<void> configure(
     String apiKey,
-    bool isDebug,
-    String? endpointBaseUrl,
     int logLevel,
     String? customerUserId,
   ) => Future.value();
@@ -68,7 +66,23 @@ void main() {
 
       await AppstackPlugin.configure(
         'test-api-key',
+        logLevel: 2,
+        customerUserId: 'user-123',
+      );
+    });
+
+    test('still accepts the deprecated isDebug/endpointBaseUrl no-ops', () async {
+      final fakePlatform = MockAppstackPluginPlatform();
+      AppstackPluginPlatform.instance = fakePlatform;
+
+      // Passing the deprecated params must remain a compile-safe no-op during
+      // the deprecation window.
+      // ignore: deprecated_member_use_from_same_package
+      await AppstackPlugin.configure(
+        'test-api-key',
+        // ignore: deprecated_member_use_from_same_package
         isDebug: true,
+        // ignore: deprecated_member_use_from_same_package
         endpointBaseUrl: 'https://custom.endpoint',
         logLevel: 2,
         customerUserId: 'user-123',
@@ -328,8 +342,6 @@ class _ThrowingPlatform extends AppstackPluginPlatform {
   @override
   Future<void> configure(
     String apiKey,
-    bool isDebug,
-    String? endpointBaseUrl,
     int logLevel,
     String? customerUserId,
   ) async {
@@ -380,8 +392,6 @@ class _SdkDisabledPlatform extends AppstackPluginPlatform {
   @override
   Future<void> configure(
     String apiKey,
-    bool isDebug,
-    String? endpointBaseUrl,
     int logLevel,
     String? customerUserId,
   ) => Future.value();
@@ -411,8 +421,6 @@ class _AttributionParamsPlatform extends AppstackPluginPlatform {
   @override
   Future<void> configure(
     String apiKey,
-    bool isDebug,
-    String? endpointBaseUrl,
     int logLevel,
     String? customerUserId,
   ) => Future.value();

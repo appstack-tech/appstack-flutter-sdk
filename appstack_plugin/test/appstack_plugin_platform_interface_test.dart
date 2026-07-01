@@ -23,8 +23,6 @@ void main() {
       expect(
         () => AppstackPluginPlatform.instance.configure(
           'key',
-          false,
-          null,
           1,
           null,
         ),

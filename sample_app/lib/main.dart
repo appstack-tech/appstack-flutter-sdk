@@ -12,27 +12,14 @@ void main() async {
       : 'q40jebdl91tgelzcrp5pbnbh';
 
   try {
-    if (Platform.isIOS) {
-      // iOS: endpointBaseUrl was removed from the public configure() API. The
-      // dev-environment override is applied natively from the APPSTACK_DEV_PROXY_URL
-      // key in ios/Runner/Info.plist (repo-only, see that file) — nothing to pass
-      // here.
-      await AppstackPlugin.configure(
-        apiKey,
-        isDebug: true,
-        logLevel: 0, // DEBUG
-      );
+    await AppstackPlugin.configure(
+      apiKey,
+      logLevel: 0, // DEBUG
+    );
 
+    if (Platform.isIOS) {
       // Enable Apple Search Ads attribution on iOS
       await AppstackPlugin.enableAppleAdsAttribution();
-    } else {
-      // Android still accepts endpointBaseUrl via configure().
-      await AppstackPlugin.configure(
-        apiKey,
-        isDebug: true,
-        logLevel: 0, // DEBUG
-        endpointBaseUrl: 'https://api.event.dev.appstack.tech/android/',
-      );
     }
   } catch (e) {
     print('Failed to configure Appstack SDK: $e');
