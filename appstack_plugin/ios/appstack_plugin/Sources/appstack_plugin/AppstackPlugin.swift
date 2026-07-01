@@ -218,7 +218,11 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
     attributionEventSink = events
-    Task.detached(priority: .background) { [weak self] in
+    // Detached (off the main thread, so it never blocks UI/startup) but at the
+    // default priority — matching the direct getAttributionParams path, which
+    // calls the same SDK method and returns promptly. The previous .background
+    // QoS could be starved under load, stalling the stream (a >10s hang in CI).
+    Task.detached { [weak self] in
       let params = await AppstackAttributionSdk.shared.getAttributionParams()
       await MainActor.run { [weak self] in
         guard let self = self else { return }
