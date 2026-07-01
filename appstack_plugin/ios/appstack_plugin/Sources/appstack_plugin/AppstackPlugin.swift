@@ -53,7 +53,9 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
     // isDebug/endpointBaseUrl are still accepted from the Dart layer for API
     // compatibility, but are no longer forwarded to the SDK (removed from its
-    // public configure API). Parsed and intentionally ignored.
+    // public configure API). The dev-environment override that endpointBaseUrl
+    // used to provide now lives behind the internal-only "setProxyUrl" channel
+    // (see handleSetProxyUrl), never through configure.
     _ = args["isDebug"] as? Bool ?? false
     _ = args["endpointBaseUrl"] as? String
     let logLevel = args["logLevel"] as? Int ?? 1
@@ -76,10 +78,24 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       sdkLogLevel = .info
     }
 
+    // Testing-only proxy override, read from the app's Info.plist. This is NOT
+    // exposed through the public configure() API: a proxy URL is applied only if
+    // the host app deliberately ships an APPSTACK_DEV_PROXY_URL key (our
+    // sample_app does; published-plugin consumers do not). Routed through the
+    // SDK's @_spi setProxyUrl(_:) hook.
+    let devProxyUrl = (Bundle.main.object(forInfoDictionaryKey: "APPSTACK_DEV_PROXY_URL") as? String)
+      .flatMap { $0.isEmpty ? nil : $0 }
+
     // Execute SDK configuration on a background thread to avoid blocking the main thread
     sdkQueue.async { [weak self] in
       guard let self = self else { return }
       do {
+        // Apply the dev proxy override before configuring so the SDK's initial
+        // requests target it.
+        if let devProxyUrl = devProxyUrl {
+          AppstackAttributionSdk.shared.setProxyUrl(devProxyUrl)
+        }
+
         // Configure the SDK via the SPI overload so the wrapper version is
         // reported. isDebug/endpointBaseUrl are no longer forwarded to the SDK
         // (the public API dropped them); they remain parsed above for the
@@ -97,7 +113,7 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       }
     }
   }
-  
+
   private func handleSendEvent(call: FlutterMethodCall, result: @escaping FlutterResult) {
     guard let args = call.arguments as? [String: Any],
           let eventTypeString = args["eventType"] as? String else {

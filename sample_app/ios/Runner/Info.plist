@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Repo-only: points the Appstack SDK at the dev environment for local
+	     testing. The plugin reads this key and forwards it to the SDK's internal
+	     setProxyUrl hook. Published-plugin consumers do not ship this key. -->
+	<key>APPSTACK_DEV_PROXY_URL</key>
+	<string>https://api.event.dev.appstack.tech</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
