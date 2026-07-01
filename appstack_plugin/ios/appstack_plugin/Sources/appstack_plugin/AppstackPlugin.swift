@@ -1,6 +1,6 @@
 import Flutter
 import UIKit
-import AppstackSDK
+@_spi(AppstackInternal) import AppstackSDK
 
 public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   private let sdkQueue = DispatchQueue(label: "com.appstack.plugin.sdk", qos: .userInitiated)
@@ -51,8 +51,11 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       return
     }
 
-    let isDebug = args["isDebug"] as? Bool ?? false
-    let endpointBaseUrl = args["endpointBaseUrl"] as? String
+    // isDebug/endpointBaseUrl are still accepted from the Dart layer for API
+    // compatibility, but are no longer forwarded to the SDK (removed from its
+    // public configure API). Parsed and intentionally ignored.
+    _ = args["isDebug"] as? Bool ?? false
+    _ = args["endpointBaseUrl"] as? String
     let logLevel = args["logLevel"] as? Int ?? 1
     let customerUserId = args["customerUserId"] as? String
     let wrapperVersion = args["wrapperVersion"] as? String
@@ -77,12 +80,11 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     sdkQueue.async { [weak self] in
       guard let self = self else { return }
       do {
-        // Configure the SDK
-        if let endpointBaseUrl = endpointBaseUrl {
-          AppstackAttributionSdk.shared.configure(apiKey: apiKey, isDebug: isDebug, endpointBaseUrl: endpointBaseUrl, logLevel: sdkLogLevel, customerUserId: customerUserId, wrapperVersion: wrapperVersion)
-        } else {
-          AppstackAttributionSdk.shared.configure(apiKey: apiKey, isDebug: isDebug, logLevel: sdkLogLevel, customerUserId: customerUserId, wrapperVersion: wrapperVersion)
-        }
+        // Configure the SDK via the SPI overload so the wrapper version is
+        // reported. isDebug/endpointBaseUrl are no longer forwarded to the SDK
+        // (the public API dropped them); they remain parsed above for the
+        // unchanged Dart-facing API.
+        AppstackAttributionSdk.shared.configure(apiKey: apiKey, logLevel: sdkLogLevel, customerUserId: customerUserId, wrapperVersion: wrapperVersion)
 
         // Always return success on the main thread to prevent hanging
         self.deliverResult(result, true)
