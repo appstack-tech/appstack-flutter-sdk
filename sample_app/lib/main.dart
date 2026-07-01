@@ -4,28 +4,35 @@ import 'dart:io' show Platform;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Configure Appstack SDK
   // Replace with your actual API keys
-  final apiKey = Platform.isIOS 
-      ? 'q40jebdl91tgelzcrp5pbnbh' 
+  final apiKey = Platform.isIOS
+      ? 'q40jebdl91tgelzcrp5pbnbh'
       : 'q40jebdl91tgelzcrp5pbnbh';
 
-  final endpointBaseUrl = Platform.isIOS 
-      ? 'https://api.event.dev.appstack.tech'
-      : 'https://api.event.dev.appstack.tech/android/';
-  
   try {
-    await AppstackPlugin.configure(
-      apiKey,
-      isDebug: true,
-      logLevel: 0, // DEBUG
-      endpointBaseUrl: endpointBaseUrl,
-    );
-    
-    // Enable Apple Search Ads attribution on iOS
     if (Platform.isIOS) {
+      // iOS: endpointBaseUrl was removed from the public configure() API. The
+      // dev-environment override is applied natively from the APPSTACK_DEV_PROXY_URL
+      // key in ios/Runner/Info.plist (repo-only, see that file) — nothing to pass
+      // here.
+      await AppstackPlugin.configure(
+        apiKey,
+        isDebug: true,
+        logLevel: 0, // DEBUG
+      );
+
+      // Enable Apple Search Ads attribution on iOS
       await AppstackPlugin.enableAppleAdsAttribution();
+    } else {
+      // Android still accepts endpointBaseUrl via configure().
+      await AppstackPlugin.configure(
+        apiKey,
+        isDebug: true,
+        logLevel: 0, // DEBUG
+        endpointBaseUrl: 'https://api.event.dev.appstack.tech/android/',
+      );
     }
   } catch (e) {
     print('Failed to configure Appstack SDK: $e');

@@ -1,6 +1,6 @@
 import Flutter
 import UIKit
-import AppstackSDK
+@_spi(AppstackInternal) import AppstackSDK
 
 public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   private let sdkQueue = DispatchQueue(label: "com.appstack.plugin.sdk", qos: .userInitiated)
@@ -51,8 +51,13 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       return
     }
 
-    let isDebug = args["isDebug"] as? Bool ?? false
-    let endpointBaseUrl = args["endpointBaseUrl"] as? String
+    // isDebug/endpointBaseUrl are still accepted from the Dart layer for API
+    // compatibility, but are no longer forwarded to the SDK (removed from its
+    // public configure API). The dev-environment override that endpointBaseUrl
+    // used to provide now lives behind the internal-only "setProxyUrl" channel
+    // (see handleSetProxyUrl), never through configure.
+    _ = args["isDebug"] as? Bool ?? false
+    _ = args["endpointBaseUrl"] as? String
     let logLevel = args["logLevel"] as? Int ?? 1
     let customerUserId = args["customerUserId"] as? String
     let wrapperVersion = args["wrapperVersion"] as? String
@@ -73,16 +78,29 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       sdkLogLevel = .info
     }
 
+    // Testing-only proxy override, read from the app's Info.plist. This is NOT
+    // exposed through the public configure() API: a proxy URL is applied only if
+    // the host app deliberately ships an APPSTACK_DEV_PROXY_URL key (our
+    // sample_app does; published-plugin consumers do not). Routed through the
+    // SDK's @_spi setProxyUrl(_:) hook.
+    let devProxyUrl = (Bundle.main.object(forInfoDictionaryKey: "APPSTACK_DEV_PROXY_URL") as? String)
+      .flatMap { $0.isEmpty ? nil : $0 }
+
     // Execute SDK configuration on a background thread to avoid blocking the main thread
     sdkQueue.async { [weak self] in
       guard let self = self else { return }
       do {
-        // Configure the SDK
-        if let endpointBaseUrl = endpointBaseUrl {
-          AppstackAttributionSdk.shared.configure(apiKey: apiKey, isDebug: isDebug, endpointBaseUrl: endpointBaseUrl, logLevel: sdkLogLevel, customerUserId: customerUserId, wrapperVersion: wrapperVersion)
-        } else {
-          AppstackAttributionSdk.shared.configure(apiKey: apiKey, isDebug: isDebug, logLevel: sdkLogLevel, customerUserId: customerUserId, wrapperVersion: wrapperVersion)
+        // Apply the dev proxy override before configuring so the SDK's initial
+        // requests target it.
+        if let devProxyUrl = devProxyUrl {
+          AppstackAttributionSdk.shared.setProxyUrl(devProxyUrl)
         }
+
+        // Configure the SDK via the SPI overload so the wrapper version is
+        // reported. isDebug/endpointBaseUrl are no longer forwarded to the SDK
+        // (the public API dropped them); they remain parsed above for the
+        // unchanged Dart-facing API.
+        AppstackAttributionSdk.shared.configure(apiKey: apiKey, logLevel: sdkLogLevel, customerUserId: customerUserId, wrapperVersion: wrapperVersion)
 
         // Always return success on the main thread to prevent hanging
         self.deliverResult(result, true)
@@ -95,7 +113,7 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       }
     }
   }
-  
+
   private func handleSendEvent(call: FlutterMethodCall, result: @escaping FlutterResult) {
     guard let args = call.arguments as? [String: Any],
           let eventTypeString = args["eventType"] as? String else {
@@ -200,7 +218,11 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
     attributionEventSink = events
-    Task.detached(priority: .background) { [weak self] in
+    // Detached (off the main thread, so it never blocks UI/startup) but at the
+    // default priority — matching the direct getAttributionParams path, which
+    // calls the same SDK method and returns promptly. The previous .background
+    // QoS could be starved under load, stalling the stream (a >10s hang in CI).
+    Task.detached { [weak self] in
       let params = await AppstackAttributionSdk.shared.getAttributionParams()
       await MainActor.run { [weak self] in
         guard let self = self else { return }
