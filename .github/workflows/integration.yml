@@ -136,22 +136,8 @@ jobs:
           api-level: 30
           arch: x86_64
           working-directory: sample_app
-          # Capture logcat around the run so the native SDK's event POSTs and HTTP
-          # status codes are visible in the job output. Delivery only happens when
-          # a real APPSTACK_API_KEY secret is set; otherwise the SDK reports itself
-          # disabled and there is nothing to send.
-          script: |
-            adb logcat -c
-            adb logcat > "$RUNNER_TEMP/appstack-android.log" 2>&1 &
-            LOGCAT_PID=$!
-            TEST_RC=0
-            flutter test integration_test \
-              --dart-define=APPSTACK_API_KEY="${APPSTACK_API_KEY:-integration-test-placeholder-key}" \
-              || TEST_RC=$?
-            kill "$LOGCAT_PID" 2>/dev/null || true
-            echo "::group::Appstack SDK / event traffic (Android)"
-            grep -iE "AppstackSdk|okhttp|/android/v2/events|<-- 20[0-9]" \
-              "$RUNNER_TEMP/appstack-android.log" \
-              || echo "(no Appstack SDK log lines captured — is APPSTACK_API_KEY set?)"
-            echo "::endgroup::"
-            exit "$TEST_RC"
+          # android-emulator-runner executes `script` one line at a time, so the
+          # logcat-capture + test + log-surfacing logic lives in a single script
+          # file (see sample_app/tool/ci_android_integration.sh) to keep shell
+          # state intact.
+          script: bash tool/ci_android_integration.sh
