@@ -45,7 +45,6 @@ class _MyAppState extends State<MyApp> {
     try {
       await AppstackPlugin.configure(
         _apiKeyController.text,
-        isDebug: true, // Enable debug mode for this example
         logLevel: 0, // DEBUG level
       );
 

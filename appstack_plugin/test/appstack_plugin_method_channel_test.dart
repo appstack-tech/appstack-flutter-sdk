@@ -36,8 +36,6 @@ void main() {
 
       await platform.configure(
         'my-api-key',
-        true,
-        'https://custom.endpoint',
         2,
         'customer-123',
       );
@@ -45,10 +43,11 @@ void main() {
       expect(capturedArgs, isNotNull);
       final args = capturedArgs!;
       expect(args['apiKey'], 'my-api-key');
-      expect(args['isDebug'], true);
-      expect(args['endpointBaseUrl'], 'https://custom.endpoint');
       expect(args['logLevel'], 2);
       expect(args['customerUserId'], 'customer-123');
+      // isDebug/endpointBaseUrl are no longer sent over the channel.
+      expect(args.containsKey('isDebug'), isFalse);
+      expect(args.containsKey('endpointBaseUrl'), isFalse);
     });
 
     test('invokes native configure with null optionals', () async {
@@ -62,15 +61,15 @@ void main() {
         return null;
       });
 
-      await platform.configure('key', false, null, 1, null);
+      await platform.configure('key', 1, null);
 
       expect(capturedArgs, isNotNull);
       final args = capturedArgs!;
       expect(args['apiKey'], 'key');
-      expect(args['isDebug'], false);
-      expect(args['endpointBaseUrl'], isNull);
       expect(args['logLevel'], 1);
       expect(args['customerUserId'], isNull);
+      expect(args.containsKey('isDebug'), isFalse);
+      expect(args.containsKey('endpointBaseUrl'), isFalse);
     });
 
     test('succeeds when native returns', () async {
@@ -80,7 +79,7 @@ void main() {
         return null;
       });
 
-      await platform.configure('test-api-key', false, null, 1, null);
+      await platform.configure('test-api-key', 1, null);
     });
   });
 

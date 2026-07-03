@@ -26,8 +26,6 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
   /// Configure Appstack SDK with your API key and optional parameters
   Future<void> configure(
     String apiKey,
-    bool isDebug,
-    String? endpointBaseUrl,
     int logLevel,
     String? customerUserId,
   ) {

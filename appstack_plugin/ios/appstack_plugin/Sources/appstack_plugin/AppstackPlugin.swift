@@ -51,13 +51,6 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       return
     }
 
-    // isDebug/endpointBaseUrl are still accepted from the Dart layer for API
-    // compatibility, but are no longer forwarded to the SDK (removed from its
-    // public configure API). The dev-environment override that endpointBaseUrl
-    // used to provide now lives behind the internal-only "setProxyUrl" channel
-    // (see handleSetProxyUrl), never through configure.
-    _ = args["isDebug"] as? Bool ?? false
-    _ = args["endpointBaseUrl"] as? String
     let logLevel = args["logLevel"] as? Int ?? 1
     let customerUserId = args["customerUserId"] as? String
     let wrapperVersion = args["wrapperVersion"] as? String

@@ -1,6 +1,7 @@
 package com.appstack.plugin
 
 import android.content.Context
+import android.content.pm.PackageManager
 import androidx.annotation.NonNull
 import com.appstack.attribution.AppstackAttributionSdk
 import com.appstack.attribution.EventType
@@ -42,6 +43,7 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandl
     }
   }
 
+  @OptIn(com.appstack.attribution.InternalAppstackApi::class)
   private fun handleConfigure(call: MethodCall, result: Result) {
     try {
       val apiKey = call.argument<String>("apiKey")
@@ -50,13 +52,11 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandl
         return
       }
 
-      val isDebug = call.argument<Boolean>("isDebug") ?: false
-      val endpointBaseUrl = call.argument<String>("endpointBaseUrl")
       val logLevelInt = call.argument<Int>("logLevel") ?: 1
       val customerUserId = call.argument<String>("customerUserId")
-      val wrapperVersion = call.argument<String>("wrapperVersion")
+      val wrapperVersion = call.argument<String>("wrapperVersion") ?: "flutter-0.0.1"
 
-      // Map log level to LogLevel enum
+      // Map log level to LogLevel enum.
       val logLevel = when (logLevelInt) {
         0 -> LogLevel.DEBUG
         1 -> LogLevel.INFO
@@ -65,31 +65,47 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandl
         else -> LogLevel.INFO
       }
 
-      // Configure the SDK
-      if (endpointBaseUrl != null) {
-        AppstackAttributionSdk.configure(
-          context = context,
-          apiKey = apiKey,
-          isDebug = isDebug,
-          endpointBaseUrl = endpointBaseUrl,
-          logLevel = logLevel,
-          customerUserId = customerUserId,
-          wrapperVersion = wrapperVersion
-        )
-      } else {
-        AppstackAttributionSdk.configure(
-          context = context,
-          apiKey = apiKey,
-          isDebug = isDebug,
-          logLevel = logLevel,
-          customerUserId = customerUserId,
-          wrapperVersion = wrapperVersion
-        )
+      // Testing-only proxy override, read from the app's manifest metadata. This
+      // is NOT exposed through the public configure() API: a proxy URL is applied
+      // only if the host app deliberately ships an APPSTACK_DEV_PROXY_URL
+      // <meta-data> entry (our sample_app does; published-plugin consumers do
+      // not). Routed through the SDK's internal setProxyUrl(_) hook and applied
+      // BEFORE configure so the SDK's initial requests target it.
+      val devProxyUrl = readDevProxyUrl()
+      if (!devProxyUrl.isNullOrEmpty()) {
+        AppstackAttributionSdk.setProxyUrl(devProxyUrl)
       }
+
+      // Configure the SDK. This plugin reports a wrapper version, so it uses
+      // the internal `configureWrapper` entry point.
+      AppstackAttributionSdk.configureWrapper(
+        context = context,
+        apiKey = apiKey,
+        wrapperVersion = wrapperVersion,
+        logLevel = logLevel,
+        customerUserId = customerUserId
+      )
 
       result.success(true)
     } catch (e: Exception) {
       result.error("CONFIGURATION_ERROR", "Failed to configure SDK: ${e.message}", null)
+    }
+  }
+
+  /**
+   * Reads the repo-only APPSTACK_DEV_PROXY_URL <meta-data> value from the host
+   * app's manifest, mirroring the iOS Info.plist key of the same name. Returns
+   * null when the key is absent (the published-plugin case).
+   */
+  private fun readDevProxyUrl(): String? {
+    return try {
+      val appInfo = context.packageManager.getApplicationInfo(
+        context.packageName,
+        PackageManager.GET_META_DATA
+      )
+      appInfo.metaData?.getString("APPSTACK_DEV_PROXY_URL")
+    } catch (e: Exception) {
+      null
     }
   }
 

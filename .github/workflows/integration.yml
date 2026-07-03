@@ -70,12 +70,32 @@ jobs:
           echo "DEVICE_ID=$DEVICE_ID" >> "$GITHUB_ENV"
           xcrun simctl boot "$DEVICE_ID" || true
 
+      - name: Start capturing Appstack SDK logs
+        run: |
+          xcrun simctl spawn "$DEVICE_ID" log stream --level debug \
+            --predicate 'subsystem == "tech.app-stack.appstack"' \
+            > "$RUNNER_TEMP/appstack-ios.log" 2>&1 &
+          echo "APPSTACK_LOG_PID=$!" >> "$GITHUB_ENV"
+
       - name: Run integration tests
         run: |
           flutter test integration_test \
             --dart-define=APPSTACK_API_KEY="${APPSTACK_API_KEY:-integration-test-placeholder-key}" \
             -d "$DEVICE_ID"
         working-directory: sample_app
+
+      # Surface the native SDK's own log lines — event POSTs, HTTP status codes,
+      # attribution — so automatic runs *show* the events. Delivery only happens
+      # when a real APPSTACK_API_KEY secret is set; otherwise the SDK reports
+      # itself disabled and there is nothing to send.
+      - name: Show captured Appstack SDK logs
+        if: always()
+        run: |
+          kill "$APPSTACK_LOG_PID" 2>/dev/null || true
+          echo "::group::Appstack SDK / event traffic (iOS ${{ matrix.integration }})"
+          grep -iE "appstack|/ios/|event|status code|20[0-9]" "$RUNNER_TEMP/appstack-ios.log" \
+            || echo "(no Appstack SDK log lines captured — is APPSTACK_API_KEY set?)"
+          echo "::endgroup::"
 
   android:
     name: Android
@@ -116,6 +136,8 @@ jobs:
           api-level: 30
           arch: x86_64
           working-directory: sample_app
-          script: >
-            flutter test integration_test
-            --dart-define=APPSTACK_API_KEY="${APPSTACK_API_KEY:-integration-test-placeholder-key}"
+          # android-emulator-runner executes `script` one line at a time, so the
+          # logcat-capture + test + log-surfacing logic lives in a single script
+          # file (see sample_app/tool/ci_android_integration.sh) to keep shell
+          # state intact.
+          script: bash tool/ci_android_integration.sh

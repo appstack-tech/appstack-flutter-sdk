@@ -21,10 +21,12 @@ import 'package:appstack_plugin/appstack_plugin.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
+const _placeholderKey = 'integration-test-placeholder-key';
 const _apiKey = String.fromEnvironment(
   'APPSTACK_API_KEY',
-  defaultValue: 'integration-test-placeholder-key',
+  defaultValue: _placeholderKey,
 );
+const _hasRealKey = _apiKey != _placeholderKey;
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +34,7 @@ void main() {
   group('Appstack SDK native bridge', () {
     setUpAll(() async {
       // Must succeed (complete without throwing) on every integration path.
-      await AppstackPlugin.configure(_apiKey, isDebug: true, logLevel: 0);
+      await AppstackPlugin.configure(_apiKey, logLevel: 0);
     });
 
     testWidgets('isSdkDisabled returns a bool over the channel', (_) async {
@@ -85,6 +87,72 @@ void main() {
         // Documented: returns false on non-iOS platforms.
         expect(result, isFalse);
       }
+    });
+
+    // Delivery observability: the round-trip tests above fire events immediately
+    // and only prove the bridge returns a value. This one waits until the SDK is
+    // actually configured before sending, so events are delivered rather than
+    // dropped (Android) / left unsent at teardown. It prints what the Dart layer
+    // sees; the native HTTP delivery (POST /events -> 202) shows up in the device
+    // logs captured by the CI workflow.
+    //
+    // Skipped without a real APPSTACK_API_KEY: on the placeholder key the SDK
+    // reports itself disabled and sends nothing, so there is nothing to observe.
+    // Set the APPSTACK_API_KEY secret to exercise it.
+    testWidgets('event delivery: sends events after config and reports data',
+        (tester) async {
+      if (!_hasRealKey) {
+        markTestSkipped(
+          'APPSTACK_API_KEY not set — skipping live event-delivery check.',
+        );
+        return;
+      }
+
+      // Config-load time is variable (network + emulator first-connection cost),
+      // so a fixed delay is unreliable — events sent too early are dropped on
+      // Android. Poll instead: attribution params populate only after config +
+      // match complete, so a non-empty result is a reliable "SDK is ready"
+      // signal. Capped so a match that legitimately returns nothing can't hang
+      // the run (config has loaded well before the cap either way).
+      for (var i = 0; i < 25; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(seconds: 2)),
+        );
+        final p = await AppstackPlugin.getAttributionParams();
+        if (p != null && p.isNotEmpty) break;
+      }
+
+      final purchase = await AppstackPlugin.sendEvent(
+        EventType.purchase,
+        parameters: {'revenue': 9.99, 'currency': 'USD'},
+      );
+      final custom = await AppstackPlugin.sendEvent(
+        EventType.custom,
+        eventName: 'integration_test_event',
+        parameters: {'k': 'v'},
+      );
+
+      final id = await AppstackPlugin.getAppstackId();
+      final params = await AppstackPlugin.getAttributionParams();
+
+      // Surfaced in the `flutter test` output so automatic runs show what the
+      // Dart layer observed.
+      // ignore: avoid_print
+      print('[integration] sendEvent(purchase) accepted=$purchase');
+      // ignore: avoid_print
+      print('[integration] sendEvent(custom) accepted=$custom');
+      // ignore: avoid_print
+      print('[integration] appstackId=$id');
+      // ignore: avoid_print
+      print('[integration] attributionParams=$params');
+
+      // Keep the app alive so the SDK can POST the events before teardown.
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(seconds: 8)),
+      );
+
+      expect(purchase, isA<bool>());
+      expect(custom, isA<bool>());
     });
   });
 }
