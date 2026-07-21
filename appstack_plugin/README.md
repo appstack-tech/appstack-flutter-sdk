@@ -12,7 +12,7 @@ Here, you will find the [pub.dev appstack_plugin documentation](https://pub.dev/
 
 ### **iOS**
 
-- **iOS version:** 13.0+ (14.3+ recommended for Apple Ads)
+- **iOS version:** 15.0+
 - **Xcode:** 14.0+
 
 ### **Android**
@@ -348,7 +348,7 @@ Future<void> initializeSDK() async {
 
 ### **Platform constraints**
 
-- **iOS:** Requires iOS 14.3+
+- **iOS:** Requires iOS 15.0+
 - **Android:** Minimum API level 21 (Android 5.0)
 - **Flutter:** 3.3.0+
 - Some Apple Ads features may not work in development/simulator environments

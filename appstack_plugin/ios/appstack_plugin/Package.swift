@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "appstack_plugin",
     platforms: [
-        .iOS(.v14)
+        .iOS(.v15)
     ],
     products: [
         .library(
@@ -15,7 +15,7 @@ let package = Package(
     dependencies: [
         // Reference the official Appstack iOS SDK from GitHub
         // Using exact version to ensure consistency across builds
-        .package(url: "https://github.com/appstack-tech/ios-appstack-sdk.git", exact: "4.4.0-rc0"),
+        .package(url: "https://github.com/appstack-tech/ios-appstack-sdk.git", exact: "4.4.0"),
     ],
     targets: [
         .target(
