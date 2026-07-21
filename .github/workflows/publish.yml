@@ -9,6 +9,14 @@ permissions:
   contents: read
   id-token: write
 
+# Single source of truth for version validation, reused by every job below so
+# the publish gate and the release defense-in-depth check stay identical.
+# Restricted SemVer: MAJOR.MINOR.PATCH with an optional, well-formed prerelease
+# (dot-separated, non-empty [0-9A-Za-z-] identifiers — rejects empty identifiers
+# and consecutive dots).
+env:
+  SEMVER_REGEX: '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+
 jobs:
   publish:
     name: Publish to pub.dev
@@ -40,7 +48,7 @@ jobs:
           VERSION=${GITHUB_REF#refs/tags/}
           # Validate the tag is a simple SemVer before it flows into any script
           # or downstream job — guards against script injection via crafted tags.
-          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+          if ! printf '%s' "$VERSION" | grep -Eq "$SEMVER_REGEX"; then
             echo "::error::Tag '$VERSION' is not a valid SemVer version"
             exit 1
           fi
@@ -62,10 +70,6 @@ jobs:
       - name: Set up pub.dev credentials
         run: |
           gcloud auth print-identity-token --audiences=https://pub.dev | flutter pub token add https://pub.dev
-
-      - name: Publish - dry run
-        run: flutter pub publish --dry-run
-        working-directory: appstack_plugin
 
       # Enforce version changes in all files, just in case we missed to change some
       - name: Update version in files
@@ -95,6 +99,12 @@ jobs:
           sed -i "s/appstack_plugin: \^[0-9]\+\.[0-9]\+\.[0-9]\+/appstack_plugin: ^$VERSION/" README.md
 
           echo "Version updated in all files"
+
+      # Dry-run AFTER the version bump so it validates the exact package contents
+      # (including the updated pubspec.yaml version) that the next step publishes.
+      - name: Publish - dry run
+        run: flutter pub publish --dry-run
+        working-directory: appstack_plugin
 
       - name: Publish to pub.dev
         run: flutter pub publish -f
@@ -126,9 +136,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Defense in depth: publish already validated this, but re-check before
-          # it flows into git/gh commands. Prereleases are excluded by the job if:.
-          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          # Defense in depth: publish already validated this with the same
+          # SEMVER_REGEX, but re-check before it flows into git/gh commands.
+          # Stable-only is enforced by the job `if:` above, not this regex.
+          if ! printf '%s' "$VERSION" | grep -Eq "$SEMVER_REGEX"; then
             echo "::error::Refusing to release invalid version '$VERSION'"
             exit 1
           fi
