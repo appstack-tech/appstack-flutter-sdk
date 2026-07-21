@@ -13,9 +13,13 @@ jobs:
   publish:
     name: Publish to pub.dev
     runs-on: ubuntu-latest
+    # Least privilege: publishing only reads the repo. Creating the GitHub
+    # Release (which needs contents: write) is isolated in the `release` job.
     permissions:
-      contents: write   # needed to create the GitHub Release
+      contents: read
       id-token: write
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,8 +36,15 @@ jobs:
       - name: Extract version from tag
         id: get_version
         run: |
+          set -euo pipefail
           VERSION=${GITHUB_REF#refs/tags/}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          # Validate the tag is a simple SemVer before it flows into any script
+          # or downstream job — guards against script injection via crafted tags.
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "::error::Tag '$VERSION' is not a valid SemVer version"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Extracted version: $VERSION"
 
       - name: Install dependencies
@@ -58,19 +69,23 @@ jobs:
 
       # Enforce version changes in all files, just in case we missed to change some
       - name: Update version in files
+        env:
+          # Pass the validated output through env rather than interpolating it
+          # directly into the script body.
+          VERSION: ${{ steps.get_version.outputs.version }}
         run: |
-          VERSION=${{ steps.get_version.outputs.version }}
+          set -euo pipefail
           echo "Updating version to $VERSION"
-          
+
           # Update pubspec.yaml files
           sed -i "s/^version: .*/version: $VERSION/" appstack_plugin/pubspec.yaml
-          
+
           # Update podspec files
           sed -i "s/s\.version.*=.*/s.version          = '$VERSION'/" appstack_plugin/ios/appstack_plugin.podspec
-          
+
           # Update build.gradle files
           sed -i "s/^version .*/version '$VERSION'/" appstack_plugin/android/build.gradle
-          
+
           # Update wrapper version constant
           sed -i "s/const _kWrapperVersion = 'flutter-[^']*'/const _kWrapperVersion = 'flutter-$VERSION'/" appstack_plugin/lib/appstack_plugin_method_channel.dart
 
@@ -78,27 +93,52 @@ jobs:
           sed -i "s/appstack_plugin: \^[0-9]\+\.[0-9]\+\.[0-9]\+/appstack_plugin: ^$VERSION/" appstack_plugin/README.md
           sed -i "s/appstack_plugin: \^[0-9]\+\.[0-9]\+\.[0-9]\+/appstack_plugin: ^$VERSION/" appstack_plugin/USAGE.md
           sed -i "s/appstack_plugin: \^[0-9]\+\.[0-9]\+\.[0-9]\+/appstack_plugin: ^$VERSION/" README.md
-          
+
           echo "Version updated in all files"
 
       - name: Publish to pub.dev
         run: flutter pub publish -f
         working-directory: appstack_plugin
 
-      # Create a GitHub Release so the changes for each version are visible on
-      # the repo's Releases page and users can see the current latest version.
-      # Notes are pulled from the matching CHANGELOG section. Runs only after a
-      # successful publish (a failed earlier step short-circuits the job).
-      #
-      # Skipped for pre-release tags (anything with a "-", e.g. 2.4.0-rc1): those
-      # still publish to pub.dev but do not get a GitHub Release.
+  # Create a GitHub Release so the changes for each version are visible on the
+  # repo's Releases page and users can see the current latest version. Notes are
+  # pulled from the matching CHANGELOG section. Runs only after the publish job
+  # succeeds (needs: publish), and is the only job granted contents: write.
+  #
+  # Skipped for pre-release tags (anything with a "-", e.g. 2.4.0-rc1): those
+  # still publish to pub.dev but do not get a GitHub Release.
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: publish
+    if: ${{ !contains(needs.publish.outputs.version, '-') }}
+    permissions:
+      contents: write   # needed to create the GitHub Release
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Create GitHub Release
-        if: ${{ !contains(steps.get_version.outputs.version, '-') }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Consume the version as an env value, not inline interpolation.
+          VERSION: ${{ needs.publish.outputs.version }}
         run: |
           set -euo pipefail
-          VERSION="${{ steps.get_version.outputs.version }}"
+
+          # Defense in depth: publish already validated this, but re-check before
+          # it flows into git/gh commands. Prereleases are excluded by the job if:.
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Refusing to release invalid version '$VERSION'"
+            exit 1
+          fi
+
+          # Idempotent: skip if a release for this version already exists (e.g. a
+          # workflow re-run) instead of failing on `gh release create`.
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "Release $VERSION already exists — skipping."
+            exit 0
+          fi
 
           # Extract this version's section from the CHANGELOG: everything between
           # "## [VERSION]" and the next "## [" header.
@@ -121,7 +161,7 @@ jobs:
           echo "----- release notes for $VERSION -----"
           cat "$RUNNER_TEMP/release_notes.md"
 
-          # Only stable X.Y.Z tags reach this step (see the step's `if:`), so the
+          # Only stable X.Y.Z tags reach this job (see the job's `if:`), so the
           # release is always marked latest.
           gh release create "$VERSION" \
             --title "$VERSION" \
