@@ -18,9 +18,16 @@ env:
   SEMVER_REGEX: '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
 
 jobs:
+  # Publishing is allowed only after the same build/link and hermetic runtime
+  # checks that gate pull requests have passed for the tagged commit.
+  integration:
+    name: Build and runtime checks
+    uses: ./.github/workflows/integration.yml
+
   publish:
     name: Publish to pub.dev
     runs-on: ubuntu-latest
+    needs: integration
     # Least privilege: publishing only reads the repo. Creating the GitHub
     # Release (which needs contents: write) is isolated in the `release` job.
     permissions:

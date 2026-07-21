@@ -1,9 +1,10 @@
-name: Integration
+name: Build and runtime checks
 
-# Integration tests build and launch the sample app on a real simulator/emulator
-# and exercise the native bridge. The iOS job runs the SAME suite twice — once
-# per integration path (SwiftPM and CocoaPods/XCFramework) — so a link failure on
-# either path fails CI. See sample_app/integration_test/README.md.
+# Build and link checks preserve each native integration path. Hermetic runtime
+# checks drive the public Flutter API through the native SDK against a local
+# recording backend; no Appstack service or real API key is used. iOS runs the
+# checks through both SwiftPM and CocoaPods/XCFramework so either link path can
+# block a PR.
 #
 # These are heavier than the unit-test workflow (macOS runners, simulators), so
 # they run on PRs into main and on demand rather than on every push.
@@ -13,6 +14,7 @@ on:
     branches:
       - main
   workflow_dispatch:
+  workflow_call:
 
 # Least privilege: this workflow only reads the repo and runs tests — it never
 # pushes, comments, or publishes.
@@ -21,8 +23,6 @@ permissions:
 
 env:
   FLUTTER_VERSION: '3.44.1'
-  # Optional: set an org secret APPSTACK_API_KEY to also validate delivery.
-  APPSTACK_API_KEY: ${{ secrets.APPSTACK_API_KEY }}
 
 jobs:
   ios:
@@ -77,25 +77,37 @@ jobs:
             > "$RUNNER_TEMP/appstack-ios.log" 2>&1 &
           echo "APPSTACK_LOG_PID=$!" >> "$GITHUB_ENV"
 
-      - name: Run integration tests
-        run: |
-          flutter test integration_test \
-            --dart-define=APPSTACK_API_KEY="${APPSTACK_API_KEY:-integration-test-placeholder-key}" \
-            -d "$DEVICE_ID"
+      - name: Run build/link and hermetic runtime checks
+        env:
+          APPSTACK_RUNTIME_ARTIFACT_DIR: ${{ runner.temp }}/appstack-runtime-validation/ios-${{ matrix.integration }}
+        run: bash tool/run_runtime_validation.sh ios "$DEVICE_ID"
         working-directory: sample_app
 
-      # Surface the native SDK's own log lines — event POSTs, HTTP status codes,
-      # attribution — so automatic runs *show* the events. Delivery only happens
-      # when a real APPSTACK_API_KEY secret is set; otherwise the SDK reports
-      # itself disabled and there is nothing to send.
+      # Surface the native SDK's own config, attribution, and event traffic. The
+      # recording backend remains the authoritative assertion source.
       - name: Show captured Appstack SDK logs
         if: always()
         run: |
           kill "$APPSTACK_LOG_PID" 2>/dev/null || true
           echo "::group::Appstack SDK / event traffic (iOS ${{ matrix.integration }})"
           grep -iE "appstack|/ios/|event|status code|20[0-9]" "$RUNNER_TEMP/appstack-ios.log" \
-            || echo "(no Appstack SDK log lines captured — is APPSTACK_API_KEY set?)"
+            || echo "(no Appstack SDK log lines captured)"
           echo "::endgroup::"
+
+      - name: Show failed runtime diagnostics
+        if: failure()
+        env:
+          DIAGNOSTICS_DIR: ${{ runner.temp }}/appstack-runtime-validation/ios-${{ matrix.integration }}
+        run: |
+          for file in runtime.log validator.log mock-server.log mock-requests.jsonl; do
+            echo "::group::$file"
+            if [[ -f "$DIAGNOSTICS_DIR/$file" ]]; then
+              sed -n '1,2000p' "$DIAGNOSTICS_DIR/$file"
+            else
+              echo "(not produced)"
+            fi
+            echo "::endgroup::"
+          done
 
   android:
     name: Android
@@ -141,3 +153,18 @@ jobs:
           # file (see sample_app/tool/ci_android_integration.sh) to keep shell
           # state intact.
           script: bash tool/ci_android_integration.sh
+
+      - name: Show failed runtime diagnostics
+        if: failure()
+        env:
+          DIAGNOSTICS_DIR: ${{ runner.temp }}/appstack-runtime-validation/android
+        run: |
+          for file in runtime.log validator.log mock-server.log mock-requests.jsonl; do
+            echo "::group::$file"
+            if [[ -f "$DIAGNOSTICS_DIR/$file" ]]; then
+              sed -n '1,2000p' "$DIAGNOSTICS_DIR/$file"
+            else
+              echo "(not produced)"
+            fi
+            echo "::endgroup::"
+          done

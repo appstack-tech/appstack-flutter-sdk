@@ -25,13 +25,11 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <!-- Repo-only: points the Appstack SDK at the dev environment for local
-             testing. The plugin reads this key and forwards it to the SDK's
-             internal setProxyUrl hook. Published-plugin consumers do not ship
-             this key. -->
+        <!-- Test-only: the Gradle placeholder is empty in normal builds and is
+             populated by tool/run_runtime_validation.sh for hermetic tests. -->
         <meta-data
             android:name="APPSTACK_DEV_PROXY_URL"
-            android:value="https://api.event.dev.appstack.tech/android/" />
+            android:value="${appstackDevProxyUrl}" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
