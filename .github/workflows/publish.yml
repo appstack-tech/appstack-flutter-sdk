@@ -14,7 +14,7 @@ jobs:
     name: Publish to pub.dev
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write   # needed to create the GitHub Release
       id-token: write
     steps:
       - name: Checkout repository
@@ -84,3 +84,47 @@ jobs:
       - name: Publish to pub.dev
         run: flutter pub publish -f
         working-directory: appstack_plugin
+
+      # Create a GitHub Release so the changes for each version are visible on
+      # the repo's Releases page and users can see the current latest version.
+      # Notes are pulled from the matching CHANGELOG section. Runs only after a
+      # successful publish (a failed earlier step short-circuits the job).
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.get_version.outputs.version }}"
+
+          # Extract this version's section from the CHANGELOG: everything between
+          # "## [VERSION]" and the next "## [" header.
+          NOTES=$(awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" {flag=1; next}
+            flag && /^## \[/ {exit}
+            flag {print}
+          ' appstack_plugin/CHANGELOG.md)
+
+          # Trim leading/trailing blank lines (portable — no tac).
+          NOTES=$(printf '%s\n' "$NOTES" \
+            | sed '/./,$!d' \
+            | awk 'NF{last=NR} {line[NR]=$0} END{for (i=1; i<=last; i++) print line[i]}')
+
+          if [ -z "$NOTES" ]; then
+            NOTES="Release $VERSION. See appstack_plugin/CHANGELOG.md for details."
+          fi
+
+          printf '%s\n' "$NOTES" > "$RUNNER_TEMP/release_notes.md"
+          echo "----- release notes for $VERSION -----"
+          cat "$RUNNER_TEMP/release_notes.md"
+
+          # Tags like "2.4.0-rc1" are marked pre-release; plain X.Y.Z become latest.
+          PRERELEASE=""
+          case "$VERSION" in
+            *-*) PRERELEASE="--prerelease" ;;
+          esac
+
+          gh release create "$VERSION" \
+            --title "$VERSION" \
+            --notes-file "$RUNNER_TEMP/release_notes.md" \
+            --verify-tag \
+            $PRERELEASE
