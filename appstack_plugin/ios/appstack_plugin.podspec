@@ -23,7 +23,7 @@ Flutter plugin for Appstack Attribution SDK. Track app installs, user events, an
   # Include Appstack XCFramework (supports all architectures)
   s.ios.vendored_frameworks = 'AppstackSDK.xcframework'
   
-  s.platform = :ios, '13.0'
+  s.platform = :ios, '15.0'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }

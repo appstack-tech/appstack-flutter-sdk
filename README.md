@@ -99,7 +99,7 @@ To keep the published docs in sync, see [docs/README.md](./docs/README.md).
 
 ## Platform Support
 
-- **iOS**: 14.3+
+- **iOS**: 15.0+
 - **Android**: API 21+ (Android 5.0+)
 - **Flutter**: 3.3.0+
 

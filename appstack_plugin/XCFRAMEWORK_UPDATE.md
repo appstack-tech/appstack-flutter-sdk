@@ -112,9 +112,9 @@ The XCFramework must support:
 
 ## Minimum iOS Version
 
-The XCFramework should support iOS 13.0+ as specified in the podspec:
+The XCFramework should support iOS 15.0+ as specified in the podspec:
 ```ruby
-s.platform = :ios, '13.0'
+s.platform = :ios, '15.0'
 ```
 
 ## Troubleshooting
