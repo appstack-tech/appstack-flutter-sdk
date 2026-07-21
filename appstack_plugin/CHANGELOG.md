@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Updated the Appstack iOS SDK to 4.4.0**
+- **Updated the Appstack Android SDK to 1.5.0**
 - Raised the minimum supported iOS version to **15.0** (required by iOS SDK 4.4.0). This applies to both integration paths — the Swift Package Manager package (`Package.swift`) and the CocoaPods podspec.
 
 ## [2.2.2] - 2026-06-24
