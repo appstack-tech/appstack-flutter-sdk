@@ -89,7 +89,11 @@ jobs:
       # the repo's Releases page and users can see the current latest version.
       # Notes are pulled from the matching CHANGELOG section. Runs only after a
       # successful publish (a failed earlier step short-circuits the job).
+      #
+      # Skipped for pre-release tags (anything with a "-", e.g. 2.4.0-rc1): those
+      # still publish to pub.dev but do not get a GitHub Release.
       - name: Create GitHub Release
+        if: ${{ !contains(steps.get_version.outputs.version, '-') }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -117,14 +121,10 @@ jobs:
           echo "----- release notes for $VERSION -----"
           cat "$RUNNER_TEMP/release_notes.md"
 
-          # Tags like "2.4.0-rc1" are marked pre-release; plain X.Y.Z become latest.
-          PRERELEASE=""
-          case "$VERSION" in
-            *-*) PRERELEASE="--prerelease" ;;
-          esac
-
+          # Only stable X.Y.Z tags reach this step (see the step's `if:`), so the
+          # release is always marked latest.
           gh release create "$VERSION" \
             --title "$VERSION" \
             --notes-file "$RUNNER_TEMP/release_notes.md" \
             --verify-tag \
-            $PRERELEASE
+            --latest
