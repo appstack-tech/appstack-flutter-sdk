@@ -15,7 +15,7 @@ adb logcat > "$RUNNER_TEMP/appstack-android.log" 2>&1 &
 LOGCAT_PID=$!
 
 TEST_RC=0
-export APPSTACK_RUNTIME_ARTIFACT_DIR="${APPSTACK_RUNTIME_ARTIFACT_DIR:-$RUNNER_TEMP/appstack-runtime-validation/android}"
+export APPSTACK_RUNTIME_DIAGNOSTICS_DIR="${APPSTACK_RUNTIME_DIAGNOSTICS_DIR:-$RUNNER_TEMP/appstack-runtime-validation/android}"
 bash tool/run_runtime_validation.sh android || TEST_RC=$?
 
 kill "$LOGCAT_PID" 2>/dev/null || true

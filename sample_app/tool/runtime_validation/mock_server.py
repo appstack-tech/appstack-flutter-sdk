@@ -15,6 +15,29 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 
+REDACTED_HEADER_VALUE = "[REDACTED]"
+SENSITIVE_HEADERS = {
+    "authorization",
+    "cookie",
+    "proxy-authorization",
+    "set-cookie",
+    "x-api-key",
+    "x-appstack-api-key",
+}
+
+
+def recordable_headers(headers) -> dict:
+    """Return diagnostic-safe headers without authentication material."""
+    return {
+        key.lower(): (
+            REDACTED_HEADER_VALUE
+            if key.lower() in SENSITIVE_HEADERS
+            else value
+        )
+        for key, value in headers.items()
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port-file", required=True)
@@ -109,9 +132,7 @@ def main() -> None:
             entry = {
                 "method": self.command,
                 "path": self.path,
-                "headers": {
-                    key.lower(): value for key, value in self.headers.items()
-                },
+                "headers": recordable_headers(self.headers),
                 "body": body,
             }
             with write_lock:

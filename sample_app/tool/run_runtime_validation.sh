@@ -15,8 +15,8 @@ case "$MODE" in
     ;;
 esac
 
-if [[ -n "${APPSTACK_RUNTIME_ARTIFACT_DIR:-}" ]]; then
-  WORK_DIR="$APPSTACK_RUNTIME_ARTIFACT_DIR"
+if [[ -n "${APPSTACK_RUNTIME_DIAGNOSTICS_DIR:-}" ]]; then
+  WORK_DIR="$APPSTACK_RUNTIME_DIAGNOSTICS_DIR"
   mkdir -p "$WORK_DIR"
 else
   WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/appstack-flutter-runtime-validation.XXXXXX")"

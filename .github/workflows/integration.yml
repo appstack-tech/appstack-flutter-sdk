@@ -21,6 +21,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: build-runtime-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   FLUTTER_VERSION: '3.44.1'
 
@@ -79,7 +83,7 @@ jobs:
 
       - name: Run build/link and hermetic runtime checks
         env:
-          APPSTACK_RUNTIME_ARTIFACT_DIR: ${{ runner.temp }}/appstack-runtime-validation/ios-${{ matrix.integration }}
+          APPSTACK_RUNTIME_DIAGNOSTICS_DIR: ${{ runner.temp }}/appstack-runtime-validation/ios-${{ matrix.integration }}
         run: bash tool/run_runtime_validation.sh ios "$DEVICE_ID"
         working-directory: sample_app
 
