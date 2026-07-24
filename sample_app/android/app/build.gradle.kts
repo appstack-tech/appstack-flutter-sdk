@@ -28,6 +28,20 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["appstackDevProxyUrl"] = providers.gradleProperty(
+            "appstackRuntimeProxyUrl"
+        ).orElse("").get()
+        manifestPlaceholders["appstackNetworkSecurityConfig"] = providers.gradleProperty(
+            "appstackNetworkSecurityConfig"
+        ).orElse("@xml/appstack_debug_network_security_config").get()
+    }
+
+    sourceSets {
+        getByName("debug") {
+            // Populated temporarily by tool/run_runtime_validation.sh with a
+            // generated one-day CA and its network-security configuration.
+            res.srcDir("src/runtimeValidationGenerated/res")
+        }
     }
 
     buildTypes {

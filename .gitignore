@@ -250,3 +250,8 @@ GoogleService-Info.plist
 google-services.json
 # Plugins (already resolved through pubspec.yaml)
 .flutter-plugins
+
+# Generated only by sample_app/tool/run_runtime_validation.sh. These files carry
+# loopback proxy settings and a one-day local Android CA for hermetic runtime tests.
+sample_app/ios/Flutter/RuntimeValidation.xcconfig
+sample_app/android/app/src/runtimeValidationGenerated/
