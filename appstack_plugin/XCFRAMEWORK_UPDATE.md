@@ -60,14 +60,17 @@ cd /path/to/appstack-flutter-sdk/appstack_plugin
 
 VERSION=X.Y.Z   # must match the exact: pin above
 
-# The checksum upstream committed for this tag.
-curl -fsSL "https://raw.githubusercontent.com/appstack-tech/ios-appstack-sdk/$VERSION/Package.swift" \
-  | grep -E 'url:|checksum:'
+# Read the release URL and the checksum upstream committed for this tag, and
+# capture them rather than assuming the asset path — if upstream ever renames the
+# asset, this keeps following the manifest instead of guessing.
+MANIFEST=$(curl -fsSL "https://raw.githubusercontent.com/appstack-tech/ios-appstack-sdk/$VERSION/Package.swift")
+ZIP_URL=$(printf '%s' "$MANIFEST" | sed -nE 's/.*url:[[:space:]]*"(https:\/\/[^"]*\.zip)".*/\1/p')
+EXPECTED=$(printf '%s' "$MANIFEST" | sed -nE 's/.*checksum:[[:space:]]*"([0-9a-fA-F]{64})".*/\1/p')
+echo "$ZIP_URL"; echo "$EXPECTED"
 
 # Download the artifact and verify it before it goes anywhere near the repo.
-curl -fsSL -o /tmp/AppstackSDK.xcframework.zip \
-  "https://github.com/appstack-tech/ios-appstack-sdk/releases/download/$VERSION/AppstackSDK.xcframework.zip"
-shasum -a 256 /tmp/AppstackSDK.xcframework.zip   # must equal the checksum above
+curl -fsSL -o /tmp/AppstackSDK.xcframework.zip "$ZIP_URL"
+shasum -a 256 /tmp/AppstackSDK.xcframework.zip   # must equal $EXPECTED
 
 # Replace the vendored copy with the zip contents, verbatim.
 rm -rf ios/AppstackSDK.xcframework
@@ -198,7 +201,7 @@ script (worth knowing if you ever compare by hand):
 Whatever the pinned release contains, verbatim. As of 4.4.0 that is three slices
 plus dSYMs (69 files following symlinks):
 
-```
+```text
 AppstackSDK.xcframework/
 ├── Info.plist
 ├── ios-arm64/

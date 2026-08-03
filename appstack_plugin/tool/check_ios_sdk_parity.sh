@@ -122,15 +122,38 @@ curl -fsSL --retry 3 --retry-delay 2 --max-time 60 \
        must not be reported as parity."
 
 # Pull the binaryTarget's url + checksum. Tolerant of whitespace and line
-# breaks, but not of absence.
-UPSTREAM_ZIP_URL="$(
-  sed -nE 's/.*url:[[:space:]]*"(https:\/\/[^"]*\.zip)".*/\1/p' "$UPSTREAM_PACKAGE_SWIFT" \
-    | head -n 1
+# breaks, but not of absence — or of ambiguity. The two fields are matched
+# independently, so more than one candidate for either means we could pair a url
+# with another target's checksum. That would still fail closed at the checksum
+# step, but it would blame a supply-chain mismatch for what is really an
+# unrecognised manifest, so refuse to guess and say so.
+UPSTREAM_ZIP_URLS="$(
+  sed -nE 's/.*url:[[:space:]]*"(https:\/\/[^"]*\.zip)".*/\1/p' "$UPSTREAM_PACKAGE_SWIFT"
 )" || true
-UPSTREAM_CHECKSUM="$(
-  sed -nE 's/.*checksum:[[:space:]]*"([0-9a-fA-F]{64})".*/\1/p' "$UPSTREAM_PACKAGE_SWIFT" \
-    | head -n 1
+UPSTREAM_CHECKSUMS="$(
+  sed -nE 's/.*checksum:[[:space:]]*"([0-9a-fA-F]{64})".*/\1/p' "$UPSTREAM_PACKAGE_SWIFT"
 )" || true
+
+# grep -c rather than wc -l: an empty string must count as 0, not 1.
+URL_COUNT="$(printf '%s' "$UPSTREAM_ZIP_URLS" | grep -c . || true)"
+CHECKSUM_COUNT="$(printf '%s' "$UPSTREAM_CHECKSUMS" | grep -c . || true)"
+
+if [[ "$URL_COUNT" -gt 1 || "$CHECKSUM_COUNT" -gt 1 ]]; then
+  echo "" >&2
+  echo "Upstream Package.swift at tag $SDK_VERSION declares more than one remote" >&2
+  echo "binaryTarget field, so the url and checksum cannot be paired reliably." >&2
+  echo "" >&2
+  echo "  urls found ($URL_COUNT):" >&2
+  printf '%s\n' "$UPSTREAM_ZIP_URLS" | sed 's/^/    /' >&2
+  echo "  checksums found ($CHECKSUM_COUNT):" >&2
+  printf '%s\n' "$UPSTREAM_CHECKSUMS" | sed 's/^/    /' >&2
+  echo "" >&2
+  echo "Update this script to select the correct target deliberately." >&2
+  die "ambiguous binaryTarget manifest for $SDK_VERSION."
+fi
+
+UPSTREAM_ZIP_URL="$UPSTREAM_ZIP_URLS"
+UPSTREAM_CHECKSUM="$UPSTREAM_CHECKSUMS"
 
 if [[ -z "$UPSTREAM_ZIP_URL" || -z "$UPSTREAM_CHECKSUM" ]]; then
   echo "" >&2
@@ -170,7 +193,14 @@ curl -fsSL --retry 3 --retry-delay 2 --max-time 600 \
 ACTUAL_CHECKSUM="$(shasum -a 256 "$ZIP_PATH" | awk '{print $1}')"
 [[ -n "$ACTUAL_CHECKSUM" ]] || die "could not compute a sha256 for the downloaded zip."
 
-if [[ "$ACTUAL_CHECKSUM" != "$UPSTREAM_CHECKSUM" ]]; then
+# Compare case-insensitively. A SHA256 hex digest is the same value in either
+# case, but `shasum` always prints lowercase while the manifest regex accepts
+# [0-9a-fA-F] — so an uppercase digest upstream would otherwise be reported as a
+# supply-chain failure on a perfectly good artifact. `tr` rather than ${var,,}
+# because macOS ships bash 3.2 as /bin/bash.
+lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
+
+if [[ "$(lower "$ACTUAL_CHECKSUM")" != "$(lower "$UPSTREAM_CHECKSUM")" ]]; then
   echo "" >&2
   echo "Checksum mismatch on the downloaded release artifact." >&2
   echo "  url:      $UPSTREAM_ZIP_URL" >&2
@@ -208,17 +238,31 @@ fi
 
 # Locate the .xcframework inside the extraction rather than assuming a layout.
 # Depth-limited so a nested framework bundle can't be mistaken for the root.
-OFFICIAL_XCFRAMEWORK="$(
+OFFICIAL_XCFRAMEWORKS="$(
   find "$EXTRACT_DIR" -maxdepth 3 -type d -name '*.xcframework' 2>/dev/null \
-    | LC_ALL=C sort | head -n 1
+    | LC_ALL=C sort
 )" || true
 
-if [[ -z "$OFFICIAL_XCFRAMEWORK" ]]; then
+if [[ -z "$OFFICIAL_XCFRAMEWORKS" ]]; then
   echo "" >&2
   echo "No .xcframework found in the extracted artifact. Top-level contents:" >&2
   find "$EXTRACT_DIR" -maxdepth 2 -mindepth 1 >&2
   die "unexpected artifact layout for $SDK_VERSION."
 fi
+
+# Exactly one, or we bail. Picking the first of several would compare an
+# arbitrary bundle and could report parity against the wrong artifact.
+XCFRAMEWORK_COUNT="$(printf '%s' "$OFFICIAL_XCFRAMEWORKS" | grep -c . || true)"
+if [[ "$XCFRAMEWORK_COUNT" -ne 1 ]]; then
+  echo "" >&2
+  echo "Expected exactly one .xcframework in the $SDK_VERSION artifact, found $XCFRAMEWORK_COUNT:" >&2
+  printf '%s\n' "$OFFICIAL_XCFRAMEWORKS" | sed "s|$EXTRACT_DIR/||" | sed 's/^/    /' >&2
+  echo "" >&2
+  echo "Update this script to select the right bundle deliberately." >&2
+  die "ambiguous artifact layout for $SDK_VERSION."
+fi
+
+OFFICIAL_XCFRAMEWORK="$OFFICIAL_XCFRAMEWORKS"
 
 # ---------------------------------------------------------------------------
 # 5. Compare the official tree against the vendored one
@@ -245,6 +289,23 @@ manifest() {
   # Print "sha256  path" for every file, paths relative to $1, sorted stably.
   # Fails loudly rather than emitting a short manifest.
   local root="$1" out="$2"
+
+  # A dangling symlink matches neither `-type f` (nothing to follow) nor its
+  # target, so it would drop out of the manifest entirely — and a stray one
+  # present only in the vendored tree would then let both manifests agree while
+  # the trees differ. Under `-L`, `-type l` matches *only* broken links (valid
+  # ones resolve to their target's type), so this does not fire on the canonical
+  # symlinked framework layout.
+  local broken
+  broken="$( cd "$root" && find -L . -type l -print )" \
+    || die "could not scan for broken symlinks in $root"
+  if [[ -n "$broken" ]]; then
+    echo "" >&2
+    echo "Broken symlink(s) under $root:" >&2
+    printf '%s\n' "$broken" | sed 's|^\./|    |' >&2
+    die "cannot assert parity for a tree containing broken symlinks."
+  fi
+
   ( cd "$root" \
       && find -L . -type f -print0 \
       | LC_ALL=C sort -z \
@@ -321,8 +382,10 @@ fi
 
 cat >&2 <<EOF
   SwiftPM users would get the official $SDK_VERSION binary while CocoaPods users
-  get the vendored one. Fix by re-vendoring from the pinned release:
+  get the vendored one. Fix by re-vendoring from the pinned release — the paths
+  below are relative to the plugin directory, so run this from there:
 
+    cd "$PLUGIN_DIR"
     curl -fsSL -o /tmp/AppstackSDK.xcframework.zip \\
       "$UPSTREAM_ZIP_URL"
     shasum -a 256 /tmp/AppstackSDK.xcframework.zip   # expect $UPSTREAM_CHECKSUM
