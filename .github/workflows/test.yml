@@ -24,6 +24,15 @@ jobs:
         with:
           persist-credentials: false
 
+      # Runs before the Flutter toolchain is even installed: it needs nothing but
+      # curl and shasum, and drift is cheaper to learn about now than at tag
+      # time. Confirms the vendored XCFramework is the artifact the SwiftPM
+      # `exact:` pin resolves to — 2.4.0 shipped an rc0 build against a 4.4.0 pin
+      # and analyze, unit tests and both build/link legs all still passed, so
+      # nothing else in CI covers this.
+      - name: Check vendored XCFramework matches the pinned iOS SDK version
+        run: bash appstack_plugin/tool/check_ios_sdk_parity.sh
+
       - name: Setup Flutter SDK
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2  # v2.23.0
         with:
