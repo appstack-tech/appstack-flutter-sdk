@@ -14,6 +14,10 @@ export 'event_type.dart';
 /// // Configure the SDK
 /// await AppstackPlugin.configure('your-api-key');
 ///
+/// // Set the customer user id later (e.g. on login), or clear it on logout
+/// await AppstackPlugin.setCustomerUserId('user-123');
+/// await AppstackPlugin.setCustomerUserId(null);
+///
 /// // Send events
 /// await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 29.99, 'currency': 'USD'});
 ///
@@ -104,6 +108,22 @@ class AppstackPlugin {
       }
     } catch (error) {
       throw Exception('Failed to configure Appstack SDK: $error');
+    }
+  }
+
+  /// Set — or clear — the customer user id after [configure], e.g. once a login
+  /// reveals it. A repeat [configure] is a no-op, so it cannot be used to change the id.
+  ///
+  /// Parameters:
+  /// - [customerUserId]: Your identifier for the signed-in user; `null` or a blank
+  ///   string clears it (do this on logout). Safe to call at any time; last write wins.
+  ///
+  /// Returns: Future that completes once native has stored (or cleared) the id
+  static Future<void> setCustomerUserId(String? customerUserId) async {
+    try {
+      await AppstackPluginPlatform.instance.setCustomerUserId(customerUserId);
+    } catch (error) {
+      throw Exception('Failed to set customer user ID: $error');
     }
   }
 

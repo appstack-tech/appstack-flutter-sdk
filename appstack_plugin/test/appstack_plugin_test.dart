@@ -7,12 +7,21 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 class MockAppstackPluginPlatform
     with MockPlatformInterfaceMixin
     implements AppstackPluginPlatform {
+  /// Every `setCustomerUserId` argument received, in order — nulls included.
+  final List<String?> setCustomerUserIdCalls = <String?>[];
+
   @override
   Future<void> configure(
     String apiKey,
     int logLevel,
     String? customerUserId,
   ) => Future.value();
+
+  @override
+  Future<void> setCustomerUserId(String? customerUserId) {
+    setCustomerUserIdCalls.add(customerUserId);
+    return Future.value();
+  }
 
   @override
   Future<bool> sendEvent(
@@ -164,6 +173,63 @@ void main() {
 
       await AppstackPlugin.configure('key');
       // Should complete; SDK disabled warning is logged
+    });
+  });
+
+  group('AppstackPlugin.setCustomerUserId', () {
+    test('forwards the id to the platform', () async {
+      final fakePlatform = MockAppstackPluginPlatform();
+      AppstackPluginPlatform.instance = fakePlatform;
+
+      await AppstackPlugin.setCustomerUserId('user-123');
+
+      expect(fakePlatform.setCustomerUserIdCalls, ['user-123']);
+    });
+
+    // A null id is a clear, so it must reach the platform, not be filtered out.
+    test('forwards null to the platform as a clear', () async {
+      final fakePlatform = MockAppstackPluginPlatform();
+      AppstackPluginPlatform.instance = fakePlatform;
+
+      await AppstackPlugin.setCustomerUserId(null);
+
+      expect(fakePlatform.setCustomerUserIdCalls, [null]);
+    });
+
+    test('forwards a blank id instead of rejecting it', () async {
+      final fakePlatform = MockAppstackPluginPlatform();
+      AppstackPluginPlatform.instance = fakePlatform;
+
+      await AppstackPlugin.setCustomerUserId('');
+      await AppstackPlugin.setCustomerUserId('   ');
+
+      expect(fakePlatform.setCustomerUserIdCalls, ['', '   ']);
+    });
+
+    test('applies last-write-wins ordering', () async {
+      final fakePlatform = MockAppstackPluginPlatform();
+      AppstackPluginPlatform.instance = fakePlatform;
+
+      await AppstackPlugin.setCustomerUserId('first');
+      await AppstackPlugin.setCustomerUserId(null);
+      await AppstackPlugin.setCustomerUserId('second');
+
+      expect(fakePlatform.setCustomerUserIdCalls, ['first', null, 'second']);
+    });
+
+    test('throws Exception when the platform fails', () async {
+      AppstackPluginPlatform.instance = _ThrowingPlatform(
+        throwOnSetCustomerUserId: true,
+      );
+
+      expect(
+        () => AppstackPlugin.setCustomerUserId('user-123'),
+        throwsA(isA<Exception>().having(
+          (e) => e.toString(),
+          'message',
+          contains('Failed to set customer user ID'),
+        )),
+      );
     });
   });
 
@@ -325,6 +391,7 @@ void main() {
 class _ThrowingPlatform extends AppstackPluginPlatform {
   _ThrowingPlatform({
     this.throwOnConfigure = false,
+    this.throwOnSetCustomerUserId = false,
     this.throwOnSendEvent = false,
     this.throwOnEnableAppleAdsAttribution = false,
     this.throwOnGetAppstackId = false,
@@ -333,6 +400,7 @@ class _ThrowingPlatform extends AppstackPluginPlatform {
   });
 
   final bool throwOnConfigure;
+  final bool throwOnSetCustomerUserId;
   final bool throwOnSendEvent;
   final bool throwOnEnableAppleAdsAttribution;
   final bool throwOnGetAppstackId;
@@ -346,6 +414,11 @@ class _ThrowingPlatform extends AppstackPluginPlatform {
     String? customerUserId,
   ) async {
     if (throwOnConfigure) throw Exception('configure failed');
+  }
+
+  @override
+  Future<void> setCustomerUserId(String? customerUserId) async {
+    if (throwOnSetCustomerUserId) throw Exception('setCustomerUserId failed');
   }
 
   @override

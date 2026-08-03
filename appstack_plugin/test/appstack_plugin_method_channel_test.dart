@@ -83,6 +83,77 @@ void main() {
     });
   });
 
+  group('setCustomerUserId', () {
+    test('invokes native setCustomerUserId with the id', () async {
+      Map<String, dynamic>? capturedArgs;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+        if (methodCall.method == 'setCustomerUserId') {
+          capturedArgs =
+              Map<String, dynamic>.from(methodCall.arguments as Map);
+        }
+        return null;
+      });
+
+      await platform.setCustomerUserId('customer-123');
+
+      expect(capturedArgs, isNotNull);
+      expect(capturedArgs!['customerUserId'], 'customer-123');
+    });
+
+    // Dropping the key would drop the clear: the native handlers read the argument.
+    test('sends the customerUserId key with a null value on clear', () async {
+      Map<String, dynamic>? capturedArgs;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+        if (methodCall.method == 'setCustomerUserId') {
+          capturedArgs =
+              Map<String, dynamic>.from(methodCall.arguments as Map);
+        }
+        return null;
+      });
+
+      await platform.setCustomerUserId(null);
+
+      expect(capturedArgs, isNotNull);
+      expect(capturedArgs!.containsKey('customerUserId'), isTrue);
+      expect(capturedArgs!['customerUserId'], isNull);
+    });
+
+    test('forwards a blank id without normalizing it away', () async {
+      final captured = <String?>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+        if (methodCall.method == 'setCustomerUserId') {
+          captured.add(
+            (methodCall.arguments as Map)['customerUserId'] as String?,
+          );
+        }
+        return null;
+      });
+
+      await platform.setCustomerUserId('');
+      await platform.setCustomerUserId('  ');
+
+      expect(captured, ['', '  ']);
+    });
+
+    test('propagates platform exceptions', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+        if (methodCall.method == 'setCustomerUserId') {
+          throw PlatformException(code: 'SET_CUSTOMER_USER_ID_ERROR');
+        }
+        return null;
+      });
+
+      expect(
+        () => platform.setCustomerUserId('customer-123'),
+        throwsA(isA<PlatformException>()),
+      );
+    });
+  });
+
   group('sendEvent', () {
     test('returns true when native returns true', () async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

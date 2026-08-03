@@ -31,6 +31,7 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandl
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
     when (call.method) {
       "configure" -> handleConfigure(call, result)
+      "setCustomerUserId" -> handleSetCustomerUserId(call, result)
       "sendEvent" -> handleSendEvent(call, result)
       "enableAppleAdsAttribution" -> {
         // Apple Ads Attribution is iOS-only, return false on Android
@@ -89,6 +90,23 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandl
       result.success(true)
     } catch (e: Exception) {
       result.error("CONFIGURATION_ERROR", "Failed to configure SDK: ${e.message}", null)
+    }
+  }
+
+  /**
+   * Sets — or clears — the customer user id after configure(). Forwarded verbatim:
+   * unlike the configure path, a null or blank id is an explicit clear here.
+   */
+  private fun handleSetCustomerUserId(call: MethodCall, result: Result) {
+    try {
+      AppstackAttributionSdk.setCustomerUserId(call.argument<String>("customerUserId"))
+      result.success(null)
+    } catch (e: Exception) {
+      result.error(
+        "SET_CUSTOMER_USER_ID_ERROR",
+        "Failed to set customer user ID: ${e.message}",
+        null
+      )
     }
   }
 
