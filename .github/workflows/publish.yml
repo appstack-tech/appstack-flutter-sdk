@@ -18,10 +18,30 @@ env:
   SEMVER_REGEX: '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
 
 jobs:
+  # Cheap release gate, first: confirm the vendored XCFramework is the artifact
+  # the SwiftPM `exact:` pin resolves to. 2.4.0 shipped an rc0 XCFramework
+  # against a 4.4.0 pin and every other check stayed green, so this runs before
+  # the simulator/emulator matrix and before any GCP auth — drift cancels the
+  # release in under a minute instead of after the heavy jobs.
+  verify:
+    name: Verify iOS SDK parity
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Check vendored XCFramework matches the pinned SDK version
+        run: bash appstack_plugin/tool/check_ios_sdk_parity.sh
+
   # Publishing is allowed only after the same build/link and hermetic runtime
   # checks that gate pull requests have passed for the tagged commit.
   integration:
     name: Build and runtime checks
+    needs: verify
     uses: ./.github/workflows/integration.yml
 
   publish:
