@@ -5,7 +5,7 @@ All notable changes to the Appstack Flutter Plugin will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.5.0] - 2026-08-06
 
 ### Changed
 - **Updated the Appstack iOS SDK to 4.4.1** — attribution matching now includes additional network context to improve match diagnostics.
