@@ -5,6 +5,16 @@ All notable changes to the Appstack Flutter Plugin will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Updated the Appstack iOS SDK to 4.4.1** — attribution match requests now carry a bounded snapshot of the current network path (transport, IPv4/IPv6 routing availability, expensive-path classification, Low Data Mode, and a best-effort VPN-interface signal) to improve match diagnostics.
+- **Updated the Appstack Android SDK to 1.6.0** — attribution matching now includes permissionless device signals (network availability, carrier/SIM metadata, RAM and internal-storage capacity, CPU core count, uptime, and preferred languages). No raw IP addresses or persistent telephony identifiers are collected, and no new dangerous permission is required. The Play install referrer is now fetched *before* `/attribution/match` and forwarded as `raw_referrer`, so the backend can resolve the match deterministically instead of falling back to probabilistic matching; a failed referrer fetch is retried up to three times per launch.
+- **`EventType.install` is no longer sent when passed to `sendEvent()`** — both native SDKs already emit the install event automatically on first launch, and both now discard a manual send at the entry point. Previously a manual `sendEvent(EventType.install)` inflated install counts. The call still succeeds; the event is logged and dropped natively. (iOS 4.4.1 applies the same rule to its auto-tracked `FIRST_OPEN` and `FIRST_OPEN_GUARDED` events, which this plugin's `EventType` does not expose.)
+
+### Fixed
+- **Android: a remotely disabled app no longer fires the attribution match request** — previously `enabled=false` suppressed only the event POSTs, and a fresh install still called `/attribution/match`. A disabled app now makes no attribution network calls at all.
+
 ## [2.4.0] - 2026-07-21
 
 ### Changed
