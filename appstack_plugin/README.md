@@ -130,7 +130,7 @@ Here, you will find the [pub.dev appstack_plugin documentation](https://pub.dev/
     - `isDebug` - Optional debug mode flag (default: false)
     - `endpointBaseUrl` - Optional custom endpoint
     - `logLevel` - Optional log level: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR (default: 1)
-    - `customerUserId` - Optional customer user ID passed through to the native SDKs
+    - `customerUserId` - Optional customer user ID passed through to the native SDKs. If it is only known after `configure()` (usually after a login), use [`setCustomerUserId()`](#setting-the-customer-user-id) instead — a repeat `configure()` is a no-op and ignores this parameter.
 
     Returns: A `Future<void>` that completes when configuration is done. It throws on failure (e.g. an empty API key or an invalid `logLevel`). To check whether the SDK was actually enabled after configuring, call `isSdkDisabled()`.
 
@@ -274,6 +274,26 @@ if (await AppstackPlugin.isSdkDisabled()) {
   print('SDK is disabled - check your API key');
 }
 ```
+
+### **Setting the customer user ID**
+
+The customer user ID is your own identifier for the signed-in user. Appstack attaches it to events so server-to-server events — which identify the user by this ID rather than by the install — can be joined back to the install that produced them.
+
+If you already know the ID at startup, pass it to `configure()`. More often a login reveals it afterwards, so set it whenever it becomes known:
+
+```dart
+// On login
+await AppstackPlugin.setCustomerUserId('user-123');
+
+// On logout — otherwise the previous user's ID stays attached to later events
+await AppstackPlugin.setCustomerUserId(null);
+```
+
+- `null` (or a blank string) clears the stored ID. Unlike `configure()`, which never clears, a blank value here is an explicit clear rather than "not provided".
+- Callable at any time, before or after `configure()`, as often as you like — the last call wins.
+- Applies to every event sent from here on, including ones the native SDK has buffered but not yet flushed. Events already sent are not backfilled and do not need to be: Appstack maps the ID to the install using any event that carries it.
+- The call itself sends nothing. Make sure at least one event follows, or no mapping is ever formed.
+- Calling `configure()` again to change the ID does not work — a repeat `configure()` is a no-op and its `customerUserId` is ignored.
 
 ### **Getting the Appstack ID**
 

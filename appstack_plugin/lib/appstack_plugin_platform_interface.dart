@@ -32,6 +32,13 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
     throw UnimplementedError('configure() has not been implemented.');
   }
 
+  /// Set — or clear — the customer user id after [configure]
+  ///
+  /// A null or blank id is an explicit clear here, not "not provided".
+  Future<void> setCustomerUserId(String? customerUserId) {
+    throw UnimplementedError('setCustomerUserId() has not been implemented.');
+  }
+
   /// Send an event with optional parameters
   Future<bool> sendEvent(
     String eventType,

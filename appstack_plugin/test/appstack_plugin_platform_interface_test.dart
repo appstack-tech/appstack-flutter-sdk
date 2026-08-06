@@ -34,6 +34,17 @@ void main() {
       );
     });
 
+    test('setCustomerUserId throws UnimplementedError', () {
+      expect(
+        () => AppstackPluginPlatform.instance.setCustomerUserId('user-123'),
+        throwsA(isA<UnimplementedError>().having(
+          (e) => e.message,
+          'message',
+          contains('setCustomerUserId()'),
+        )),
+      );
+    });
+
     test('sendEvent throws UnimplementedError', () {
       expect(
         () => AppstackPluginPlatform.instance.sendEvent(

@@ -27,6 +27,14 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
   }
 
   @override
+  Future<void> setCustomerUserId(String? customerUserId) async {
+    // The key is always sent, holding null on a clear.
+    await methodChannel.invokeMethod<void>('setCustomerUserId', {
+      'customerUserId': customerUserId,
+    });
+  }
+
+  @override
   Future<bool> sendEvent(
     String eventType,
     String? eventName,

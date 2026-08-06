@@ -19,6 +19,8 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     switch call.method {
     case "configure":
       handleConfigure(call: call, result: result)
+    case "setCustomerUserId":
+      handleSetCustomerUserId(call: call, result: result)
     case "sendEvent":
       handleSendEvent(call: call, result: result)
     case "enableAppleAdsAttribution":
@@ -104,6 +106,18 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         // Always return success on the main thread to prevent hanging
         self.deliverResult(result, true)
       }
+    }
+  }
+
+  /// Sets — or clears — the customer user id after configure(). A null or absent
+  /// argument both decode to nil, which is the clear — unlike the configure path.
+  private func handleSetCustomerUserId(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    let customerUserId = (call.arguments as? [String: Any])?["customerUserId"] as? String
+
+    sdkQueue.async { [weak self] in
+      guard let self = self else { return }
+      AppstackAttributionSdk.shared.setCustomerUserId(customerUserId)
+      self.deliverResult(result, nil)
     }
   }
 
