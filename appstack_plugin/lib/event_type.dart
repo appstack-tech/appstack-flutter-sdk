@@ -9,6 +9,9 @@
 enum EventType {
   // MARK: - Lifecycle
   /// User installs the app (tracked automatically by the SDK).
+  ///
+  /// Passing this to `sendEvent` has no effect: both native SDKs discard a
+  /// manual install event so it cannot inflate install counts.
   install,
 
   // MARK: - Authentication & account
