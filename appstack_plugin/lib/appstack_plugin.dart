@@ -207,6 +207,11 @@ class AppstackPlugin {
   /// on the platform thread. Prefer [getAttributionParamsWithCallback] when
   /// attribution retrieval time may vary.
   ///
+  /// On iOS the map always contains `appstack_match_status`, describing the
+  /// attribution outcome: `matched`, `matched_no_params`, `organic`, `skipped`,
+  /// `failed` or `not_configured`. Only `failed` is worth retrying. Android does
+  /// not send that key yet, so keep handling an empty map as "nothing yet".
+  ///
   /// Example:
   /// ```dart
   /// final params = await AppstackPlugin.getAttributionParams();
