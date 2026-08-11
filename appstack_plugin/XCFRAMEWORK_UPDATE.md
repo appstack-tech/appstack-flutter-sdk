@@ -198,7 +198,7 @@ script (worth knowing if you ever compare by hand):
 
 ## XCFramework Structure
 
-Whatever the pinned release contains, verbatim. As of 4.4.1 that is three slices
+Whatever the pinned release contains, verbatim. As of 4.5.0 that is three slices
 plus dSYMs (69 files following symlinks):
 
 ```text

@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `AppstackPlugin.setCustomerUserId(customerUserId)` — sets or clears the customer user ID after `configure()`, bridging the native iOS/Android setter of the same name. Use it when a login reveals the ID; calling `configure()` a second time does not work, as a repeat `configure()` is a no-op and ignores its `customerUserId`. Clear it on logout so the previous user's ID stops being attached to later events. Passing `null` (or a blank string) clears the stored ID — unlike `configure()`, which treats a blank value as "not provided" because it never clears. Safe to call at any time; last write wins.
 
+### Changed
+- **Updated the Appstack iOS SDK to 4.5.0** — on iOS, `getAttributionParams()` no longer comes back empty: the map now always carries an `appstack_match_status` key reporting the attribution outcome (`matched`, `matched_no_params`, `organic`, `skipped`, `failed` or `not_configured`). Only `failed` is worth re-reading later; the rest are settled answers. The Dart signature is unchanged — the result is still nullable, so existing null checks keep working — but code that read an empty result as "not attributed" should switch to the status key. Treat the key as iOS-only for now: Android 1.7.0 does not add it, so an empty map still means "nothing yet" there. Also fixed on iOS: a `setCustomerUserId()` call made immediately after `configure()` is no longer overwritten by the `customerUserId` passed to `configure()`, and a blank customer user ID is treated as absent rather than sent as an empty string.
+- **Updated the Appstack Android SDK to 1.7.0** — adds the native `setCustomerUserId` setter that `AppstackPlugin.setCustomerUserId()` bridges on Android. No new permission is required.
+
 ## [2.5.0] - 2026-08-06
 
 ### Changed
