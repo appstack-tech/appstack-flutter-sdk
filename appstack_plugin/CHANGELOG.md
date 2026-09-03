@@ -5,6 +5,14 @@ All notable changes to the Appstack Flutter Plugin will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-09-03
+
+### Changed
+- **Updated the Appstack iOS SDK to 4.6.0** — the SDK can now encrypt the identifying parameters it sends to the attribution endpoint, using HPKE over P-256 (CryptoKit) with a server-supplied recipient key. It is entirely internal and server-gated: nothing is exposed on the public API, there is no flag to set, and the SDK falls back to its previous behaviour when the server does not enable it. The release also ships a `PrivacyInfo.xcprivacy` privacy manifest inside every framework slice, declaring the SDK's own required-reason API use (`UserDefaults`/`CA92.1` and file timestamps/`C617.1`) — it travels with the vendored XCFramework and the SPM binary target alike, so host apps get it without adding anything. Natively the SDK also gained an internal `ASA_ATTRIBUTION` event type that it emits itself; like `FIRST_OPEN`, it is not exposed through Dart's `EventType` and is not something an app sends by hand.
+- **Updated the Appstack Android SDK to 1.8.0** — the same internal, server-gated HPKE parameter encryption as iOS 4.6.0. No public API change, no new permission, and no new transitive dependency (it is built on the platform's own crypto primitives); the R8/ProGuard keep rules it needs ship inside the AAR, so consuming apps need no rule of their own.
+
+No Dart API changed in this release: `EventType`, `configure()`, `sendEvent()`, `getAttributionParams()` and the rest keep their current signatures and behaviour, and both bridges pass the native values through untouched as before.
+
 ## [2.6.0] - 2026-08-11
 
 ### Added

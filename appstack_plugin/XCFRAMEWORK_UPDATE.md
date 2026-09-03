@@ -198,8 +198,8 @@ script (worth knowing if you ever compare by hand):
 
 ## XCFramework Structure
 
-Whatever the pinned release contains, verbatim. As of 4.5.0 that is three slices
-plus dSYMs (69 files following symlinks):
+Whatever the pinned release contains, verbatim. As of 4.6.0 that is three slices
+plus dSYMs (74 files following symlinks):
 
 ```text
 AppstackSDK.xcframework/
@@ -209,6 +209,7 @@ AppstackSDK.xcframework/
 │   │   ├── AppstackSDK (binary)
 │   │   ├── Headers/AppstackSDK.h
 │   │   ├── Info.plist
+│   │   ├── PrivacyInfo.xcprivacy
 │   │   └── Modules/
 │   │       ├── AppstackSDK.swiftmodule/
 │   │       └── module.modulemap
@@ -217,9 +218,15 @@ AppstackSDK.xcframework/
 │   ├── AppstackSDK.framework/          (same shape, + _CodeSignature/)
 │   └── dSYMs/AppstackSDK.framework.dSYM/
 └── ios-arm64_x86_64-maccatalyst/
-    ├── AppstackSDK.framework/          (Versions/A/… layout, flattened in the zip)
+    ├── AppstackSDK.framework/          (Versions/A/… layout, flattened in the zip;
+    │                                    PrivacyInfo.xcprivacy lives under Resources/)
     └── dSYMs/AppstackSDK.framework.dSYM/
 ```
+
+4.6.0 is the first release to ship `PrivacyInfo.xcprivacy` inside each slice. It
+is part of the artifact, so it travels with `s.ios.vendored_frameworks` and needs
+no podspec change — the commented-out `s.resource_bundles` line in the podspec is
+for a manifest describing the *plugin's* own API use, which is a separate thing.
 
 Do not add, prune or restructure slices to make this diagram match — the vendored
 tree must equal the pinned artifact. If the shape changes upstream, update the
