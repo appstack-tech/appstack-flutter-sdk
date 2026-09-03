@@ -134,6 +134,23 @@ class AppstackPlugin {
   /// - [eventName]: Event name for custom events (optional)
   /// - [parameters]: Optional map of parameters to include with the event (e.g., {'revenue': 29.99, 'currency': 'USD'})
   ///
+  /// Use strings, finite numbers, booleans, lists, and nested string-keyed maps
+  /// as parameter values. A `DateTime`, `Uri`, `Set` or arbitrary object cannot
+  /// cross the platform channel and throws an `ArgumentError` before reaching
+  /// the native SDK — convert those yourself (e.g. `date.toIso8601String()`).
+  ///
+  /// A `null` value is omitted from the payload and the event still sends;
+  /// nulls nested inside a list are preserved. A value the native SDK cannot
+  /// serialize — `double.nan`, `double.infinity`, or a typed-data list such as
+  /// `Uint8List` — has its key dropped individually and logged natively, and
+  /// the event still sends with the remaining parameters.
+  ///
+  /// Custom parameter values may be encrypted on the device before they are
+  /// sent, so avoid relying on them being readable in raw payload inspection.
+  /// This is driven entirely by remote config — nothing to set here — and keys
+  /// the backend needs in the clear (`currency`, `revenue`, campaign fields)
+  /// are excluded. Revenue reporting is unaffected.
+  ///
   /// Returns: Future that resolves to true if event was sent successfully
   static Future<bool> sendEvent(
     EventType eventType, {

@@ -5,6 +5,23 @@ All notable changes to the Appstack Flutter Plugin will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-09-03
+
+### Changed
+- **Updated the Appstack iOS SDK to 4.6.0**
+- **Updated the Appstack Android SDK to 1.8.0**
+- **Custom `sendEvent()` parameters are encrypted on the device before being sent.** Parameter keys not in the backend's plaintext allowlist are sealed with RFC 9180 HPKE. The allowlist is served in remote config; no app or `configure()` change is required, and with no config block both SDKs send plaintext as before. `transaction_details`, deeplink user data, identifiers and other top-level event fields are not encrypted, and revenue is extracted before encryption, so revenue reporting is unchanged. A value that cannot be sealed is omitted and the event still sends. Requires iOS 17+; on iOS 15–16 values are encrypted server-side as before. Applies at Android's API 21 floor. No new dependency on either platform; the Android AAR grows ~36 KB.
+
+### Fixed
+
+All three are iOS SDK 4.6.0 fixes; Android is unchanged.
+
+- **A `null` in `sendEvent()`'s `parameters` no longer drops the event on iOS.** Nulls are omitted from the payload; nulls inside lists are kept. This matches Android's existing behaviour.
+- **`sendEvent()` no longer crashes on iOS when a parameter value cannot be JSON-serialized.** The key is dropped and logged natively; the event sends with the rest. From Dart this covers `double.nan`, `double.infinity` and typed-data lists (`Uint8List`, `Int32List`, `Int64List`, `Float64List`). `DateTime`, `Uri`, `Set` and arbitrary objects are unaffected — they throw `ArgumentError` at the platform channel and never reach the SDK.
+- **A `null` in the attribution match response no longer discards the whole response on iOS.** One null query parameter could previously cost an install its attribution data.
+
+No Dart API changed. `sendEvent()`'s doc comment now describes null handling, the parameter value types that cross the platform channel, and the encryption.
+
 ## [2.6.0] - 2026-08-11
 
 ### Added
