@@ -119,6 +119,22 @@ def validate_links(result: Dict) -> Dict[str, Optional[str]]:
     return observed
 
 
+# Distinctive strings that appear only in the probe's parsed links. Link
+# parsing is documented as local-only, so none of them may reach the wire.
+LINK_MARKERS = ("links.example.com", "abc123", "pre123", "evil.example.com")
+
+
+def require_no_link_traffic(requests: List[Dict]) -> None:
+    for item in requests:
+        blob = json.dumps(item, ensure_ascii=False)
+        for marker in LINK_MARKERS:
+            require(
+                marker not in blob,
+                f"link parsing leaked {marker!r} to {item.get('path')!r}; "
+                "handleUniversalLink must not make a network request or send an event",
+            )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runtime-log", required=True)
@@ -213,6 +229,8 @@ def main() -> None:
         parameters.get("nested") == {"enabled": True, "value": 7},
         "nested custom parameter changed",
     )
+
+    require_no_link_traffic(requests)
 
     login_parameters = login.get("custom_parameters") or {}
     require(
