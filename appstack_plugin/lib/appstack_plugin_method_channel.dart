@@ -85,6 +85,18 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
   }
 
   @override
+  Future<Map<String, dynamic>?> handleUniversalLink(
+    String url,
+    List<String>? allowedHosts,
+  ) async {
+    final result = await methodChannel.invokeMethod<Map<dynamic, dynamic>?>(
+      'handleUniversalLink',
+      {'url': url, 'allowedHosts': allowedHosts},
+    );
+    return result == null ? null : Map<String, dynamic>.from(result);
+  }
+
+  @override
   Stream<Map<String, dynamic>?> getAttributionParamsWithCallback() {
     return _attributionParamsEventChannel
         .receiveBroadcastStream()

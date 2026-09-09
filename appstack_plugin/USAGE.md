@@ -61,6 +61,39 @@ class MyApp extends StatelessWidget {
 }
 ```
 
+## Universal Links and Android App Links
+
+Appstack parses standard links on your branded domain. The shared
+`appstack.link` and `dev.appstack.link` hosts are intentionally ignored. A
+supported link has exactly one path segment, for example
+`https://links.example.com/abc123?screen=offer`.
+
+Forward the `Uri` from your app's existing Router or link plugin:
+
+```dart
+Future<void> handleIncomingUri(Uri uri) async {
+  final link = await AppstackPlugin.handleUniversalLink(
+    uri,
+    allowedHosts: {'links.example.com'},
+  );
+  if (link != null) {
+    // Route using link.deeplinkId and link.queryParams.
+  }
+}
+```
+
+Call it for both the initial URI and later URI events. The method is safe before
+`configure()`, and it does not register a second lifecycle listener, make a
+network request, or track an event. If you use a plugin such as `app_links`,
+follow Flutter's guidance for disabling Flutter's built-in deep-link handler so
+the two handlers do not conflict. See Flutter's
+[deep-linking guide](https://docs.flutter.dev/ui/navigation/deep-linking).
+
+On iOS, add `applinks:links.example.com` to the Runner target's Associated
+Domains entitlement. On Android, add a verified HTTPS intent filter for that
+host. The branded domain must serve the matching AASA and `assetlinks.json`
+files.
+
 ## Installation ID + attribution parameters
 
 ```dart

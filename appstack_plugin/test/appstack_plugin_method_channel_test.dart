@@ -154,6 +154,42 @@ void main() {
     });
   });
 
+  group('handleUniversalLink', () {
+    test('forwards URL and allowlist and converts the result', () async {
+      MethodCall? captured;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (methodCall) async {
+        captured = methodCall;
+        return {
+          'deeplinkId': 'abc',
+          'queryParams': {'screen': 'offer'},
+          'url': 'https://links.example.com/abc?screen=offer',
+        };
+      });
+
+      final value = await platform.handleUniversalLink(
+        'https://links.example.com/abc?screen=offer',
+        ['links.example.com'],
+      );
+
+      expect(captured!.method, 'handleUniversalLink');
+      expect(captured!.arguments, {
+        'url': 'https://links.example.com/abc?screen=offer',
+        'allowedHosts': ['links.example.com'],
+      });
+      expect(value!['deeplinkId'], 'abc');
+    });
+
+    test('returns null when native ignores the URL', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (_) async => null);
+      expect(
+        await platform.handleUniversalLink('https://appstack.link/abc', null),
+        isNull,
+      );
+    });
+  });
+
   group('sendEvent', () {
     test('returns true when native returns true', () async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

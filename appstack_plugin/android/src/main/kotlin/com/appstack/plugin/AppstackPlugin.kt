@@ -2,10 +2,12 @@ package com.appstack.plugin
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.annotation.NonNull
 import com.appstack.attribution.AppstackAttributionSdk
 import com.appstack.attribution.EventType
 import com.appstack.attribution.LogLevel
+import com.appstack.attribution.LinkOptions
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
@@ -40,6 +42,7 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandl
       "getAppstackId" -> handleGetAppstackId(result)
       "isSdkDisabled" -> handleIsSdkDisabled(result)
       "getAttributionParams" -> handleGetAttributionParams(result)
+      "handleUniversalLink" -> handleUniversalLink(call, result)
       else -> result.notImplemented()
     }
   }
@@ -178,6 +181,29 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandl
       result.success(attributionParams)
     } catch (e: Exception) {
       result.error("GET_ATTRIBUTION_PARAMS_ERROR", "Failed to get attribution params: ${e.message}", null)
+    }
+  }
+
+  private fun handleUniversalLink(call: MethodCall, result: Result) {
+    try {
+      val url = call.argument<String>("url")
+      if (url.isNullOrBlank()) {
+        result.error("INVALID_ARGUMENTS", "A valid URL is required", null)
+        return
+      }
+      val allowedHosts = call.argument<List<String>>("allowedHosts")?.toSet()
+      val parsed = AppstackAttributionSdk.handleAppLink(Uri.parse(url), LinkOptions(allowedHosts))
+      if (parsed == null) {
+        result.success(null)
+        return
+      }
+      result.success(mapOf(
+        "deeplinkId" to (parsed.deeplinkId ?: ""),
+        "queryParams" to parsed.queryParams,
+        "url" to parsed.uri.toString()
+      ))
+    } catch (e: Exception) {
+      result.error("UNIVERSAL_LINK_ERROR", "Failed to parse universal link: ${e.message}", null)
     }
   }
 

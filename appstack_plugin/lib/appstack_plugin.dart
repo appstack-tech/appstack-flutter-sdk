@@ -5,6 +5,26 @@ import 'event_type.dart';
 
 export 'event_type.dart';
 
+class AppstackLinkResult {
+  const AppstackLinkResult({
+    required this.deeplinkId,
+    required this.queryParams,
+    required this.url,
+  });
+
+  final String deeplinkId;
+  final Map<String, String> queryParams;
+  final Uri url;
+
+  factory AppstackLinkResult.fromMap(Map<dynamic, dynamic> value) {
+    return AppstackLinkResult(
+      deeplinkId: value['deeplinkId'] as String,
+      queryParams: Map<String, String>.from(value['queryParams'] as Map),
+      url: Uri.parse(value['url'] as String),
+    );
+  }
+}
+
 /// Main Appstack SDK class for Flutter
 ///
 /// Usage example:
@@ -242,6 +262,25 @@ class AppstackPlugin {
     } catch (error) {
       throw Exception('Failed to get attribution params: $error');
     }
+  }
+
+  /// Parse an Appstack standard Universal/App Link delivered by the app's link handler.
+  /// Safe before [configure]. Returns null for unsupported links.
+  static Future<AppstackLinkResult?> handleUniversalLink(
+    Uri url, {
+    Set<String>? allowedHosts,
+  }) async {
+    if (allowedHosts != null &&
+        allowedHosts.any((host) => host.trim().isEmpty)) {
+      throw ArgumentError(
+        'allowedHosts must contain only non-empty hostnames',
+      );
+    }
+    final value = await AppstackPluginPlatform.instance.handleUniversalLink(
+      url.toString(),
+      allowedHosts?.map((host) => host.trim()).toList(),
+    );
+    return value == null ? null : AppstackLinkResult.fromMap(value);
   }
 
   /// Get attribution parameters via a push-style stream backed by a native background thread.

@@ -22,7 +22,7 @@ integration path** — they must be kept on the same version:
   `appstack_plugin/Package.swift`:
   ```swift
   dependencies: [
-      .package(url: "https://github.com/appstack-tech/ios-appstack-sdk.git", exact: "4.6.0"),
+      .package(url: "https://github.com/appstack-tech/ios-appstack-sdk.git", exact: "4.7.0"),
   ]
   ```
 - **CocoaPods** links the **bundled `AppstackSDK.xcframework`** committed in this
@@ -37,7 +37,7 @@ Both paths must be bumped together, or the two integrations ship different SDK b
 
 1. Edit `appstack_plugin/Package.swift` and update the exact version (SPM path):
    ```swift
-   .package(url: "https://github.com/appstack-tech/ios-appstack-sdk.git", exact: "4.6.0"),
+   .package(url: "https://github.com/appstack-tech/ios-appstack-sdk.git", exact: "4.7.0"),
    ```
 2. Replace `AppstackSDK.xcframework/` with the matching build of the same release
    (CocoaPods path), and commit it.
@@ -59,4 +59,3 @@ For Flutter apps on the CocoaPods path, `pod install` reads `appstack_plugin.pod
 compiles `appstack_plugin/Sources/appstack_plugin/AppstackPlugin.swift`, and links the
 bundled `AppstackSDK.xcframework`. (The SPM path does not use CocoaPods at all — Flutter
 resolves the package directly.)
-
