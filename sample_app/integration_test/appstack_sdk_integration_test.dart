@@ -25,6 +25,38 @@ bool _validAttribution(Map<String, dynamic>? value) {
       value?['unicode'] == 'café 🚀';
 }
 
+/// Drive `handleUniversalLink` against the real native parser and record what
+/// came back. Failures are captured rather than thrown so one unsupported case
+/// cannot hide the rest of the matrix.
+Future<Map<String, Object?>> _probeLink(
+  String label,
+  String url, {
+  Set<String>? allowedHosts,
+}) async {
+  try {
+    final link = await AppstackPlugin.handleUniversalLink(
+      Uri.parse(url),
+      allowedHosts: allowedHosts,
+    );
+    return <String, Object?>{
+      'label': label,
+      'url': url,
+      'allowedHosts': allowedHosts?.toList(),
+      'supported': link != null,
+      'deeplinkId': link?.deeplinkId,
+      'queryParams': link?.queryParams,
+      'resultUrl': link?.url.toString(),
+    };
+  } catch (error) {
+    return <String, Object?>{
+      'label': label,
+      'url': url,
+      'allowedHosts': allowedHosts?.toList(),
+      'error': '$error',
+    };
+  }
+}
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -37,6 +69,8 @@ void main() {
     var attributionValidated = false;
     var customEventAccepted = false;
     var standardEventAccepted = false;
+    Map<String, Object?> preConfigureLink = <String, Object?>{};
+    final linkCases = <Map<String, Object?>>[];
 
     try {
       if (!_runtimeValidationEnabled || _runtimeProxyUrl.isEmpty) {
@@ -46,12 +80,72 @@ void main() {
         );
       }
 
+      // Documented guarantee: the parser is usable before configure().
+      preConfigureLink = await _probeLink(
+        'preConfigure',
+        'https://links.example.com/pre123?screen=offer',
+        allowedHosts: {'links.example.com'},
+      );
+
       await AppstackPlugin.configure(
         _apiKey,
         logLevel: 0,
         customerUserId: _customerUserId,
       );
       configured = true;
+
+      // Universal/App Link parsing matrix, executed against the native parser.
+      linkCases.addAll(<Map<String, Object?>>[
+        // Supported: branded host, exactly one path segment.
+        await _probeLink(
+          'brandedSingleSegment',
+          'https://links.example.com/abc123?screen=offer&utm_source=café%20🚀',
+          allowedHosts: {'links.example.com'},
+        ),
+        // Ignored by design: the shared Appstack hosts.
+        await _probeLink(
+          'sharedHost',
+          'https://appstack.link/abc123?screen=offer',
+          allowedHosts: {'appstack.link'},
+        ),
+        await _probeLink(
+          'sharedDevHost',
+          'https://dev.appstack.link/abc123?screen=offer',
+          allowedHosts: {'dev.appstack.link'},
+        ),
+        // Unsupported shapes.
+        await _probeLink(
+          'multiSegment',
+          'https://links.example.com/a/b?screen=offer',
+          allowedHosts: {'links.example.com'},
+        ),
+        await _probeLink(
+          'noSegment',
+          'https://links.example.com/?screen=offer',
+          allowedHosts: {'links.example.com'},
+        ),
+        // Host outside the allowlist.
+        await _probeLink(
+          'hostNotAllowed',
+          'https://evil.example.com/abc123?screen=offer',
+          allowedHosts: {'links.example.com'},
+        ),
+        // Observational: no allowlist supplied.
+        await _probeLink(
+          'noAllowlistBranded',
+          'https://links.example.com/abc123?screen=offer',
+        ),
+        await _probeLink(
+          'noAllowlistShared',
+          'https://appstack.link/abc123?screen=offer',
+        ),
+        // Observational: custom scheme rather than https.
+        await _probeLink(
+          'customScheme',
+          'myapp://links.example.com/abc123?screen=offer',
+          allowedHosts: {'links.example.com'},
+        ),
+      ]);
 
       final appstackId = await AppstackPlugin.getAppstackId();
       appstackIdPresent = appstackId != null && appstackId.isNotEmpty;
@@ -115,6 +209,8 @@ void main() {
       'attributionValidated': attributionValidated,
       'customEventAccepted': customEventAccepted,
       'standardEventAccepted': standardEventAccepted,
+      'preConfigureLink': preConfigureLink,
+      'linkCases': linkCases,
       'errors': errors,
     };
 
@@ -131,5 +227,44 @@ void main() {
     expect(attributionValidated, isTrue);
     expect(customEventAccepted, isTrue);
     expect(standardEventAccepted, isTrue);
+
+    Map<String, Object?> linkCase(String label) => linkCases.firstWhere(
+      (item) => item['label'] == label,
+      orElse: () => throw StateError('missing link case: $label'),
+    );
+
+    // The parser must work before configure().
+    expect(preConfigureLink['error'], isNull);
+    expect(preConfigureLink['supported'], isTrue);
+    expect(preConfigureLink['deeplinkId'], 'pre123');
+
+    // A branded host with exactly one path segment is the supported shape.
+    final branded = linkCase('brandedSingleSegment');
+    expect(branded['error'], isNull);
+    expect(branded['supported'], isTrue);
+    expect(branded['deeplinkId'], 'abc123');
+    expect(
+      (branded['queryParams'] as Map?)?['screen'],
+      'offer',
+      reason: 'query parameters must survive the native bridge',
+    );
+    expect(
+      (branded['queryParams'] as Map?)?['utm_source'],
+      'café 🚀',
+      reason: 'percent-encoded UTF-8 must survive the native bridge',
+    );
+
+    // Everything the documented contract excludes must come back null.
+    for (final label in const <String>[
+      'sharedHost',
+      'sharedDevHost',
+      'multiSegment',
+      'noSegment',
+      'hostNotAllowed',
+    ]) {
+      final item = linkCase(label);
+      expect(item['error'], isNull, reason: '$label threw');
+      expect(item['supported'], isFalse, reason: '$label must be unsupported');
+    }
   });
 }

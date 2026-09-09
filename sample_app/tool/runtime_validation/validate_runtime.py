@@ -54,6 +54,71 @@ def required_events(
     return events, custom, login
 
 
+def link_case(result: Dict, label: str) -> Dict:
+    for item in result.get("linkCases") or []:
+        if item.get("label") == label:
+            return item
+    raise AssertionError(f"runtime probe recorded no link case {label!r}")
+
+
+def validate_links(result: Dict) -> Dict[str, Optional[str]]:
+    """Check the documented universal-link contract and return the observed
+    behaviour of the cases the contract leaves open."""
+    pre = result.get("preConfigureLink") or {}
+    require(not pre.get("error"), f"link parse before configure() failed: {pre.get('error')}")
+    require(
+        pre.get("supported") is True,
+        "link parsing must work before configure()",
+    )
+    require(
+        pre.get("deeplinkId") == "pre123",
+        f"wrong deeplink ID before configure(): {pre.get('deeplinkId')!r}",
+    )
+
+    branded = link_case(result, "brandedSingleSegment")
+    require(not branded.get("error"), f"branded link threw: {branded.get('error')}")
+    require(
+        branded.get("supported") is True,
+        "a branded host with one path segment must be supported",
+    )
+    require(
+        branded.get("deeplinkId") == "abc123",
+        f"wrong deeplink ID: {branded.get('deeplinkId')!r}",
+    )
+    query = branded.get("queryParams") or {}
+    require(query.get("screen") == "offer", "query parameter lost on the bridge")
+    require(
+        query.get("utm_source") == "café 🚀",
+        "percent-encoded UTF-8 query parameter changed on the bridge",
+    )
+
+    for label in (
+        "sharedHost",
+        "sharedDevHost",
+        "multiSegment",
+        "noSegment",
+        "hostNotAllowed",
+    ):
+        item = link_case(result, label)
+        require(not item.get("error"), f"{label} threw: {item.get('error')}")
+        require(
+            item.get("supported") is False,
+            f"{label} must be unsupported but returned {item.get('deeplinkId')!r}",
+        )
+
+    # Not part of the documented contract; recorded so a behaviour change is
+    # visible in the harness output rather than silently assumed.
+    observed = {}
+    for label in ("noAllowlistBranded", "noAllowlistShared", "customScheme"):
+        item = link_case(result, label)
+        observed[label] = (
+            f"error: {item['error']}"
+            if item.get("error")
+            else (item.get("deeplinkId") if item.get("supported") else None)
+        )
+    return observed
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runtime-log", required=True)
@@ -91,6 +156,8 @@ def main() -> None:
         "standard event call did not complete successfully",
     )
     require(not result.get("errors"), f"runtime probe errors: {result.get('errors')}")
+
+    observed_links = validate_links(result)
 
     requests_path = Path(args.requests_file)
     deadline = time.monotonic() + args.timeout_seconds
@@ -163,6 +230,8 @@ def main() -> None:
                 "platform": result.get("platform"),
                 "eventsRecorded": len(events),
                 "wrapperVersion": custom.get("wrapper_version"),
+                "linkCasesChecked": len(result.get("linkCases") or []),
+                "undocumentedLinkBehaviour": observed_links,
             },
             sort_keys=True,
         )
