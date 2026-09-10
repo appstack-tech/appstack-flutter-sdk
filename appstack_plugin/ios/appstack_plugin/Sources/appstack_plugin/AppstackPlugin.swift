@@ -31,6 +31,8 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       handleIsSdkDisabled(result: result)
     case "getAttributionParams":
       handleGetAttributionParams(result: result)
+    case "handleUniversalLink":
+      handleUniversalLink(call: call, result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -221,6 +223,33 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       let attributionParams = await AppstackAttributionSdk.shared.getAttributionParams()
       self.deliverResult(result, attributionParams)
     }
+  }
+
+  private func handleUniversalLink(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let arguments = call.arguments as? [String: Any],
+          let urlString = arguments["url"] as? String,
+          let url = URL(string: urlString) else {
+      result(FlutterError(code: "INVALID_ARGUMENTS", message: "A valid URL is required", details: nil))
+      return
+    }
+    let allowedHosts = (arguments["allowedHosts"] as? [String]).map(Set.init)
+    guard let parsed = AppstackAttributionSdk.shared.handleUniversalLink(
+      url,
+      options: LinkOptions(allowedHosts: allowedHosts)
+    ) else {
+      result(nil)
+      return
+    }
+    // `deeplinkId` is optional natively. A [String: Any] literal cannot hold
+    // nil, so omit the key instead; Dart decodes a missing key as null.
+    var payload: [String: Any] = [
+      "queryParams": parsed.queryParams,
+      "url": parsed.url.absoluteString,
+    ]
+    if let deeplinkId = parsed.deeplinkId {
+      payload["deeplinkId"] = deeplinkId
+    }
+    result(payload)
   }
 
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {

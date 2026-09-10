@@ -54,6 +54,91 @@ def required_events(
     return events, custom, login
 
 
+def link_case(result: Dict, label: str) -> Dict:
+    for item in result.get("linkCases") or []:
+        if item.get("label") == label:
+            return item
+    raise AssertionError(f"runtime probe recorded no link case {label!r}")
+
+
+def validate_links(result: Dict) -> None:
+    """Check the documented universal-link contract."""
+    pre = result.get("preConfigureLink") or {}
+    require(not pre.get("error"), f"link parse before configure() failed: {pre.get('error')}")
+    require(
+        pre.get("supported") is True,
+        "link parsing must work before configure()",
+    )
+    require(
+        pre.get("deeplinkId") == "pre123",
+        f"wrong deeplink ID before configure(): {pre.get('deeplinkId')!r}",
+    )
+
+    branded = link_case(result, "brandedSingleSegment")
+    require(not branded.get("error"), f"branded link threw: {branded.get('error')}")
+    require(
+        branded.get("supported") is True,
+        "a branded host with one path segment must be supported",
+    )
+    require(
+        branded.get("deeplinkId") == "abc123",
+        f"wrong deeplink ID: {branded.get('deeplinkId')!r}",
+    )
+    query = branded.get("queryParams") or {}
+    require(query.get("screen") == "offer", "query parameter lost on the bridge")
+    require(
+        query.get("utm_source") == "café 🚀",
+        "percent-encoded UTF-8 query parameter changed on the bridge",
+    )
+
+    # allowedHosts is optional hardening: with none supplied, any host but the
+    # shared Appstack ones is still parsed.
+    open_host = link_case(result, "noAllowlistBranded")
+    require(
+        not open_host.get("error"), f"open-host link threw: {open_host.get('error')}"
+    )
+    require(
+        open_host.get("supported") is True,
+        "omitting allowedHosts must still parse a non-shared host",
+    )
+    require(
+        open_host.get("deeplinkId") == "abc123",
+        f"wrong deeplink ID without an allowlist: {open_host.get('deeplinkId')!r}",
+    )
+
+    for label in (
+        "sharedHost",
+        "sharedDevHost",
+        "multiSegment",
+        "noSegment",
+        "hostNotAllowed",
+        "noAllowlistShared",
+        "customScheme",
+    ):
+        item = link_case(result, label)
+        require(not item.get("error"), f"{label} threw: {item.get('error')}")
+        require(
+            item.get("supported") is False,
+            f"{label} must be unsupported but returned {item.get('deeplinkId')!r}",
+        )
+
+
+# Distinctive strings that appear only in the probe's parsed links. Link
+# parsing is documented as local-only, so none of them may reach the wire.
+LINK_MARKERS = ("links.example.com", "abc123", "pre123", "evil.example.com")
+
+
+def require_no_link_traffic(requests: List[Dict]) -> None:
+    for item in requests:
+        blob = json.dumps(item, ensure_ascii=False)
+        for marker in LINK_MARKERS:
+            require(
+                marker not in blob,
+                f"link parsing leaked {marker!r} to {item.get('path')!r}; "
+                "handleUniversalLink must not make a network request or send an event",
+            )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runtime-log", required=True)
@@ -91,6 +176,8 @@ def main() -> None:
         "standard event call did not complete successfully",
     )
     require(not result.get("errors"), f"runtime probe errors: {result.get('errors')}")
+
+    validate_links(result)
 
     requests_path = Path(args.requests_file)
     deadline = time.monotonic() + args.timeout_seconds
@@ -147,6 +234,8 @@ def main() -> None:
         "nested custom parameter changed",
     )
 
+    require_no_link_traffic(requests)
+
     login_parameters = login.get("custom_parameters") or {}
     require(
         login_parameters.get("state") == "ready",
@@ -163,6 +252,7 @@ def main() -> None:
                 "platform": result.get("platform"),
                 "eventsRecorded": len(events),
                 "wrapperVersion": custom.get("wrapper_version"),
+                "linkCasesChecked": len(result.get("linkCases") or []),
             },
             sort_keys=True,
         )

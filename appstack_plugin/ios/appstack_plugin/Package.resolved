@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/appstack-tech/ios-appstack-sdk.git",
       "state" : {
-        "revision" : "2f065113a9e35ee7e6d82b83417b23160aa92708",
-        "version" : "4.6.0"
+        "revision" : "482c58f6793439afa09c370834f3f1a8141a12f1",
+        "version" : "4.7.0"
       }
     }
   ],

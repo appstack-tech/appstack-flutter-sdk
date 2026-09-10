@@ -231,6 +231,14 @@ Here, you will find the [pub.dev appstack_plugin documentation](https://pub.dev/
 
 ## **Advanced usage**
 
+### **Universal Links and Android App Links**
+
+Pass the initial URI and subsequent URI events from your existing Flutter
+Router or link plugin to `AppstackPlugin.handleUniversalLink`. Only branded
+standard links with one path segment are supported; see
+[USAGE.md](USAGE.md#universal-links-and-android-app-links) for platform setup and
+an example.
+
 ### **Attribution parameters**
 
 Two methods are available to retrieve attribution parameters:

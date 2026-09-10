@@ -5,6 +5,16 @@ All notable changes to the Appstack Flutter Plugin will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] - 2026-09-10
+
+### Added
+
+- Added `AppstackPlugin.handleUniversalLink(Uri, {allowedHosts})` for parsing branded-domain Appstack standard links delivered by the app's existing Flutter link handler. It is safe before `configure()` and returns `null` for unsupported links. The result's `deeplinkId` is nullable, matching both native SDKs. `allowedHosts` is optional hardening; omitting it parses any host except the shared Appstack ones.
+
+### Changed
+
+- Updated the native SDK dependencies that provide standard-link parsing: iOS `4.7.0` and Android `1.9.0`.
+
 ## [2.7.0] - 2026-09-03
 
 ### Changed

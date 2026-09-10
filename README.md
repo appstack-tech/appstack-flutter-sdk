@@ -90,6 +90,11 @@ print('Attribution parameters: $attributionParams');
 
 ## Documentation
 
+Universal/App Link parsing is exposed through
+`AppstackPlugin.handleUniversalLink`. The host app remains responsible for
+receiving cold- and warm-start links and configuring its branded domain; see the
+[plugin usage guide](appstack_plugin/USAGE.md#universal-links-and-android-app-links).
+
 - **[Full docs (docs.appstack.tech)](https://docs.appstack.tech)** – Flutter SDK guide on the main docs site
 - [Plugin README](./appstack_plugin/README.md) – Complete API documentation
 - [Usage Guide](./appstack_plugin/USAGE.md) – Detailed usage examples

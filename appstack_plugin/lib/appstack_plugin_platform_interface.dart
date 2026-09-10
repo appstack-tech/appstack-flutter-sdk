@@ -78,6 +78,13 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
     );
   }
 
+  Future<Map<String, dynamic>?> handleUniversalLink(
+    String url,
+    List<String>? allowedHosts,
+  ) {
+    throw UnimplementedError('handleUniversalLink() has not been implemented.');
+  }
+
   /// Get attribution parameters via a background-native stream
   ///
   /// Spawns a native background thread and emits a single result when ready,
