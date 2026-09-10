@@ -130,7 +130,7 @@ void main() {
           'https://evil.example.com/abc123?screen=offer',
           allowedHosts: {'links.example.com'},
         ),
-        // Observational: no allowlist supplied.
+        // Documented: with no allowlist every host but the shared ones parses.
         await _probeLink(
           'noAllowlistBranded',
           'https://links.example.com/abc123?screen=offer',
@@ -139,7 +139,7 @@ void main() {
           'noAllowlistShared',
           'https://appstack.link/abc123?screen=offer',
         ),
-        // Observational: custom scheme rather than https.
+        // Documented: only https links are parsed.
         await _probeLink(
           'customScheme',
           'myapp://links.example.com/abc123?screen=offer',
@@ -254,6 +254,12 @@ void main() {
       reason: 'percent-encoded UTF-8 must survive the native bridge',
     );
 
+    // With no allowlist, any host but the shared Appstack ones still parses.
+    final openHost = linkCase('noAllowlistBranded');
+    expect(openHost['error'], isNull);
+    expect(openHost['supported'], isTrue);
+    expect(openHost['deeplinkId'], 'abc123');
+
     // Everything the documented contract excludes must come back null.
     for (final label in const <String>[
       'sharedHost',
@@ -261,6 +267,8 @@ void main() {
       'multiSegment',
       'noSegment',
       'hostNotAllowed',
+      'noAllowlistShared',
+      'customScheme',
     ]) {
       final item = linkCase(label);
       expect(item['error'], isNull, reason: '$label threw');
