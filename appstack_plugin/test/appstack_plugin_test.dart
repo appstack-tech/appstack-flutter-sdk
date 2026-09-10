@@ -266,6 +266,42 @@ void main() {
       expect(fakePlatform.handledHosts, ['links.example.com']);
     });
 
+    test('maps a missing deeplinkId to null', () async {
+      // iOS omits the key entirely when the native value is nil.
+      final fakePlatform = MockAppstackPluginPlatform()
+        ..linkResult = {
+          'queryParams': {'screen': 'offer'},
+          'url': 'https://links.example.com/abc?screen=offer',
+        };
+      AppstackPluginPlatform.instance = fakePlatform;
+
+      final link = await AppstackPlugin.handleUniversalLink(
+        Uri.parse('https://links.example.com/abc?screen=offer'),
+      );
+
+      expect(link!.deeplinkId, isNull);
+      expect(link.queryParams, {'screen': 'offer'});
+      expect(link.url, Uri.parse('https://links.example.com/abc?screen=offer'));
+    });
+
+    test('maps an explicitly null deeplinkId to null', () async {
+      // Android sends the key through with a null value.
+      final fakePlatform = MockAppstackPluginPlatform()
+        ..linkResult = {
+          'deeplinkId': null,
+          'queryParams': <String, String>{},
+          'url': 'https://links.example.com/abc',
+        };
+      AppstackPluginPlatform.instance = fakePlatform;
+
+      final link = await AppstackPlugin.handleUniversalLink(
+        Uri.parse('https://links.example.com/abc'),
+      );
+
+      expect(link!.deeplinkId, isNull);
+      expect(link.queryParams, isEmpty);
+    });
+
     test('rejects an empty allowed host', () async {
       AppstackPluginPlatform.instance = MockAppstackPluginPlatform();
       expect(

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added `AppstackPlugin.handleUniversalLink(Uri, {allowedHosts})` for parsing branded-domain Appstack standard links delivered by the app's existing Flutter link handler. It is safe before `configure()` and returns `null` for unsupported links.
+- Added `AppstackPlugin.handleUniversalLink(Uri, {allowedHosts})` for parsing branded-domain Appstack standard links delivered by the app's existing Flutter link handler. It is safe before `configure()` and returns `null` for unsupported links. The result's `deeplinkId` is nullable, matching both native SDKs. `allowedHosts` is optional hardening; omitting it parses any host except the shared Appstack ones.
 
 ### Changed
 

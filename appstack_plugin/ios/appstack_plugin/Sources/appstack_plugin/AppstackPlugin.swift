@@ -240,11 +240,16 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       result(nil)
       return
     }
-    result([
-      "deeplinkId": parsed.deeplinkId ?? "",
+    // `deeplinkId` is optional natively. A [String: Any] literal cannot hold
+    // nil, so omit the key instead; Dart decodes a missing key as null.
+    var payload: [String: Any] = [
       "queryParams": parsed.queryParams,
       "url": parsed.url.absoluteString,
-    ])
+    ]
+    if let deeplinkId = parsed.deeplinkId {
+      payload["deeplinkId"] = deeplinkId
+    }
+    result(payload)
   }
 
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {

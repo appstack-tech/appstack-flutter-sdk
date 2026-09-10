@@ -12,13 +12,15 @@ class AppstackLinkResult {
     required this.url,
   });
 
-  final String deeplinkId;
+  /// The link's single path segment. Optional in both native SDKs, so it is
+  /// nullable here rather than collapsed to an empty string.
+  final String? deeplinkId;
   final Map<String, String> queryParams;
   final Uri url;
 
   factory AppstackLinkResult.fromMap(Map<dynamic, dynamic> value) {
     return AppstackLinkResult(
-      deeplinkId: value['deeplinkId'] as String,
+      deeplinkId: value['deeplinkId'] as String?,
       queryParams: Map<String, String>.from(value['queryParams'] as Map),
       url: Uri.parse(value['url'] as String),
     );

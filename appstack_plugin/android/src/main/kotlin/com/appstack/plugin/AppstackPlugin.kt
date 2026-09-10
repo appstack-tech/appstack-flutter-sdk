@@ -198,7 +198,7 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandl
         return
       }
       result.success(mapOf(
-        "deeplinkId" to (parsed.deeplinkId ?: ""),
+        "deeplinkId" to parsed.deeplinkId,
         "queryParams" to parsed.queryParams,
         "url" to parsed.uri.toString()
       ))
