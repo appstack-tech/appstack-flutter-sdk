@@ -303,6 +303,14 @@ await AppstackPlugin.setCustomerUserId(null);
 - The call itself sends nothing. Make sure at least one event follows, or no mapping is ever formed.
 - Calling `configure()` again to change the ID does not work — a repeat `configure()` is a no-op and its `customerUserId` is ignored.
 
+### **Deleting user data**
+
+Use `deleteUserData()` when fulfilling a GDPR or other privacy deletion request. It is available on both iOS and Android and completes only after the native request finishes.
+
+```dart
+await AppstackPlugin.deleteUserData();
+```
+
 ### **Getting the Appstack ID**
 
 Retrieve the unique Appstack ID for the current user. Returns `null` if it is not available yet.

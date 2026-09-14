@@ -9,6 +9,7 @@ class MockAppstackPluginPlatform
     implements AppstackPluginPlatform {
   /// Every `setCustomerUserId` argument received, in order — nulls included.
   final List<String?> setCustomerUserIdCalls = <String?>[];
+  int deleteUserDataCalls = 0;
   String? handledUrl;
   List<String>? handledHosts;
   Map<String, dynamic>? linkResult;
@@ -18,7 +19,8 @@ class MockAppstackPluginPlatform
     String apiKey,
     int logLevel,
     String? customerUserId,
-  ) => Future.value();
+  ) =>
+      Future.value();
 
   @override
   Future<void> setCustomerUserId(String? customerUserId) {
@@ -27,11 +29,17 @@ class MockAppstackPluginPlatform
   }
 
   @override
+  Future<void> deleteUserData() async {
+    deleteUserDataCalls++;
+  }
+
+  @override
   Future<bool> sendEvent(
     String eventType,
     String? eventName,
     Map<String, dynamic>? parameters,
-  ) => Future.value(true);
+  ) =>
+      Future.value(true);
 
   @override
   Future<bool> enableAppleAdsAttribution() => Future.value(true);
@@ -93,7 +101,8 @@ void main() {
       );
     });
 
-    test('still accepts the deprecated isDebug/endpointBaseUrl no-ops', () async {
+    test('still accepts the deprecated isDebug/endpointBaseUrl no-ops',
+        () async {
       final fakePlatform = MockAppstackPluginPlatform();
       AppstackPluginPlatform.instance = fakePlatform;
 
@@ -172,7 +181,8 @@ void main() {
       );
     });
 
-    test('does not rethrow when isSdkDisabled throws after configure', () async {
+    test('does not rethrow when isSdkDisabled throws after configure',
+        () async {
       AppstackPluginPlatform.instance = _ThrowingPlatform(
         throwOnIsSdkDisabled: true,
       );
@@ -241,6 +251,32 @@ void main() {
           (e) => e.toString(),
           'message',
           contains('Failed to set customer user ID'),
+        )),
+      );
+    });
+  });
+
+  group('AppstackPlugin.deleteUserData', () {
+    test('waits for the platform deletion to complete', () async {
+      final fakePlatform = MockAppstackPluginPlatform();
+      AppstackPluginPlatform.instance = fakePlatform;
+
+      await AppstackPlugin.deleteUserData();
+
+      expect(fakePlatform.deleteUserDataCalls, 1);
+    });
+
+    test('throws Exception when the platform fails', () async {
+      AppstackPluginPlatform.instance = _ThrowingPlatform(
+        throwOnDeleteUserData: true,
+      );
+
+      expect(
+        () => AppstackPlugin.deleteUserData(),
+        throwsA(isA<Exception>().having(
+          (e) => e.toString(),
+          'message',
+          contains('Failed to delete Appstack user data'),
         )),
       );
     });
@@ -473,6 +509,7 @@ class _ThrowingPlatform extends AppstackPluginPlatform {
   _ThrowingPlatform({
     this.throwOnConfigure = false,
     this.throwOnSetCustomerUserId = false,
+    this.throwOnDeleteUserData = false,
     this.throwOnSendEvent = false,
     this.throwOnEnableAppleAdsAttribution = false,
     this.throwOnGetAppstackId = false,
@@ -482,6 +519,7 @@ class _ThrowingPlatform extends AppstackPluginPlatform {
 
   final bool throwOnConfigure;
   final bool throwOnSetCustomerUserId;
+  final bool throwOnDeleteUserData;
   final bool throwOnSendEvent;
   final bool throwOnEnableAppleAdsAttribution;
   final bool throwOnGetAppstackId;
@@ -500,6 +538,11 @@ class _ThrowingPlatform extends AppstackPluginPlatform {
   @override
   Future<void> setCustomerUserId(String? customerUserId) async {
     if (throwOnSetCustomerUserId) throw Exception('setCustomerUserId failed');
+  }
+
+  @override
+  Future<void> deleteUserData() async {
+    if (throwOnDeleteUserData) throw Exception('deleteUserData failed');
   }
 
   @override
@@ -548,14 +591,16 @@ class _SdkDisabledPlatform extends AppstackPluginPlatform {
     String apiKey,
     int logLevel,
     String? customerUserId,
-  ) => Future.value();
+  ) =>
+      Future.value();
 
   @override
   Future<bool> sendEvent(
     String eventType,
     String? eventName,
     Map<String, dynamic>? parameters,
-  ) => Future.value(true);
+  ) =>
+      Future.value(true);
 
   @override
   Future<bool> enableAppleAdsAttribution() => Future.value(true);
@@ -577,14 +622,16 @@ class _AttributionParamsPlatform extends AppstackPluginPlatform {
     String apiKey,
     int logLevel,
     String? customerUserId,
-  ) => Future.value();
+  ) =>
+      Future.value();
 
   @override
   Future<bool> sendEvent(
     String eventType,
     String? eventName,
     Map<String, dynamic>? parameters,
-  ) => Future.value(true);
+  ) =>
+      Future.value(true);
 
   @override
   Future<bool> enableAppleAdsAttribution() => Future.value(true);

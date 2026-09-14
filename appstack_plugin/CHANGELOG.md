@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `AppstackPlugin.deleteUserData()` on iOS and Android for GDPR/privacy deletion requests. The future completes only after the native deletion request finishes and throws when native deletion fails.
+
 ### Changed
 
+- Updated the Appstack Android SDK dependency to `1.10.0`.
 - Updated the native iOS SDK to `4.7.1`, which fixes Swift 6 build errors when referencing `AppstackAttributionSdk.shared` or `AppstackASAAttribution.shared`.
 
 ## [2.8.0] - 2026-09-10

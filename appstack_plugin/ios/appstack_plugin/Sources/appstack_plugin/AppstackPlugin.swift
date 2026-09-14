@@ -21,6 +21,8 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       handleConfigure(call: call, result: result)
     case "setCustomerUserId":
       handleSetCustomerUserId(call: call, result: result)
+    case "deleteUserData":
+      handleDeleteUserData(result: result)
     case "sendEvent":
       handleSendEvent(call: call, result: result)
     case "enableAppleAdsAttribution":
@@ -120,6 +122,25 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       guard let self = self else { return }
       AppstackAttributionSdk.shared.setCustomerUserId(customerUserId)
       self.deliverResult(result, nil)
+    }
+  }
+
+  private func handleDeleteUserData(result: @escaping FlutterResult) {
+    Task { [weak self] in
+      guard let self = self else { return }
+      do {
+        try await AppstackAttributionSdk.shared.deleteUserData()
+        self.deliverResult(result, nil)
+      } catch {
+        self.deliverResult(
+          result,
+          FlutterError(
+            code: "DELETE_USER_DATA_ERROR",
+            message: "Failed to delete user data: \(error.localizedDescription)",
+            details: nil
+          )
+        )
+      }
     }
   }
 

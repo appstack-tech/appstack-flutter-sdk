@@ -14,6 +14,9 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /** AppstackPlugin */
 class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandler {
@@ -34,6 +37,7 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandl
     when (call.method) {
       "configure" -> handleConfigure(call, result)
       "setCustomerUserId" -> handleSetCustomerUserId(call, result)
+      "deleteUserData" -> handleDeleteUserData(result)
       "sendEvent" -> handleSendEvent(call, result)
       "enableAppleAdsAttribution" -> {
         // Apple Ads Attribution is iOS-only, return false on Android
@@ -110,6 +114,21 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandl
         "Failed to set customer user ID: ${e.message}",
         null
       )
+    }
+  }
+
+  private fun handleDeleteUserData(result: Result) {
+    CoroutineScope(Dispatchers.IO).launch {
+      try {
+        AppstackAttributionSdk.deleteUserData()
+        result.success(null)
+      } catch (e: Exception) {
+        result.error(
+          "DELETE_USER_DATA_ERROR",
+          "Failed to delete user data: ${e.message}",
+          null
+        )
+      }
     }
   }
 
