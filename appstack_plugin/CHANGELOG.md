@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated the Appstack Android SDK dependency to `1.10.0`.
+- Updated the native iOS SDK to `4.7.1`, which fixes Swift 6 build errors when referencing `AppstackAttributionSdk.shared` or `AppstackASAAttribution.shared`.
 
 ## [2.8.0] - 2026-09-10
 
