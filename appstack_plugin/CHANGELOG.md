@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.0] - 2026-09-14
+
 ### Added
 
 - Added `AppstackPlugin.deleteUserData()` on iOS and Android for GDPR/privacy deletion requests. The future completes only after the native deletion request finishes and throws when native deletion fails.
