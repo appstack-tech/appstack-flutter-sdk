@@ -39,6 +39,11 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
     throw UnimplementedError('setCustomerUserId() has not been implemented.');
   }
 
+  /// Permanently delete the current user's Appstack data.
+  Future<void> deleteUserData() {
+    throw UnimplementedError('deleteUserData() has not been implemented.');
+  }
+
   /// Send an event with optional parameters
   Future<bool> sendEvent(
     String eventType,

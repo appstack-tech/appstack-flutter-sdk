@@ -40,6 +40,9 @@ class AppstackLinkResult {
 /// await AppstackPlugin.setCustomerUserId('user-123');
 /// await AppstackPlugin.setCustomerUserId(null);
 ///
+/// // Permanently delete this user's Appstack data for a privacy request
+/// await AppstackPlugin.deleteUserData();
+///
 /// // Send events
 /// await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 29.99, 'currency': 'USD'});
 ///
@@ -146,6 +149,16 @@ class AppstackPlugin {
       await AppstackPluginPlatform.instance.setCustomerUserId(customerUserId);
     } catch (error) {
       throw Exception('Failed to set customer user ID: $error');
+    }
+  }
+
+  /// Permanently delete the current user's Appstack data for a GDPR or other
+  /// privacy deletion request. Available on both iOS and Android.
+  static Future<void> deleteUserData() async {
+    try {
+      await AppstackPluginPlatform.instance.deleteUserData();
+    } catch (error) {
+      throw Exception('Failed to delete Appstack user data: $error');
     }
   }
 

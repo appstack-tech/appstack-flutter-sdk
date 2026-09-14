@@ -45,6 +45,17 @@ void main() {
       );
     });
 
+    test('deleteUserData throws UnimplementedError', () {
+      expect(
+        () => AppstackPluginPlatform.instance.deleteUserData(),
+        throwsA(isA<UnimplementedError>().having(
+          (e) => e.message,
+          'message',
+          contains('deleteUserData()'),
+        )),
+      );
+    });
+
     test('sendEvent throws UnimplementedError', () {
       expect(
         () => AppstackPluginPlatform.instance.sendEvent(

@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 
 import 'appstack_plugin_platform_interface.dart';
 
-const _attributionParamsEventChannel = EventChannel('appstack_plugin/attribution_params');
+const _attributionParamsEventChannel =
+    EventChannel('appstack_plugin/attribution_params');
 const _kWrapperVersion = 'flutter-0.0.1';
 
 /// An implementation of [AppstackPluginPlatform] that uses method channels.
@@ -32,6 +33,11 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
     await methodChannel.invokeMethod<void>('setCustomerUserId', {
       'customerUserId': customerUserId,
     });
+  }
+
+  @override
+  Future<void> deleteUserData() async {
+    await methodChannel.invokeMethod<void>('deleteUserData');
   }
 
   @override
@@ -98,8 +104,8 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
 
   @override
   Stream<Map<String, dynamic>?> getAttributionParamsWithCallback() {
-    return _attributionParamsEventChannel
-        .receiveBroadcastStream()
-        .map((event) => event != null ? Map<String, dynamic>.from(event as Map) : null);
+    return _attributionParamsEventChannel.receiveBroadcastStream().map(
+        (event) =>
+            event != null ? Map<String, dynamic>.from(event as Map) : null);
   }
 }
