@@ -61,6 +61,14 @@ class MyApp extends StatelessWidget {
 }
 ```
 
+## Deleting user data
+
+For a GDPR or other privacy deletion request, permanently delete the current user's Appstack data on either platform:
+
+```dart
+await AppstackPlugin.deleteUserData();
+```
+
 ## Universal Links and Android App Links
 
 Appstack parses standard `https` links on your branded domain. The shared

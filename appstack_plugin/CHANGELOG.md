@@ -5,6 +5,16 @@ All notable changes to the Appstack Flutter Plugin will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Added `AppstackPlugin.deleteUserData()` on iOS and Android for GDPR/privacy deletion requests. The future completes only after the native deletion request finishes and throws when native deletion fails.
+
+### Changed
+
+- Updated the Appstack Android SDK dependency to `1.10.0`.
+
 ## [2.8.0] - 2026-09-10
 
 ### Added

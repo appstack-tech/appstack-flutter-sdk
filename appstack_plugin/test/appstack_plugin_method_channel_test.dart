@@ -28,8 +28,7 @@ void main() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
         if (methodCall.method == 'configure' && methodCall.arguments != null) {
-          capturedArgs =
-              Map<String, dynamic>.from(methodCall.arguments as Map);
+          capturedArgs = Map<String, dynamic>.from(methodCall.arguments as Map);
         }
         return null;
       });
@@ -55,8 +54,7 @@ void main() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
         if (methodCall.method == 'configure' && methodCall.arguments != null) {
-          capturedArgs =
-              Map<String, dynamic>.from(methodCall.arguments as Map);
+          capturedArgs = Map<String, dynamic>.from(methodCall.arguments as Map);
         }
         return null;
       });
@@ -89,8 +87,7 @@ void main() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
         if (methodCall.method == 'setCustomerUserId') {
-          capturedArgs =
-              Map<String, dynamic>.from(methodCall.arguments as Map);
+          capturedArgs = Map<String, dynamic>.from(methodCall.arguments as Map);
         }
         return null;
       });
@@ -107,8 +104,7 @@ void main() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
         if (methodCall.method == 'setCustomerUserId') {
-          capturedArgs =
-              Map<String, dynamic>.from(methodCall.arguments as Map);
+          capturedArgs = Map<String, dynamic>.from(methodCall.arguments as Map);
         }
         return null;
       });
@@ -149,6 +145,37 @@ void main() {
 
       expect(
         () => platform.setCustomerUserId('customer-123'),
+        throwsA(isA<PlatformException>()),
+      );
+    });
+  });
+
+  group('deleteUserData', () {
+    test('invokes native deleteUserData without arguments', () async {
+      MethodCall? captured;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (methodCall) async {
+        captured = methodCall;
+        return null;
+      });
+
+      await platform.deleteUserData();
+
+      expect(captured!.method, 'deleteUserData');
+      expect(captured!.arguments, isNull);
+    });
+
+    test('propagates platform exceptions', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (methodCall) async {
+        if (methodCall.method == 'deleteUserData') {
+          throw PlatformException(code: 'DELETE_USER_DATA_ERROR');
+        }
+        return null;
+      });
+
+      expect(
+        () => platform.deleteUserData(),
         throwsA(isA<PlatformException>()),
       );
     });
@@ -225,8 +252,7 @@ void main() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
         if (methodCall.method == 'sendEvent' && methodCall.arguments != null) {
-          capturedArgs =
-              Map<String, dynamic>.from(methodCall.arguments as Map);
+          capturedArgs = Map<String, dynamic>.from(methodCall.arguments as Map);
         }
         return true;
       });
@@ -389,8 +415,7 @@ void main() {
         ),
       );
 
-      final events =
-          await platform.getAttributionParamsWithCallback().toList();
+      final events = await platform.getAttributionParamsWithCallback().toList();
 
       expect(events, hasLength(1));
       expect(events.first, isA<Map<String, dynamic>>());
@@ -409,8 +434,7 @@ void main() {
         ),
       );
 
-      final events =
-          await platform.getAttributionParamsWithCallback().toList();
+      final events = await platform.getAttributionParamsWithCallback().toList();
 
       expect(events, [null]);
     });
