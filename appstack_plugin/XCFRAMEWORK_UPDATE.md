@@ -202,10 +202,11 @@ paths ship the same build:
 bash appstack_plugin/tool/check_ios_sdk_parity.sh
 ```
 
-It reads the `exact:` pin, fetches upstream's `Package.swift` at that tag, pulls
-the release URL and checksum out of it, downloads the zip, verifies its SHA256,
-extracts it, and compares it against the vendored tree file-by-file. On drift it
-prints the differing paths.
+It reads the plugin's single `exact:` version pin or `branch:` pin, fetches
+upstream's `Package.swift` at that tag or branch, pulls the release URL and
+checksum out of it, downloads the zip, verifies its SHA256, extracts it, and
+compares it against the vendored tree file-by-file. On drift it prints the
+differing paths.
 
 Where it runs:
 

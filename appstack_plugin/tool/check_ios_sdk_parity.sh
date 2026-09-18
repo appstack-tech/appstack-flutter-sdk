@@ -78,41 +78,52 @@ log "Reading pinned SDK ref from ${PACKAGE_SWIFT#"$PLUGIN_DIR"/}"
 
 # `|| true` so a no-match falls through to the diagnostic below instead of being
 # killed by `set -e`/`pipefail` with no explanation. Every such extraction is
-# followed by an explicit emptiness check that exits non-zero — the tolerance is
+# followed by an explicit count check that exits non-zero — the tolerance is
 # about producing a useful message, never about passing.
-SDK_EXACT="$(
-  sed -nE 's|.*ios-appstack-sdk\.git"[[:space:]]*,[[:space:]]*exact:[[:space:]]*"([^"]+)".*|\1|p' \
-    "$PACKAGE_SWIFT" | head -n 1
+#
+# Collect every match rather than taking the first: `head -n 1` would silently
+# ignore a duplicate declaration, and a checker whose whole job is to fail closed
+# must not guess which pin the build actually uses.
+SDK_EXACT_MATCHES="$(
+  grep -oE 'ios-appstack-sdk\.git"[[:space:]]*,[[:space:]]*exact:[[:space:]]*"[^"]+"' "$PACKAGE_SWIFT" \
+    | sed -E 's/.*"([^"]+)"$/\1/'
 )" || true
-SDK_BRANCH="$(
-  sed -nE 's|.*ios-appstack-sdk\.git"[[:space:]]*,[[:space:]]*branch:[[:space:]]*"([^"]+)".*|\1|p' \
-    "$PACKAGE_SWIFT" | head -n 1
+SDK_BRANCH_MATCHES="$(
+  grep -oE 'ios-appstack-sdk\.git"[[:space:]]*,[[:space:]]*branch:[[:space:]]*"[^"]+"' "$PACKAGE_SWIFT" \
+    | sed -E 's/.*"([^"]+)"$/\1/'
 )" || true
 
-if [[ -n "$SDK_EXACT" && -n "$SDK_BRANCH" ]]; then
-  die "the plugin pins $UPSTREAM_REPO by both an \`exact:\` version and a \`branch:\` — keep exactly one."
-fi
+# grep -c rather than wc -l: an empty string must count as 0, not 1.
+EXACT_COUNT="$(printf '%s' "$SDK_EXACT_MATCHES" | grep -c . || true)"
+BRANCH_COUNT="$(printf '%s' "$SDK_BRANCH_MATCHES" | grep -c . || true)"
+TOTAL_COUNT=$((EXACT_COUNT + BRANCH_COUNT))
 
-if [[ -n "$SDK_EXACT" ]]; then
-  SDK_PIN_KIND="exact"
-  SDK_REF="$SDK_EXACT"
-  SDK_PIN_LABEL="tag $SDK_REF"
-elif [[ -n "$SDK_BRANCH" ]]; then
-  SDK_PIN_KIND="branch"
-  SDK_REF="$SDK_BRANCH"
-  SDK_PIN_LABEL="branch $SDK_REF"
-else
+if [[ "$TOTAL_COUNT" -ne 1 ]]; then
   echo "" >&2
-  echo "Could not find an \`exact:\` or \`branch:\` pin for $UPSTREAM_REPO in:" >&2
+  echo "Expected exactly one $UPSTREAM_REPO pin (an \`exact:\` version or a" >&2
+  echo "\`branch:\`), found $TOTAL_COUNT in:" >&2
   echo "  $PACKAGE_SWIFT" >&2
+  echo "" >&2
+  echo "  exact:  $EXACT_COUNT" >&2
+  echo "  branch: $BRANCH_COUNT" >&2
   echo "" >&2
   echo "Dependency lines found:" >&2
   grep -nE '\.package\(' "$PACKAGE_SWIFT" >&2 || echo "  (none)" >&2
   echo "" >&2
-  echo "If the pin moved to a version range, the vendored XCFramework can no" >&2
-  echo "longer be checked against it — restore an \`exact:\` or \`branch:\` pin, or" >&2
-  echo "update this script deliberately." >&2
-  die "unable to determine the pinned SDK ref."
+  echo "A version range (\"from:\", \"upToNextMinor\") cannot be reconciled with a" >&2
+  echo "single vendored binary, and a duplicate pin is ambiguous. Restore exactly" >&2
+  echo "one \`exact:\` or \`branch:\` pin, or update this script deliberately." >&2
+  die "unable to determine exactly one pinned SDK ref."
+fi
+
+if [[ "$EXACT_COUNT" -eq 1 ]]; then
+  SDK_PIN_KIND="exact"
+  SDK_REF="$SDK_EXACT_MATCHES"
+  SDK_PIN_LABEL="tag $SDK_REF"
+else
+  SDK_PIN_KIND="branch"
+  SDK_REF="$SDK_BRANCH_MATCHES"
+  SDK_PIN_LABEL="branch $SDK_REF"
 fi
 
 log "Pinned iOS SDK $SDK_PIN_LABEL"
