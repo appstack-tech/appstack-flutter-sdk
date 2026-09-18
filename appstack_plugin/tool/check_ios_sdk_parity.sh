@@ -65,59 +65,101 @@ done
   || die "vendored XCFramework not found at $VENDORED_XCFRAMEWORK"
 
 # ---------------------------------------------------------------------------
-# 1. Which SDK version does the plugin pin?
+# 1. Which SDK ref does the plugin pin?
 # ---------------------------------------------------------------------------
-# Matches:  .package(url: "…/ios-appstack-sdk.git", exact: "4.4.0"),
-# An `exact:` pin is required on purpose. A range ("from:", "upToNextMinor")
-# cannot be reconciled with a single vendored binary, so we refuse to guess.
+# A stable pin looks like:  .package(url: "…/ios-appstack-sdk.git", exact: "4.4.0"),
+# an RC pin looks like:     .package(url: "…/ios-appstack-sdk.git", branch: "rc"),
+#
+# An `exact:` or `branch:` pin is required on purpose. A version range
+# ("from:", "upToNextMinor") cannot be reconciled with a single vendored binary,
+# so we refuse to guess. The ref named by the pin is what upstream is resolved at.
 
-log "Reading pinned SDK version from ${PACKAGE_SWIFT#"$PLUGIN_DIR"/}"
+log "Reading pinned SDK ref from ${PACKAGE_SWIFT#"$PLUGIN_DIR"/}"
 
 # `|| true` so a no-match falls through to the diagnostic below instead of being
 # killed by `set -e`/`pipefail` with no explanation. Every such extraction is
-# followed by an explicit emptiness check that exits non-zero — the tolerance is
+# followed by an explicit count check that exits non-zero — the tolerance is
 # about producing a useful message, never about passing.
-SDK_VERSION="$(
-  sed -nE 's|.*ios-appstack-sdk\.git"[[:space:]]*,[[:space:]]*exact:[[:space:]]*"([^"]+)".*|\1|p' \
-    "$PACKAGE_SWIFT" | head -n 1
+#
+# Collect every match rather than taking the first: `head -n 1` would silently
+# ignore a duplicate declaration, and a checker whose whole job is to fail closed
+# must not guess which pin the build actually uses.
+SDK_EXACT_MATCHES="$(
+  grep -oE 'ios-appstack-sdk\.git"[[:space:]]*,[[:space:]]*exact:[[:space:]]*"[^"]+"' "$PACKAGE_SWIFT" \
+    | sed -E 's/.*"([^"]+)"$/\1/'
+)" || true
+SDK_BRANCH_MATCHES="$(
+  grep -oE 'ios-appstack-sdk\.git"[[:space:]]*,[[:space:]]*branch:[[:space:]]*"[^"]+"' "$PACKAGE_SWIFT" \
+    | sed -E 's/.*"([^"]+)"$/\1/'
 )" || true
 
-if [[ -z "$SDK_VERSION" ]]; then
+# grep -c rather than wc -l: an empty string must count as 0, not 1.
+EXACT_COUNT="$(printf '%s' "$SDK_EXACT_MATCHES" | grep -c . || true)"
+BRANCH_COUNT="$(printf '%s' "$SDK_BRANCH_MATCHES" | grep -c . || true)"
+TOTAL_COUNT=$((EXACT_COUNT + BRANCH_COUNT))
+
+if [[ "$TOTAL_COUNT" -ne 1 ]]; then
   echo "" >&2
-  echo "Could not find an \`exact:\` version pin for $UPSTREAM_REPO in:" >&2
+  echo "Expected exactly one $UPSTREAM_REPO pin (an \`exact:\` version or a" >&2
+  echo "\`branch:\`), found $TOTAL_COUNT in:" >&2
   echo "  $PACKAGE_SWIFT" >&2
+  echo "" >&2
+  echo "  exact:  $EXACT_COUNT" >&2
+  echo "  branch: $BRANCH_COUNT" >&2
   echo "" >&2
   echo "Dependency lines found:" >&2
   grep -nE '\.package\(' "$PACKAGE_SWIFT" >&2 || echo "  (none)" >&2
   echo "" >&2
-  echo "If the pin moved to a version range, the vendored XCFramework can no" >&2
-  echo "longer be checked against it — restore an \`exact:\` pin, or update this" >&2
-  echo "script deliberately." >&2
-  die "unable to determine the pinned SDK version."
+  echo "A version range (\"from:\", \"upToNextMinor\") cannot be reconciled with a" >&2
+  echo "single vendored binary, and a duplicate pin is ambiguous. Restore exactly" >&2
+  echo "one \`exact:\` or \`branch:\` pin, or update this script deliberately." >&2
+  die "unable to determine exactly one pinned SDK ref."
 fi
 
-log "Pinned iOS SDK version: $SDK_VERSION"
+if [[ "$EXACT_COUNT" -eq 1 ]]; then
+  SDK_PIN_KIND="exact"
+  SDK_REF="$SDK_EXACT_MATCHES"
+  SDK_PIN_LABEL="tag $SDK_REF"
+else
+  SDK_PIN_KIND="branch"
+  SDK_REF="$SDK_BRANCH_MATCHES"
+  SDK_PIN_LABEL="branch $SDK_REF"
+fi
 
-# Constrain the tag before it reaches a URL. Upstream tags look like 4.4.0 or
-# 4.4.0-rc1; anything else is a parse failure, not something to fetch.
-if ! printf '%s' "$SDK_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
-  die "pinned version '$SDK_VERSION' is not a plain SemVer tag — refusing to build a URL from it."
+log "Pinned iOS SDK $SDK_PIN_LABEL"
+
+# Constrain the ref before it reaches a URL.
+if [[ "$SDK_PIN_KIND" == "exact" ]]; then
+  # Upstream tags look like 4.4.0 or 4.4.0-rc1; anything else is a parse failure,
+  # not something to fetch.
+  if ! printf '%s' "$SDK_REF" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+    die "pinned version '$SDK_REF' is not a plain SemVer tag — refusing to build a URL from it."
+  fi
+else
+  # A branch name is a path segment in the raw URL; keep it to characters that
+  # cannot escape the path or inject a query/authority.
+  if ! printf '%s' "$SDK_REF" | grep -Eq '^[A-Za-z0-9][A-Za-z0-9._/-]*$'; then
+    die "pinned branch '$SDK_REF' is not a plain branch name — refusing to build a URL from it."
+  fi
+  case "$SDK_REF" in
+    *..*) die "pinned branch '$SDK_REF' contains '..' — refusing to build a URL from it." ;;
+  esac
 fi
 
 # ---------------------------------------------------------------------------
-# 2. What artifact does that tag publish, and with what checksum?
+# 2. What artifact does that ref publish, and with what checksum?
 # ---------------------------------------------------------------------------
 
 WORKDIR="$(mktemp -d)"
 readonly UPSTREAM_PACKAGE_SWIFT="$WORKDIR/upstream-Package.swift"
-readonly UPSTREAM_PACKAGE_URL="$UPSTREAM_RAW/$SDK_VERSION/Package.swift"
+readonly UPSTREAM_PACKAGE_URL="$UPSTREAM_RAW/$SDK_REF/Package.swift"
 
-log "Fetching upstream Package.swift at tag $SDK_VERSION"
+log "Fetching upstream Package.swift at $SDK_PIN_LABEL"
 
 curl -fsSL --retry 3 --retry-delay 2 --max-time 60 \
   -o "$UPSTREAM_PACKAGE_SWIFT" "$UPSTREAM_PACKAGE_URL" \
   || die "could not fetch $UPSTREAM_PACKAGE_URL
-       Either tag '$SDK_VERSION' does not exist upstream, or the network is
+       Either $SDK_PIN_LABEL does not exist upstream, or the network is
        unavailable. This is fatal on purpose — an unreachable source of truth
        must not be reported as parity."
 
@@ -140,7 +182,7 @@ CHECKSUM_COUNT="$(printf '%s' "$UPSTREAM_CHECKSUMS" | grep -c . || true)"
 
 if [[ "$URL_COUNT" -gt 1 || "$CHECKSUM_COUNT" -gt 1 ]]; then
   echo "" >&2
-  echo "Upstream Package.swift at tag $SDK_VERSION declares more than one remote" >&2
+  echo "Upstream Package.swift at $SDK_PIN_LABEL declares more than one remote" >&2
   echo "binaryTarget field, so the url and checksum cannot be paired reliably." >&2
   echo "" >&2
   echo "  urls found ($URL_COUNT):" >&2
@@ -149,7 +191,7 @@ if [[ "$URL_COUNT" -gt 1 || "$CHECKSUM_COUNT" -gt 1 ]]; then
   printf '%s\n' "$UPSTREAM_CHECKSUMS" | sed 's/^/    /' >&2
   echo "" >&2
   echo "Update this script to select the correct target deliberately." >&2
-  die "ambiguous binaryTarget manifest for $SDK_VERSION."
+  die "ambiguous binaryTarget manifest for $SDK_REF."
 fi
 
 UPSTREAM_ZIP_URL="$UPSTREAM_ZIP_URLS"
@@ -158,7 +200,7 @@ UPSTREAM_CHECKSUM="$UPSTREAM_CHECKSUMS"
 if [[ -z "$UPSTREAM_ZIP_URL" || -z "$UPSTREAM_CHECKSUM" ]]; then
   echo "" >&2
   echo "Could not extract the binaryTarget url and/or checksum from upstream's" >&2
-  echo "Package.swift at tag $SDK_VERSION ($UPSTREAM_PACKAGE_URL)." >&2
+  echo "Package.swift at $SDK_PIN_LABEL ($UPSTREAM_PACKAGE_URL)." >&2
   echo "" >&2
   echo "  url found:      ${UPSTREAM_ZIP_URL:-<none>}" >&2
   echo "  checksum found: ${UPSTREAM_CHECKSUM:-<none>}" >&2
@@ -168,7 +210,7 @@ if [[ -z "$UPSTREAM_ZIP_URL" || -z "$UPSTREAM_CHECKSUM" ]]; then
   echo "" >&2
   echo "Upstream may have restructured its manifest (e.g. switched away from a" >&2
   echo "remote binaryTarget). Update this script to match before releasing." >&2
-  die "unable to determine the official artifact for $SDK_VERSION."
+  die "unable to determine the official artifact for $SDK_REF."
 fi
 
 log "Official artifact: $UPSTREAM_ZIP_URL"
@@ -204,7 +246,7 @@ if [[ "$(lower "$ACTUAL_CHECKSUM")" != "$(lower "$UPSTREAM_CHECKSUM")" ]]; then
   echo "" >&2
   echo "Checksum mismatch on the downloaded release artifact." >&2
   echo "  url:      $UPSTREAM_ZIP_URL" >&2
-  echo "  expected: $UPSTREAM_CHECKSUM  (from upstream Package.swift @ $SDK_VERSION)" >&2
+  echo "  expected: $UPSTREAM_CHECKSUM  (from upstream Package.swift @ $SDK_REF)" >&2
   echo "  actual:   $ACTUAL_CHECKSUM" >&2
   echo "" >&2
   echo "The release asset does not match the checksum upstream committed for it." >&2
@@ -247,7 +289,7 @@ if [[ -z "$OFFICIAL_XCFRAMEWORKS" ]]; then
   echo "" >&2
   echo "No .xcframework found in the extracted artifact. Top-level contents:" >&2
   find "$EXTRACT_DIR" -maxdepth 2 -mindepth 1 >&2
-  die "unexpected artifact layout for $SDK_VERSION."
+  die "unexpected artifact layout for $SDK_REF."
 fi
 
 # Exactly one, or we bail. Picking the first of several would compare an
@@ -255,11 +297,11 @@ fi
 XCFRAMEWORK_COUNT="$(printf '%s' "$OFFICIAL_XCFRAMEWORKS" | grep -c . || true)"
 if [[ "$XCFRAMEWORK_COUNT" -ne 1 ]]; then
   echo "" >&2
-  echo "Expected exactly one .xcframework in the $SDK_VERSION artifact, found $XCFRAMEWORK_COUNT:" >&2
+  echo "Expected exactly one .xcframework in the $SDK_REF artifact, found $XCFRAMEWORK_COUNT:" >&2
   printf '%s\n' "$OFFICIAL_XCFRAMEWORKS" | sed "s|$EXTRACT_DIR/||" | sed 's/^/    /' >&2
   echo "" >&2
   echo "Update this script to select the right bundle deliberately." >&2
-  die "ambiguous artifact layout for $SDK_VERSION."
+  die "ambiguous artifact layout for $SDK_REF."
 fi
 
 OFFICIAL_XCFRAMEWORK="$OFFICIAL_XCFRAMEWORKS"
@@ -318,7 +360,7 @@ manifest() {
 readonly OFFICIAL_MANIFEST="$WORKDIR/manifest-official.txt"
 readonly VENDORED_MANIFEST="$WORKDIR/manifest-vendored.txt"
 
-log "Comparing vendored XCFramework against the official $SDK_VERSION artifact"
+log "Comparing vendored XCFramework against the official $SDK_REF artifact"
 manifest "$OFFICIAL_XCFRAMEWORK" "$OFFICIAL_MANIFEST"
 manifest "$VENDORED_XCFRAMEWORK" "$VENDORED_MANIFEST"
 
@@ -328,7 +370,7 @@ log "Logical files: $OFFICIAL_COUNT official / $VENDORED_COUNT vendored"
 
 if diff -q "$OFFICIAL_MANIFEST" "$VENDORED_MANIFEST" >/dev/null 2>&1; then
   echo ""
-  echo "PASS: vendored AppstackSDK.xcframework matches the official $SDK_VERSION release."
+  echo "PASS: vendored AppstackSDK.xcframework matches the official $SDK_REF release."
   echo "      artifact: $UPSTREAM_ZIP_URL"
   echo "      sha256:   $UPSTREAM_CHECKSUM"
   echo "      $OFFICIAL_COUNT files compared, all identical."
@@ -337,9 +379,9 @@ fi
 
 # Drift. Report which paths differ and how — "trees differ" is not actionable.
 echo "" >&2
-echo "The vendored XCFramework does not match the official $SDK_VERSION release." >&2
+echo "The vendored XCFramework does not match the official $SDK_REF release." >&2
 echo "" >&2
-echo "  pinned version: $SDK_VERSION  (ios/appstack_plugin/Package.swift)" >&2
+echo "  pinned ref: $SDK_REF  (ios/appstack_plugin/Package.swift)" >&2
 echo "  official:       $UPSTREAM_ZIP_URL" >&2
 echo "  vendored:       ${VENDORED_XCFRAMEWORK#"$PLUGIN_DIR"/}" >&2
 echo "" >&2
@@ -381,7 +423,7 @@ if [[ -n "$ONLY_VENDORED" ]]; then
 fi
 
 cat >&2 <<EOF
-  SwiftPM users would get the official $SDK_VERSION binary while CocoaPods users
+  SwiftPM users would get the official $SDK_REF binary while CocoaPods users
   get the vendored one. Fix by re-vendoring from the pinned release — the paths
   below are relative to the plugin directory, so run this from there:
 

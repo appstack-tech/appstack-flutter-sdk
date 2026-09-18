@@ -27,12 +27,50 @@ different code.
    framework yourself, and never `cp -R` it out of a local `ios-appstack-sdk`
    checkout or another project — a working tree can hold an unreleased or rc
    build, which is exactly how the 2.4.0 mismatch happened.
-2. **Never vendor an rc while pinning a final** (or vice versa). If you change
-   the `exact:` pin, re-vendor in the *same commit*.
+2. **Never mix a vendored binary with a pin that names a different ref.** An
+   `exact: "X.Y.Z"` pin must carry that tag's binary, and a `branch: "rc"` pin
+   must carry the `rc` channel's binary. If you change the pin, re-vendor in the
+   *same commit*.
 
 Both are enforced by `tool/check_ios_sdk_parity.sh`, which runs on every PR
 (`test.yml`) and gates the release before anything expensive happens
-(`publish.yml`). See [Verifying parity](#verifying-parity).
+(`publish.yml`). It understands both an `exact:` and a `branch:` pin. See
+[Verifying parity](#verifying-parity).
+
+## Testing a release candidate
+
+To exercise an unreleased native iOS SDK build, point the plugin at the native
+SDK's rolling `rc` channel instead of a released version:
+
+```swift
+.package(url: "https://github.com/appstack-tech/ios-appstack-sdk.git", branch: "rc"),
+```
+
+Then re-vendor `ios/AppstackSDK.xcframework` from that same channel. The parity
+check accepts a `branch:` pin, so it resolves the `rc` branch manifest rather
+than a tag:
+
+```bash
+cd /path/to/appstack-flutter-sdk/appstack_plugin
+
+# The rc branch's Package.swift names the current asset and its checksum.
+MANIFEST=$(curl -fsSL "https://raw.githubusercontent.com/appstack-tech/ios-appstack-sdk/rc/Package.swift")
+ZIP_URL=$(printf '%s' "$MANIFEST" | sed -nE 's/.*url:[[:space:]]*"(https:\/\/[^"]*\.zip)".*/\1/p')
+EXPECTED=$(printf '%s' "$MANIFEST" | sed -nE 's/.*checksum:[[:space:]]*"([0-9a-fA-F]{64})".*/\1/p')
+echo "$ZIP_URL"; echo "$EXPECTED"
+
+curl -fsSL -o /tmp/AppstackSDK.xcframework.zip "$ZIP_URL"
+shasum -a 256 /tmp/AppstackSDK.xcframework.zip   # must equal $EXPECTED
+rm -rf ios/AppstackSDK.xcframework
+ditto -x -k /tmp/AppstackSDK.xcframework.zip ios/
+
+bash tool/check_ios_sdk_parity.sh
+```
+
+The `rc` channel is mutable: the asset and the manifest are replaced on every
+candidate, so re-run `swift package update` (or the steps above) to pick up a
+newer one. Never ship a `branch:` pin — restore an `exact:` pin and re-vendor in
+the same commit before releasing.
 
 ## Update Process
 
@@ -164,10 +202,11 @@ paths ship the same build:
 bash appstack_plugin/tool/check_ios_sdk_parity.sh
 ```
 
-It reads the `exact:` pin, fetches upstream's `Package.swift` at that tag, pulls
-the release URL and checksum out of it, downloads the zip, verifies its SHA256,
-extracts it, and compares it against the vendored tree file-by-file. On drift it
-prints the differing paths.
+It reads the plugin's single `exact:` version pin or `branch:` pin, fetches
+upstream's `Package.swift` at that tag or branch, pulls the release URL and
+checksum out of it, downloads the zip, verifies its SHA256, extracts it, and
+compares it against the vendored tree file-by-file. On drift it prints the
+differing paths.
 
 Where it runs:
 
