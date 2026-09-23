@@ -164,7 +164,6 @@ jobs:
 
           # Update documentation files
           sed -i "s/appstack_plugin: \^[0-9]\+\.[0-9]\+\.[0-9]\+/appstack_plugin: ^$VERSION/" appstack_plugin/README.md
-          sed -i "s/appstack_plugin: \^[0-9]\+\.[0-9]\+\.[0-9]\+/appstack_plugin: ^$VERSION/" appstack_plugin/USAGE.md
           sed -i "s/appstack_plugin: \^[0-9]\+\.[0-9]\+\.[0-9]\+/appstack_plugin: ^$VERSION/" README.md
 
           echo "Version updated in all files"
