@@ -1,113 +1,82 @@
-# Appstack Flutter SDK
+<p align="center">
+  <a href="https://www.appstack.tech">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://docs.appstack.tech/images/appstack_logo_white_wordmark.png">
+      <img alt="Appstack" src="https://docs.appstack.tech/images/appstack_logo_black_wordmark.png" width="280">
+    </picture>
+  </a>
+</p>
 
-Flutter plugin for tracking events and revenue with Apple Search Ads attribution.
+<p align="center">
+  Mobile attribution and ad-network optimization for Flutter apps.
+</p>
 
-## Overview
+<p align="center">
+  <a href="https://pub.dev/packages/appstack_plugin"><img alt="pub.dev" src="https://img.shields.io/pub/v/appstack_plugin.svg"></a>
+  <img alt="Platforms" src="https://img.shields.io/badge/platforms-iOS%2015%2B%20%7C%20Android%205.0%2B-blue.svg">
+  <a href="https://github.com/appstack-tech/appstack-flutter-sdk/blob/main/appstack_plugin/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey.svg"></a>
+</p>
 
-This repository contains the Flutter SDK and a sample app. For a consistent “one page” reference (features + EAC recommendations), see the plugin README:
+<p align="center">
+  <a href="https://docs.appstack.tech/SDKs/flutter"><b>Documentation</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://docs.appstack.tech/reference/flutter">API reference</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/appstack-tech/appstack-flutter-sdk/blob/main/appstack_plugin/CHANGELOG.md">Changelog</a>
+  &nbsp;·&nbsp;
+  <a href="https://www.appstack.tech/contact">Support</a>
+</p>
 
-- `appstack_plugin/README.md`
+---
 
-## Structure
-
-This repository contains:
-
-- **`appstack_plugin/`** - The Flutter plugin package
-- **`sample_app/`** - Example Flutter app demonstrating the plugin usage
-
-## Quick Start
-
-See the [plugin README](./appstack_plugin/README.md) for installation and usage instructions.
+The Appstack Flutter plugin tracks installs and in-app events, attributes them to your ad campaigns, and sends conversions back to Meta, Google, TikTok, Apple Ads and other networks. It wraps the native Appstack iOS and Android SDKs.
 
 ## Installation
 
-Add to your `pubspec.yaml`:
-
 ```yaml
 dependencies:
-  appstack_plugin: ^2.2.2
+  appstack_plugin: ^2.10.1
 ```
 
-## Basic Usage
+Then run `flutter pub get`. iOS (Swift Package Manager or CocoaPods) and Android setup are covered in the [documentation](https://docs.appstack.tech/SDKs/flutter).
+
+## Quick start
 
 ```dart
-import 'package:appstack_plugin/appstack_plugin.dart';
 import 'dart:io' show Platform;
+import 'package:appstack_plugin/appstack_plugin.dart';
 
-// Configure the SDK
-await AppstackPlugin.configure(
-  Platform.isIOS ? 'ios-api-key' : 'android-api-key'
+await AppstackPlugin.configure(Platform.isIOS ? 'your_ios_api_key' : 'your_android_api_key');
+
+await AppstackPlugin.sendEvent(
+  EventType.purchase,
+  parameters: {'revenue': 29.99, 'currency': 'USD'},
 );
-
-// Check if SDK is disabled (optional - for debugging)
-final isDisabled = await AppstackPlugin.isSdkDisabled();
-if (isDisabled) {
-  print('Warning: SDK is disabled - check your API key');
-}
-
-// Enable Apple Search Ads attribution (iOS only)
-if (Platform.isIOS) {
-  await AppstackPlugin.enableAppleAdsAttribution();
-}
-
-// Get the Appstack ID
-final appstackId = await AppstackPlugin.getAppstackId();
-print('Appstack ID: $appstackId');
-
-// Get attribution parameters
-final attributionParams = await AppstackPlugin.getAttributionParams();
-print('Attribution Params: $attributionParams');
-
-// Track events
-await AppstackPlugin.sendEvent(EventType.purchase, parameters: {'revenue': 29.99, 'currency': 'USD'});
 ```
 
-### `getAttributionParams(): Future<Map<String, dynamic>?>`
-Retrieve attribution parameters from the SDK. This returns all available attribution data that the SDK has collected.
-
-**Returns:** A map containing attribution parameters (key-value pairs), or `null` if not available yet.
-
-**Example:**
-```dart
-final attributionParams = await AppstackPlugin.getAttributionParams();
-print('Attribution parameters: $attributionParams');
-
-// Example output (varies by platform):
-// {
-//   "attribution_source": "google_play",
-//   "install_timestamp": "1733629800",
-//   "attributed": "true",
-//   ...
-// }
-```
-
-**Use Cases:**
-- Retrieve attribution data for analytics
-- Check if the app was attributed to a specific campaign
-- Log attribution parameters for debugging
-- Send attribution data to your backend server
-- Analyze user acquisition sources
+Setup, event types, Apple Ads attribution, integrations (RevenueCat, Superwall) and troubleshooting are covered in the **[official documentation](https://docs.appstack.tech/SDKs/flutter)**.
 
 ## Documentation
 
-Universal/App Link parsing is exposed through
-`AppstackPlugin.handleUniversalLink`. The host app remains responsible for
-receiving cold- and warm-start links and configuring its branded domain; see the
-[plugin usage guide](appstack_plugin/USAGE.md#universal-links-and-android-app-links).
+- **[Flutter SDK guide](https://docs.appstack.tech/SDKs/flutter)**: installation, configuration and event tracking
+- **[API reference](https://docs.appstack.tech/reference/flutter)**: every public method and type
+- **[Apple Ads](https://docs.appstack.tech/Integrations/apple-ads)**: Apple Ads attribution setup
+- **[RevenueCat](https://docs.appstack.tech/Integrations/revenuecat)** and **[Superwall](https://docs.appstack.tech/Integrations/superwall)**: subscription platform integrations
+- **[Changelog](https://github.com/appstack-tech/appstack-flutter-sdk/blob/main/appstack_plugin/CHANGELOG.md)**: release notes for every version
 
-- **[Full docs (docs.appstack.tech)](https://docs.appstack.tech)** – Flutter SDK guide on the main docs site
-- [Plugin README](./appstack_plugin/README.md) – Complete API documentation
-- [Usage Guide](./appstack_plugin/USAGE.md) – Detailed usage examples
-- [Changelog](./appstack_plugin/CHANGELOG.md) – Version history
+## Repository layout
 
-To keep the published docs in sync, see [docs/README.md](./docs/README.md).
+- [`appstack_plugin/`](appstack_plugin): the Flutter plugin published to [pub.dev](https://pub.dev/packages/appstack_plugin)
+- [`sample_app/`](sample_app): an example app that uses the plugin
 
-## Platform Support
+## Other platforms
 
-- **iOS**: 15.0+
-- **Android**: API 21+ (Android 5.0+)
-- **Flutter**: 3.3.0+
+[iOS](https://docs.appstack.tech/SDKs/swift) · [Android](https://docs.appstack.tech/SDKs/kotlin) · [React Native](https://docs.appstack.tech/SDKs/react-native) · [Unity](https://docs.appstack.tech/SDKs/unity)
+
+## Support
+
+Questions or issues? [Open an issue](https://github.com/appstack-tech/appstack-flutter-sdk/issues) or [contact us](https://www.appstack.tech/contact).
 
 ## License
 
-MIT License - see [LICENSE](./appstack_plugin/LICENSE) for details
+Released under the [MIT License](https://github.com/appstack-tech/appstack-flutter-sdk/blob/main/appstack_plugin/LICENSE).
