@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `EventType.rawValue`: the SNAKE_CASE value sent to the native SDKs (e.g. `EventType.addToCart.rawValue` → `"ADD_TO_CART"`). `sendEvent` now uses it. What reaches the native SDKs is unchanged.
+
+### Deprecated
+
+- `EventTypeExtension.name`. It shadowed Dart's built-in `Enum.name`, so the same expression returned `"ADD_TO_CART"` or `"addToCart"` depending on the variable's static type and imports (for example through an `Enum`-typed variable, a generic helper, or `import ... show EventType`), and `EventType.values.byName(e.name)` threw. Use `rawValue` for the wire value. The next major version removes the extension, and `name` becomes the Dart enum name.
+
 ## [2.10.1] - 2026-09-22
 
 ### Changed

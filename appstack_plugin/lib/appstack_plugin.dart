@@ -194,13 +194,13 @@ class AppstackPlugin {
   }) async {
     try {
       return await AppstackPluginPlatform.instance.sendEvent(
-        eventType.name,
+        eventType.rawValue,
         eventName,
         parameters,
       );
     } catch (error) {
       throw Exception(
-        'Failed to send event (eventType: ${eventType.name}): $error',
+        'Failed to send event (eventType: ${eventType.rawValue}): $error',
       );
     }
   }

@@ -1099,6 +1099,17 @@
             "relativePath": "lib/event_type.dart",
             "isReadable": true,
             "isWriteable": false
+          },
+          {
+            "typeName": "String",
+            "name": "rawValue",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
           }
         ],
         "entryPoints": [
