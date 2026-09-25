@@ -6,7 +6,7 @@ on:
     branches:
       - main
 
-# Least privilege: analyze + unit tests only read the repo.
+# Least privilege: analyze, unit tests and the API check only read the repo.
 permissions:
   contents: read
 
@@ -51,3 +51,59 @@ jobs:
       - name: Run unit tests
         run: flutter test
         working-directory: appstack_plugin
+
+  public-api:
+    name: Public API baseline (Dart)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        with:
+          # On PRs, the merge commit plus its first parent (the base tip) is
+          # enough to classify the PR's net API change.
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2  # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      # The version lives in public_api.sh, which refuses any other: a
+      # different dart_apitool can serialise the same API differently.
+      - name: Install dart_apitool
+        run: |
+          version="$(sed -n 's/^readonly DART_APITOOL_VERSION="\(.*\)"$/\1/p' appstack_plugin/tool/public_api.sh)"
+          if [ -z "$version" ]; then
+            echo "::error::Could not read DART_APITOOL_VERSION from appstack_plugin/tool/public_api.sh."
+            exit 1
+          fi
+          dart pub global activate dart_apitool "$version"
+          echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+
+      # Fails when lib/ no longer matches api/appstack_plugin.api.json.
+      # api-change-gate.yml then requires a label on the PR that updates it.
+      - name: Check public API matches the committed baseline
+        run: bash appstack_plugin/tool/public_api.sh check
+
+      # Informational: the check above and the label gate do the enforcing.
+      # Runs even when the check failed, since that is when the breaking /
+      # non-breaking split is most useful.
+      - name: Classify API changes against the base branch
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        run: |
+          report="$(bash appstack_plugin/tool/public_api.sh diff HEAD^1)"
+          if grep -q '^### No Changes Detected' <<< "$report"; then
+            echo "No public API changes against the base branch."
+            exit 0
+          fi
+          {
+            echo "## Public API changes (dart_apitool)"
+            echo
+            echo "Classified against the base branch. A 🚨 BREAKING entry needs the \`breaking\` label; otherwise use \`api-change\`."
+            echo
+            echo "$report"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "$report"

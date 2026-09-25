@@ -40,3 +40,7 @@ example/ios/Pods/
 example/ios/.symlinks/
 example/android/.gradle/
 example/android/app/build/
+
+# Public API baseline (maintainer-only; see PUBLIC_API.md)
+api/
+PUBLIC_API.md
