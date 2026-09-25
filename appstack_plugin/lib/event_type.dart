@@ -74,22 +74,6 @@ enum EventType {
 
   /// The SNAKE_CASE value sent to the native SDKs (e.g. `"ADD_TO_CART"`).
   ///
-  /// Use this instead of `name` whenever you need the wire value: `name` is
-  /// Dart's own enum name (`"addToCart"`) wherever [EventTypeExtension] is not
-  /// in scope.
+  /// `name` is Dart's own enum name (`"addToCart"`), not the wire value.
   final String rawValue;
-}
-
-/// Shadows Dart's built-in `Enum.name` with the SNAKE_CASE wire value.
-///
-/// Kept only for compatibility: the result depends on static type and imports
-/// (`(EventType.addToCart as Enum).name` is `"addToCart"`), so use
-/// [EventType.rawValue]. The next major version removes this extension and
-/// `name` becomes the plain Dart enum name.
-extension EventTypeExtension on EventType {
-  @Deprecated(
-    'Use rawValue for the SNAKE_CASE wire value. In the next major version, '
-    'name returns the Dart enum name (e.g. "addToCart").',
-  )
-  String get name => rawValue;
 }

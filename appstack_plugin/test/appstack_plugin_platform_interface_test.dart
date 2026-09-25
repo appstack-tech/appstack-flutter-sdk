@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:appstack_plugin/appstack_plugin_platform_interface.dart';
-import 'package:appstack_plugin/appstack_plugin_method_channel.dart';
+import 'package:appstack_plugin/src/method_channel_appstack_plugin.dart';
 
 /// A platform that does not override any method, used to verify
 /// [UnimplementedError] is thrown when calling the base implementation.

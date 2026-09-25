@@ -9,10 +9,10 @@ Apps compile against this API, so every change to it is reviewed on purpose.
 ## What it covers
 
 Everything an app can import from `package:appstack_plugin`. That is every
-library directly under `lib/`, not only the `appstack_plugin.dart` barrel:
-`appstack_plugin_method_channel.dart` and
-`appstack_plugin_platform_interface.dart` are importable too, so they are in
-the baseline. It also records what `pub` and the native builds hold apps to:
+library directly under `lib/`, not only the `appstack_plugin.dart` barrel.
+`appstack_plugin_platform_interface.dart` is public on purpose, as the seam
+apps use to fake the plugin in tests. Implementation details belong in
+`lib/src/`, which the baseline leaves out. It also records what `pub` and the native builds hold apps to:
 the Dart SDK lower bound and dependency constraints from `pubspec.yaml`, the
 Android `minSdkVersion`/`compileSdkVersion`/`targetSdkVersion`, and the iOS
 minimum version.

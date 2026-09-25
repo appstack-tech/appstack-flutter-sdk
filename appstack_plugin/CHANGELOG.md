@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+This release narrows the public API and is a **major version**. Migration:
+
+- Use `EventType.rawValue` for the SNAKE_CASE wire value. `EventType.x.name` now returns the Dart enum name (`"addToCart"`), and code that relied on `name` compiles unchanged but gets the camelCase value.
+- Remove any `import 'package:appstack_plugin/appstack_plugin_method_channel.dart'`. To fake the plugin in tests, extend `AppstackPluginPlatform` with `MockPlatformInterfaceMixin` and set `AppstackPluginPlatform.instance`.
+- `AppstackPlugin()` no longer compiles. Call the static methods directly.
+
+### Removed
+
+- **Breaking:** `EventTypeExtension`, deprecated below. `EventType.x.name` is now Dart's built-in enum name.
+- **Breaking:** `package:appstack_plugin/appstack_plugin_method_channel.dart`. The method-channel implementation moved to `lib/src/` and is no longer importable.
+- **Breaking:** the implicit public `AppstackPlugin()` constructor. The class is static-only.
+
+### Changed
+
+- `AppstackPluginPlatform` is documented as the supported way to fake the plugin in an app's unit tests.
+
 ### Added
 
 - `EventType.rawValue`: the SNAKE_CASE value sent to the native SDKs (e.g. `EventType.addToCart.rawValue` → `"ADD_TO_CART"`). `sendEvent` now uses it. What reaches the native SDKs is unchanged.

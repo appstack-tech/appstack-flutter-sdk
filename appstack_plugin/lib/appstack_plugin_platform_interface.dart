@@ -1,7 +1,26 @@
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-import 'appstack_plugin_method_channel.dart';
+import 'src/method_channel_appstack_plugin.dart';
 
+/// The platform interface behind every [AppstackPlugin] call.
+///
+/// This is public on purpose, as the supported way to fake the plugin in an
+/// app's unit tests. Extend it with `MockPlatformInterfaceMixin` (from
+/// `package:plugin_platform_interface`) and set [instance]:
+///
+/// ```dart
+/// class FakeAppstack extends AppstackPluginPlatform
+///     with MockPlatformInterfaceMixin {
+///   @override
+///   Future<bool> sendEvent(String eventType, String? eventName,
+///           Map<String, dynamic>? parameters) async =>
+///       true;
+/// }
+///
+/// setUp(() => AppstackPluginPlatform.instance = FakeAppstack());
+/// ```
+///
+/// Methods a fake doesn't override throw [UnimplementedError].
 abstract class AppstackPluginPlatform extends PlatformInterface {
   /// Constructs a AppstackPluginPlatform.
   AppstackPluginPlatform() : super(token: _token);
@@ -12,7 +31,8 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
 
   /// The default instance of [AppstackPluginPlatform] to use.
   ///
-  /// Defaults to [MethodChannelAppstackPlugin].
+  /// Defaults to the method-channel implementation that talks to the native
+  /// SDKs.
   static AppstackPluginPlatform get instance => _instance;
 
   /// Platform-specific implementations should set this with their own

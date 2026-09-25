@@ -71,12 +71,10 @@ void main() {
       }
     });
 
-    // Compatibility until the next major version removes EventTypeExtension.
-    test('deprecated name still returns the raw value', () {
-      for (final value in EventType.values) {
-        // ignore: deprecated_member_use_from_same_package
-        expect(value.name, value.rawValue);
-      }
+    test('name is the Dart enum name, not the wire value', () {
+      expect(EventType.addToCart.name, 'addToCart');
+      expect(EventType.values.byName(EventType.addToCart.name),
+          EventType.addToCart);
     });
   });
 }

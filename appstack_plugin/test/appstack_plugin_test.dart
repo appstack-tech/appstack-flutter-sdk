@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:appstack_plugin/appstack_plugin.dart';
 import 'package:appstack_plugin/appstack_plugin_platform_interface.dart';
-import 'package:appstack_plugin/appstack_plugin_method_channel.dart';
+import 'package:appstack_plugin/src/method_channel_appstack_plugin.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 class MockAppstackPluginPlatform
