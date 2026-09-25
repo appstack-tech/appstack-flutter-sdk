@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:appstack_plugin/appstack_plugin.dart';
 import 'package:appstack_plugin/appstack_plugin_platform_interface.dart';
-import 'package:appstack_plugin/appstack_plugin_method_channel.dart';
+import 'package:appstack_plugin/src/method_channel_appstack_plugin.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 class MockAppstackPluginPlatform
@@ -33,13 +33,17 @@ class MockAppstackPluginPlatform
     deleteUserDataCalls++;
   }
 
+  final List<String> sentEventTypes = [];
+
   @override
   Future<bool> sendEvent(
     String eventType,
     String? eventName,
     Map<String, dynamic>? parameters,
-  ) =>
-      Future.value(true);
+  ) {
+    sentEventTypes.add(eventType);
+    return Future.value(true);
+  }
 
   @override
   Future<bool> enableAppleAdsAttribution() => Future.value(true);
@@ -376,6 +380,41 @@ void main() {
         ),
         true,
       );
+    });
+
+    // The SNAKE_CASE values every Appstack SDK sends. Written out literally so
+    // a change to how the wire value is derived can't pass unnoticed.
+    test('sends the SNAKE_CASE wire value for every event type', () async {
+      final fakePlatform = MockAppstackPluginPlatform();
+      AppstackPluginPlatform.instance = fakePlatform;
+
+      const expected = {
+        EventType.install: 'INSTALL',
+        EventType.login: 'LOGIN',
+        EventType.signUp: 'SIGN_UP',
+        EventType.register: 'REGISTER',
+        EventType.purchase: 'PURCHASE',
+        EventType.addToCart: 'ADD_TO_CART',
+        EventType.addToWishlist: 'ADD_TO_WISHLIST',
+        EventType.initiateCheckout: 'INITIATE_CHECKOUT',
+        EventType.startTrial: 'START_TRIAL',
+        EventType.subscribe: 'SUBSCRIBE',
+        EventType.levelStart: 'LEVEL_START',
+        EventType.levelComplete: 'LEVEL_COMPLETE',
+        EventType.tutorialComplete: 'TUTORIAL_COMPLETE',
+        EventType.search: 'SEARCH',
+        EventType.viewItem: 'VIEW_ITEM',
+        EventType.viewContent: 'VIEW_CONTENT',
+        EventType.share: 'SHARE',
+        EventType.custom: 'CUSTOM',
+      };
+      expect(expected.keys, containsAll(EventType.values));
+
+      for (final type in EventType.values) {
+        await AppstackPlugin.sendEvent(type);
+      }
+      expect(fakePlatform.sentEventTypes,
+          EventType.values.map((t) => expected[t]).toList());
     });
 
     test('throws Exception when platform fails', () async {

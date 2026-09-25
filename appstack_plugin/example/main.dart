@@ -82,7 +82,7 @@ class _MyAppState extends State<MyApp> {
 
       setState(() {
         _status = success
-            ? 'Event sent: ${eventType.name}${eventName != null ? ' ($eventName)' : ''}${revenue != null ? ' (Revenue: \$${revenue.toStringAsFixed(2)})' : ''}'
+            ? 'Event sent: ${eventType.rawValue}${eventName != null ? ' ($eventName)' : ''}${revenue != null ? ' (Revenue: \$${revenue.toStringAsFixed(2)})' : ''}'
             : 'Failed to send event';
       });
     } catch (e) {

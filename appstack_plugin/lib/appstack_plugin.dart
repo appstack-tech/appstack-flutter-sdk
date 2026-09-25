@@ -50,6 +50,9 @@ class AppstackLinkResult {
 /// await AppstackPlugin.enableAppleAdsAttribution();
 /// ```
 class AppstackPlugin {
+  // Static-only API: not meant to be instantiated or subclassed.
+  AppstackPlugin._();
+
   /// Configure Appstack SDK with your API key and optional parameters
   ///
   /// Parameters:
@@ -194,13 +197,13 @@ class AppstackPlugin {
   }) async {
     try {
       return await AppstackPluginPlatform.instance.sendEvent(
-        eventType.name,
+        eventType.rawValue,
         eventName,
         parameters,
       );
     } catch (error) {
       throw Exception(
-        'Failed to send event (eventType: ${eventType.name}): $error',
+        'Failed to send event (eventType: ${eventType.rawValue}): $error',
       );
     }
   }

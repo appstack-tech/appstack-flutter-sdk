@@ -1,8 +1,8 @@
 /// Standard attribution events supported by the SDK.
 ///
 /// The enum values follow the widely adopted SNAKE_CASE notation used by
-/// mobile measurement partners (MMPs). The raw value sent over the wire is the
-/// enum name itself (e.g. `EventType.addToCart` → "ADD_TO_CART").
+/// mobile measurement partners (MMPs). The value sent over the wire is
+/// [rawValue] (e.g. `EventType.addToCart.rawValue` → "ADD_TO_CART").
 ///
 /// For events that have synonymous names (e.g. signUp/register), both variants
 /// are provided to maximize compatibility with existing integrations.
@@ -12,105 +12,68 @@ enum EventType {
   ///
   /// Passing this to `sendEvent` has no effect: both native SDKs discard a
   /// manual install event so it cannot inflate install counts.
-  install,
+  install('INSTALL'),
 
   // MARK: - Authentication & account
   /// User logs in to an existing account.
-  login,
+  login('LOGIN'),
 
   /// User signs up for a new account.
-  signUp,
+  signUp('SIGN_UP'),
 
   /// Alias for signUp – kept for compatibility with some MMPs.
-  register,
+  register('REGISTER'),
 
   // MARK: - Monetization
   /// User completes a purchase (often includes revenue & currency).
-  purchase,
+  purchase('PURCHASE'),
 
   /// Item added to the shopping cart.
-  addToCart,
+  addToCart('ADD_TO_CART'),
 
   /// Item added to the wishlist.
-  addToWishlist,
+  addToWishlist('ADD_TO_WISHLIST'),
 
   /// Checkout process started.
-  initiateCheckout,
+  initiateCheckout('INITIATE_CHECKOUT'),
 
   /// User starts a free trial.
-  startTrial,
+  startTrial('START_TRIAL'),
 
   /// User subscribes to a paid plan.
-  subscribe,
+  subscribe('SUBSCRIBE'),
 
   // MARK: - Games / progression
   /// User starts a new level (games).
-  levelStart,
+  levelStart('LEVEL_START'),
 
   /// User completes a level (games).
-  levelComplete,
+  levelComplete('LEVEL_COMPLETE'),
 
   // MARK: - Engagement
   /// User completes the onboarding tutorial.
-  tutorialComplete,
+  tutorialComplete('TUTORIAL_COMPLETE'),
 
   /// User performs a search in the app.
-  search,
+  search('SEARCH'),
 
   /// User views a specific product or item.
-  viewItem,
+  viewItem('VIEW_ITEM'),
 
   /// User views generic content (e.g. article, post).
-  viewContent,
+  viewContent('VIEW_CONTENT'),
 
   /// User shares content from the app.
-  share,
+  share('SHARE'),
 
   // MARK: - Catch-all
   /// Custom application-specific event not covered above.
-  custom,
-}
+  custom('CUSTOM');
 
-/// Extension to convert Dart enum names to SNAKE_CASE for the native SDKs
-extension EventTypeExtension on EventType {
-  String get name {
-    switch (this) {
-      case EventType.install:
-        return 'INSTALL';
-      case EventType.login:
-        return 'LOGIN';
-      case EventType.signUp:
-        return 'SIGN_UP';
-      case EventType.register:
-        return 'REGISTER';
-      case EventType.purchase:
-        return 'PURCHASE';
-      case EventType.addToCart:
-        return 'ADD_TO_CART';
-      case EventType.addToWishlist:
-        return 'ADD_TO_WISHLIST';
-      case EventType.initiateCheckout:
-        return 'INITIATE_CHECKOUT';
-      case EventType.startTrial:
-        return 'START_TRIAL';
-      case EventType.subscribe:
-        return 'SUBSCRIBE';
-      case EventType.levelStart:
-        return 'LEVEL_START';
-      case EventType.levelComplete:
-        return 'LEVEL_COMPLETE';
-      case EventType.tutorialComplete:
-        return 'TUTORIAL_COMPLETE';
-      case EventType.search:
-        return 'SEARCH';
-      case EventType.viewItem:
-        return 'VIEW_ITEM';
-      case EventType.viewContent:
-        return 'VIEW_CONTENT';
-      case EventType.share:
-        return 'SHARE';
-      case EventType.custom:
-        return 'CUSTOM';
-    }
-  }
+  const EventType(this.rawValue);
+
+  /// The SNAKE_CASE value sent to the native SDKs (e.g. `"ADD_TO_CART"`).
+  ///
+  /// `name` is Dart's own enum name (`"addToCart"`), not the wire value.
+  final String rawValue;
 }

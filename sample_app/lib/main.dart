@@ -150,9 +150,9 @@ class _MyHomePageState extends State<MyHomePage> {
         parameters: parameters,
       );
       setState(() {
-        _lastEvent = eventName ?? eventType.name;
+        _lastEvent = eventName ?? eventType.rawValue;
       });
-      print('Event tracked: ${eventName ?? eventType.name}');
+      print('Event tracked: ${eventName ?? eventType.rawValue}');
     } catch (e) {
       print('Failed to track event: $e');
     }

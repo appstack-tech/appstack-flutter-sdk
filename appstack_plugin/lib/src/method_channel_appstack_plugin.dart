@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-import 'appstack_plugin_platform_interface.dart';
+import '../appstack_plugin_platform_interface.dart';
 
 const _attributionParamsEventChannel =
     EventChannel('appstack_plugin/attribution_params');
