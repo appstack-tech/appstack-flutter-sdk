@@ -115,9 +115,11 @@ cmd_diff() {
   copy_package "$PLUGIN_DIR" "$WORKDIR/new"
 
   # Versions are managed by publish.yml, not here: report, don't enforce.
+  # --check-sdk-version reports a raised Dart SDK lower bound as breaking; it
+  # is off by default.
   dart-apitool diff \
     --old "$WORKDIR/old/appstack_plugin" --new "$WORKDIR/new" \
-    --version-check-mode none \
+    --version-check-mode none --check-sdk-version \
     --report-format markdown --report-file-path "$WORKDIR/report.md" >&2 \
     || die "dart-apitool diff failed (see output above)."
   # Drop the tool-info header: it only names the temp dirs and a timestamp.
