@@ -13,23 +13,19 @@ This release narrows the public API and is a **major version**. Migration:
 - Remove any `import 'package:appstack_plugin/appstack_plugin_method_channel.dart'`. To fake the plugin in tests, extend `AppstackPluginPlatform` with `MockPlatformInterfaceMixin` and set `AppstackPluginPlatform.instance`.
 - `AppstackPlugin()` no longer compiles. Call the static methods directly.
 
-### Removed
+### Added
 
-- **Breaking:** `EventTypeExtension`, deprecated below. `EventType.x.name` is now Dart's built-in enum name.
-- **Breaking:** `package:appstack_plugin/appstack_plugin_method_channel.dart`. The method-channel implementation moved to `lib/src/` and is no longer importable.
-- **Breaking:** the implicit public `AppstackPlugin()` constructor. The class is static-only.
+- `EventType.rawValue`: the SNAKE_CASE value sent to the native SDKs (e.g. `EventType.addToCart.rawValue` → `"ADD_TO_CART"`). `sendEvent` now uses it. What reaches the native SDKs is unchanged.
 
 ### Changed
 
 - `AppstackPluginPlatform` is documented as the supported way to fake the plugin in an app's unit tests.
 
-### Added
+### Removed
 
-- `EventType.rawValue`: the SNAKE_CASE value sent to the native SDKs (e.g. `EventType.addToCart.rawValue` → `"ADD_TO_CART"`). `sendEvent` now uses it. What reaches the native SDKs is unchanged.
-
-### Deprecated
-
-- `EventTypeExtension.name`. It shadowed Dart's built-in `Enum.name`, so the same expression returned `"ADD_TO_CART"` or `"addToCart"` depending on the variable's static type and imports (for example through an `Enum`-typed variable, a generic helper, or `import ... show EventType`), and `EventType.values.byName(e.name)` threw. Use `rawValue` for the wire value. The next major version removes the extension, and `name` becomes the Dart enum name.
+- **Breaking:** `EventTypeExtension`. Its `name` getter shadowed Dart's built-in `Enum.name`, so the same expression returned `"ADD_TO_CART"` or `"addToCart"` depending on the variable's static type and imports (for example through an `Enum`-typed variable, a generic helper, or `import ... show EventType`), and `EventType.values.byName(e.name)` threw. `EventType.x.name` is now Dart's built-in enum name; use `rawValue` for the wire value.
+- **Breaking:** `package:appstack_plugin/appstack_plugin_method_channel.dart`. The method-channel implementation moved to `lib/src/` and is no longer importable.
+- **Breaking:** the implicit public `AppstackPlugin()` constructor. The class is static-only.
 
 ## [2.10.1] - 2026-09-22
 
