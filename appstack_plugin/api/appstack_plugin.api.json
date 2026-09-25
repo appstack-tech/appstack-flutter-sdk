@@ -1,0 +1,1163 @@
+{
+  "version": 3,
+  "packageApi": {
+    "packageName": "appstack_plugin",
+    "interfaceDeclarations": [
+      {
+        "name": "MethodChannelAppstackPlugin",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "AppstackPluginPlatform",
+          "PlatformInterface",
+          "Object"
+        ],
+        "executableDeclarations": [
+          {
+            "returnTypeName": "MethodChannelAppstackPlugin",
+            "name": "new",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "constructor",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_method_channel.dart"
+          },
+          {
+            "returnTypeName": "Future<void>",
+            "name": "configure",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "apiKey",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "logLevel",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "int",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "customerUserId",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<void>",
+            "name": "setCustomerUserId",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "customerUserId",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<void>",
+            "name": "deleteUserData",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<bool>",
+            "name": "sendEvent",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "eventType",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "eventName",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "parameters",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Map<String, dynamic>?",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<bool>",
+            "name": "enableAppleAdsAttribution",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<String?>",
+            "name": "getAppstackId",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<bool>",
+            "name": "isSdkDisabled",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<Map<String, dynamic>?>",
+            "name": "getAttributionParams",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<Map<String, dynamic>?>",
+            "name": "handleUniversalLink",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "url",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "allowedHosts",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "List<String>?",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Stream<Map<String, dynamic>?>",
+            "name": "getAttributionParamsWithCallback",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          }
+        ],
+        "fieldDeclarations": [
+          {
+            "typeName": "MethodChannel",
+            "name": "methodChannel",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_method_channel.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "AppstackPluginPlatform",
+            "name": "instance",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart",
+            "isReadable": true,
+            "isWriteable": true
+          }
+        ],
+        "entryPoints": [
+          "appstack_plugin_method_channel.dart"
+        ],
+        "relativePath": "lib/appstack_plugin_method_channel.dart"
+      },
+      {
+        "name": "AppstackPluginPlatform",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": true,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "PlatformInterface",
+          "Object"
+        ],
+        "executableDeclarations": [
+          {
+            "returnTypeName": "Future<void>",
+            "name": "configure",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "apiKey",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "logLevel",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "int",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "customerUserId",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<void>",
+            "name": "setCustomerUserId",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "customerUserId",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<void>",
+            "name": "deleteUserData",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<bool>",
+            "name": "sendEvent",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "eventType",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "eventName",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "parameters",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Map<String, dynamic>?",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<bool>",
+            "name": "enableAppleAdsAttribution",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<String?>",
+            "name": "getAppstackId",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<bool>",
+            "name": "isSdkDisabled",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<Map<String, dynamic>?>",
+            "name": "getAttributionParams",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Future<Map<String, dynamic>?>",
+            "name": "handleUniversalLink",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "url",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "allowedHosts",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "List<String>?",
+                "relativePath": "lib/appstack_plugin_platform_interface.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "Stream<Map<String, dynamic>?>",
+            "name": "getAttributionParamsWithCallback",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          },
+          {
+            "returnTypeName": "AppstackPluginPlatform",
+            "name": "new",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "constructor",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart"
+          }
+        ],
+        "fieldDeclarations": [
+          {
+            "typeName": "AppstackPluginPlatform",
+            "name": "instance",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin_platform_interface.dart",
+            "isReadable": true,
+            "isWriteable": true
+          }
+        ],
+        "entryPoints": [
+          "appstack_plugin_platform_interface.dart"
+        ],
+        "relativePath": "lib/appstack_plugin_platform_interface.dart"
+      },
+      {
+        "name": "AppstackLinkResult",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "Object"
+        ],
+        "executableDeclarations": [
+          {
+            "returnTypeName": "AppstackLinkResult",
+            "name": "new",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "deeplinkId",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/appstack_plugin.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "queryParams",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Map<String, String>",
+                "relativePath": "lib/appstack_plugin.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "url",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Uri",
+                "relativePath": "lib/appstack_plugin.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "constructor",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart"
+          },
+          {
+            "returnTypeName": "AppstackLinkResult",
+            "name": "fromMap",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "value",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Map<dynamic, dynamic>",
+                "relativePath": "lib/appstack_plugin.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "constructor",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart"
+          }
+        ],
+        "fieldDeclarations": [
+          {
+            "typeName": "String?",
+            "name": "deeplinkId",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Map<String, String>",
+            "name": "queryParams",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Uri",
+            "name": "url",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart",
+            "isReadable": true,
+            "isWriteable": false
+          }
+        ],
+        "entryPoints": [
+          "appstack_plugin.dart"
+        ],
+        "relativePath": "lib/appstack_plugin.dart"
+      },
+      {
+        "name": "AppstackPlugin",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "Object"
+        ],
+        "executableDeclarations": [
+          {
+            "returnTypeName": "Future<void>",
+            "name": "configure",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "apiKey",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String",
+                "relativePath": "lib/appstack_plugin.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "logLevel",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "int",
+                "relativePath": "lib/appstack_plugin.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "customerUserId",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/appstack_plugin.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "isDebug",
+                "isDeprecated": true,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/appstack_plugin.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "endpointBaseUrl",
+                "isDeprecated": true,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/appstack_plugin.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart"
+          },
+          {
+            "returnTypeName": "Future<void>",
+            "name": "setCustomerUserId",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "customerUserId",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/appstack_plugin.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart"
+          },
+          {
+            "returnTypeName": "Future<void>",
+            "name": "deleteUserData",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart"
+          },
+          {
+            "returnTypeName": "Future<bool>",
+            "name": "sendEvent",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "eventType",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "EventType",
+                "relativePath": "lib/appstack_plugin.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "eventName",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/appstack_plugin.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "parameters",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Map<String, dynamic>?",
+                "relativePath": "lib/appstack_plugin.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart"
+          },
+          {
+            "returnTypeName": "Future<bool>",
+            "name": "enableAppleAdsAttribution",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart"
+          },
+          {
+            "returnTypeName": "Future<String?>",
+            "name": "getAppstackId",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart"
+          },
+          {
+            "returnTypeName": "Future<bool>",
+            "name": "isSdkDisabled",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart"
+          },
+          {
+            "returnTypeName": "Future<Map<String, dynamic>?>",
+            "name": "getAttributionParams",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart"
+          },
+          {
+            "returnTypeName": "Future<AppstackLinkResult?>",
+            "name": "handleUniversalLink",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "url",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Uri",
+                "relativePath": "lib/appstack_plugin.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "allowedHosts",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Set<String>?",
+                "relativePath": "lib/appstack_plugin.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart"
+          },
+          {
+            "returnTypeName": "Stream<Map<String, dynamic>?>",
+            "name": "getAttributionParamsWithCallback",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart"
+          },
+          {
+            "returnTypeName": "AppstackPlugin",
+            "name": "new",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [],
+            "typeParameterNames": [],
+            "type": "constructor",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/appstack_plugin.dart"
+          }
+        ],
+        "fieldDeclarations": [],
+        "entryPoints": [
+          "appstack_plugin.dart"
+        ],
+        "relativePath": "lib/appstack_plugin.dart"
+      },
+      {
+        "name": "EventType",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "Enum",
+          "Object"
+        ],
+        "executableDeclarations": [],
+        "fieldDeclarations": [
+          {
+            "typeName": "EventType",
+            "name": "install",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "login",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "signUp",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "register",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "purchase",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "addToCart",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "addToWishlist",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "initiateCheckout",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "startTrial",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "subscribe",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "levelStart",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "levelComplete",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "tutorialComplete",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "search",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "viewItem",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "viewContent",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "share",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "EventType",
+            "name": "custom",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "List<EventType>",
+            "name": "values",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          }
+        ],
+        "entryPoints": [
+          "event_type.dart",
+          "appstack_plugin.dart"
+        ],
+        "relativePath": "lib/event_type.dart"
+      },
+      {
+        "name": "EventTypeExtension",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [],
+        "executableDeclarations": [],
+        "fieldDeclarations": [
+          {
+            "typeName": "String",
+            "name": "name",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/event_type.dart",
+            "isReadable": true,
+            "isWriteable": false
+          }
+        ],
+        "entryPoints": [
+          "event_type.dart",
+          "appstack_plugin.dart"
+        ],
+        "relativePath": "lib/event_type.dart"
+      }
+    ],
+    "executableDeclarations": [],
+    "fieldDeclarations": [],
+    "typeAliasDeclarations": [],
+    "semantics": [
+      "containsPlatformConstraints"
+    ],
+    "iosPlatformConstraints": {
+      "minimumOsVersion": 15.0
+    },
+    "androidPlatformConstraints": {
+      "minSdkVersion": 21,
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34
+    },
+    "sdkType": "flutter",
+    "minSdkVersion": "2.18.0",
+    "packageDependencies": [
+      {
+        "packageName": "plugin_platform_interface",
+        "packageVersion": "^2.0.2"
+      }
+    ]
+  },
+  "missingEntryPoints": []
+}
