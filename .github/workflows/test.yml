@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - develop
 
 # Least privilege: analyze, unit tests and the API check only read the repo.
 permissions:

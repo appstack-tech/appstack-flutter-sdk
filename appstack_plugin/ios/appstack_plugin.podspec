@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'appstack_plugin'
-  s.version          = '0.0.1'
+  s.version          = '2.10.1'
   s.summary          = 'Track events and revenue with Apple Search Ads attribution for Flutter apps.'
   s.description      = <<-DESC
 Flutter plugin for Appstack Attribution SDK. Track app installs, user events, and revenue with Apple Search Ads attribution support.

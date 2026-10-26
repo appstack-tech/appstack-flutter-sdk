@@ -70,7 +70,8 @@ bash tool/check_ios_sdk_parity.sh
 The `rc` channel is mutable: the asset and the manifest are replaced on every
 candidate, so re-run `swift package update` (or the steps above) to pick up a
 newer one. Never ship a `branch:` pin — restore an `exact:` pin and re-vendor in
-the same commit before releasing.
+the same commit before releasing. The Release version check on PRs into `main`
+(`tool/check_release_pins.sh`) rejects a `branch:` pin.
 
 ## Update Process
 

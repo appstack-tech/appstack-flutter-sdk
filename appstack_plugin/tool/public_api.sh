@@ -69,8 +69,8 @@ copy_package() {
 }
 
 # Extracts the API of the package directory $1 into the normalised file $2.
-# packagePath is a temp dir; packageVersion stays 0.0.1 in git and is only
-# stamped by publish.yml, so neither says anything about the API.
+# packagePath is a temp dir and packageVersion changes with every release
+# (tool/set_version.dart), so neither says anything about the API.
 extract() {
   local raw="$WORKDIR/raw.api.json"
   dart-apitool extract --input "$1" --output "$raw" --set-exit-on-missing-export >&2 \

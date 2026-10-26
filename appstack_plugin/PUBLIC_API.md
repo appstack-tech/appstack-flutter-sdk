@@ -18,7 +18,7 @@ Android `minSdkVersion`/`compileSdkVersion`/`targetSdkVersion`, and the iOS
 minimum version.
 
 The absolute package path and `version` are left out: the path is a temp dir,
-and `version` stays `0.0.1` in git until `publish.yml` stamps it.
+and `version` changes with every release (`tool/set_version.dart`).
 
 ## CI
 
