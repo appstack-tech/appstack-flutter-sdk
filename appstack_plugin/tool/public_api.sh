@@ -70,12 +70,20 @@ copy_package() {
 
 # Extracts the API of the package directory $1 into the normalised file $2.
 # packagePath is a temp dir and packageVersion changes with every release
-# (tool/set_version.dart), so neither says anything about the API.
+# (tool/set_version.dart), so neither says anything about the API. The
+# top-level declarations come out in file-system order, which differs between
+# machines, so they are sorted; members keep source order.
+readonly NORMALISE='
+  del(.packageApi.packagePath, .packageApi.packageVersion)
+  | reduce ("interfaceDeclarations", "executableDeclarations",
+            "fieldDeclarations", "typeAliasDeclarations") as $k
+      (.; .packageApi[$k] |= sort_by(.relativePath, .name))'
+
 extract() {
   local raw="$WORKDIR/raw.api.json"
   dart-apitool extract --input "$1" --output "$raw" --set-exit-on-missing-export >&2 \
     || die "dart-apitool extract failed (see output above)."
-  jq --indent 2 'del(.packageApi.packagePath, .packageApi.packageVersion)' "$raw" > "$2" \
+  jq --indent 2 "$NORMALISE" "$raw" > "$2" \
     || die "could not normalise $raw."
 }
 
