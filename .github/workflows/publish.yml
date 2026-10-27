@@ -1,22 +1,27 @@
 name: Publish to pub.dev
 
 on:
-  # Stable releases are pushed as X.Y.Z tags. Release candidates are triggered
-  # manually with workflow_dispatch (typically on a release/x.y branch) so they
-  # never mint a git tag: the pub.dev version is the identity.
+  # A stable release is a merge to main whose appstack_plugin/CHANGELOG.md has a
+  # new dated "## [X.Y.Z] - YYYY-MM-DD" section (see
+  # .github/scripts/resolve-release-version.sh). Merges that don't add one
+  # publish nothing. Day-to-day work lands on develop; the reviewed
+  # develop -> main PR is the release approval. The workflow creates the X.Y.Z
+  # tag itself, so pushing a tag by hand no longer publishes.
+  #
+  # Release candidates are triggered manually with workflow_dispatch on develop
+  # and never mint a git tag: the pub.dev version is the identity. pub.dev
+  # versions can't be deleted, so RCs come only from the protected develop.
   push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+    branches: [main]
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release candidate version to publish, e.g. 2.11.0-rc.1'
+        description: 'Release candidate version to publish, e.g. 3.0.0-rc.1'
         required: true
         type: string
 
 permissions:
   contents: read
-  id-token: write
 
 # Single source of truth for version validation, reused by every job below so
 # the publish gate and the release defense-in-depth check stay identical.
@@ -25,63 +30,27 @@ permissions:
 # and consecutive dots).
 env:
   SEMVER_REGEX: '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+  # Keep in sync with test.yml and integration.yml.
+  FLUTTER_VERSION: '3.44.1'
 
 jobs:
-  # Cheap release gate, first: confirm the vendored XCFramework is the artifact
-  # the SwiftPM `exact:` pin resolves to. 2.4.0 shipped an rc0 XCFramework
-  # against a 4.4.0 pin and every other check stayed green, so this runs before
-  # the simulator/emulator matrix and before any GCP auth — drift cancels the
-  # release in under a minute instead of after the heavy jobs.
-  verify:
-    name: Verify iOS SDK parity
+  # Decides what this run publishes, before any build: the stable version from
+  # the changelog on a push to main, or the validated RC input on a dispatch.
+  resolve:
+    name: Resolve version
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Check vendored XCFramework matches the pinned SDK version
-        run: bash appstack_plugin/tool/check_ios_sdk_parity.sh
-
-  # Publishing is allowed only after the same build/link and hermetic runtime
-  # checks that gate pull requests have passed for the tagged commit.
-  integration:
-    name: Build and runtime checks
-    needs: verify
-    uses: ./.github/workflows/integration.yml
-
-  publish:
-    name: Publish to pub.dev
-    runs-on: ubuntu-latest
-    needs: integration
-    # Serialize publishes so two candidates cannot run their GCP auth and publish
-    # steps at the same time. Queue rather than cancel.
-    concurrency:
-      group: publish-pub
-      cancel-in-progress: false
-    # Least privilege: publishing only reads the repo. Creating the GitHub
-    # Release (which needs contents: write) is isolated in the `release` job.
-    permissions:
-      contents: read
-      id-token: write
+    timeout-minutes: 5
     outputs:
       version: ${{ steps.meta.outputs.version }}
       channel: ${{ steps.meta.outputs.channel }}
+      release: ${{ steps.meta.outputs.release }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Tags are needed to tell a new version from one already released.
           fetch-depth: 0
-
-      - name: Setup Flutter SDK
-        uses: flutter-actions/setup-flutter@v1
-        with:
-          sdk: stable
-          version: 3.44.1
+          persist-credentials: false
 
       - name: Resolve version and channel
         id: meta
@@ -92,6 +61,10 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$REF_NAME" != "develop" ]]; then
+              echo "::error::Release candidates are published from develop, not '$REF_NAME'."
+              exit 1
+            fi
             VERSION="$INPUT_VERSION"
             # Canonical RC form is X.Y.Z-rc.N; accept the legacy -rcN too.
             #
@@ -100,101 +73,185 @@ jobs:
             # and that value is later echoed into $GITHUB_OUTPUT. [.] keeps the
             # dots literal regardless of how the shell processes backslashes.
             if [[ ! "$VERSION" =~ ^[0-9]+[.][0-9]+[.][0-9]+-rc[.]?[0-9]+$ ]]; then
-              echo "::error::Dispatch version '$VERSION' is not a release candidate (expected e.g. 2.11.0-rc.1)."
+              echo "::error::Dispatch version '$VERSION' is not a release candidate (expected e.g. 3.0.0-rc.1)."
               exit 1
             fi
-            CHANNEL=rc
+            {
+              echo "version=$VERSION"
+              echo "channel=rc"
+              echo "release=true"
+            } >> "$GITHUB_OUTPUT"
           else
-            VERSION="$REF_NAME"
-            if [[ ! "$VERSION" =~ ^[0-9]+[.][0-9]+[.][0-9]+$ ]]; then
-              echo "::error::Tag '$VERSION' is not a stable SemVer version."
-              exit 1
-            fi
-            CHANNEL=stable
+            .github/scripts/resolve-release-version.sh appstack_plugin/CHANGELOG.md
+            echo "channel=stable" >> "$GITHUB_OUTPUT"
           fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
-          echo "Resolved version=$VERSION channel=$CHANNEL"
+
+  # Cheap release gate, first: confirm the vendored XCFramework is the artifact
+  # the SwiftPM pin resolves to (2.4.0 shipped an rc0 XCFramework against a
+  # 4.4.0 pin and every other check stayed green), and, for a stable release,
+  # that every version copy agrees and both native pins are released versions.
+  # Runs before the simulator/emulator matrix and before any GCP auth, so a
+  # problem cancels the release in about a minute.
+  verify:
+    name: Verify release
+    runs-on: ubuntu-latest
+    needs: resolve
+    if: ${{ needs.resolve.outputs.release == 'true' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Check vendored XCFramework matches the pinned SDK version
+        run: bash appstack_plugin/tool/check_ios_sdk_parity.sh
+
+      - name: Check native pins are released
+        if: ${{ needs.resolve.outputs.channel == 'stable' }}
+        run: bash appstack_plugin/tool/check_release_pins.sh
+
+      - name: Setup Flutter SDK
+        if: ${{ needs.resolve.outputs.channel == 'stable' }}
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2  # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Check version copies agree
+        if: ${{ needs.resolve.outputs.channel == 'stable' }}
+        env:
+          VERSION: ${{ needs.resolve.outputs.version }}
+        run: dart run tool/set_version.dart --check "$VERSION"
+        working-directory: appstack_plugin
+
+  # Publishing is allowed only after the same build/link and hermetic runtime
+  # checks that gate pull requests have passed for this commit.
+  integration:
+    name: Build and runtime checks
+    needs: verify
+    uses: ./.github/workflows/integration.yml
+
+  publish:
+    name: Publish to pub.dev
+    runs-on: ubuntu-latest
+    needs: [resolve, integration]
+    # Serialize publishes so two candidates cannot run their GCP auth and publish
+    # steps at the same time. Queue rather than cancel.
+    concurrency:
+      group: publish-pub
+      cancel-in-progress: false
+    # GCP_SA_KEY lives in this environment, which only main (stable) and
+    # develop (RCs) can deploy to.
+    environment: release
+    # Least privilege: publishing only reads the repo. Creating the GitHub
+    # Release (which needs contents: write) is isolated in the `release` job.
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2  # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      # Re-runs after a failed GitHub Release step must not try to publish the
+      # same version again; pub.dev rejects that outright.
+      - name: Check whether this version is already on pub.dev
+        id: existing
+        env:
+          VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          if curl -fsS -o /dev/null "https://pub.dev/api/packages/appstack_plugin/versions/$VERSION"; then
+            echo "::notice::$VERSION is already on pub.dev; skipping publish."
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Install dependencies
+        if: ${{ steps.existing.outputs.published == 'false' }}
         run: flutter pub get
         working-directory: appstack_plugin
 
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v1'
+        if: ${{ steps.existing.outputs.published == 'false' }}
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3.0.0
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
           create_credentials_file: true
           export_environment_variables: true
 
       - name: Set up pub.dev credentials
+        if: ${{ steps.existing.outputs.published == 'false' }}
         run: |
           gcloud auth print-identity-token --audiences=https://pub.dev | flutter pub token add https://pub.dev
 
-      # Dry-run BEFORE the version bump: `pub publish --dry-run` fails on
+      # Dry-run BEFORE any RC stamping: `pub publish --dry-run` fails on
       # warnings and flags a dirty git tree as one, so it must run while the
       # checkout is still clean. The real publish below uses `-f` to force past
-      # the version-file edits.
+      # an RC's version-file edits.
       - name: Publish - dry run
+        if: ${{ steps.existing.outputs.published == 'false' }}
         run: flutter pub publish --dry-run
         working-directory: appstack_plugin
 
-      # Enforce version changes in all files, just in case we missed to change some
-      - name: Update version in files
+      # A stable release ships the reviewed commit as is: every version copy must
+      # already agree (release-pr.yml checked it before the merge, verify on this
+      # exact commit). An RC's version is a dispatch input, so it is stamped here.
+      # See tool/set_version.dart.
+      - name: Check or stamp version
+        if: ${{ steps.existing.outputs.published == 'false' }}
         env:
-          # Pass the validated output through env rather than interpolating it
-          # directly into the script body.
-          VERSION: ${{ steps.meta.outputs.version }}
+          VERSION: ${{ needs.resolve.outputs.version }}
+          CHANNEL: ${{ needs.resolve.outputs.channel }}
         run: |
           set -euo pipefail
-          echo "Updating version to $VERSION"
-
-          # Update pubspec.yaml files
-          sed -i "s/^version: .*/version: $VERSION/" appstack_plugin/pubspec.yaml
-
-          # Update podspec files
-          sed -i "s/s\.version.*=.*/s.version          = '$VERSION'/" appstack_plugin/ios/appstack_plugin.podspec
-
-          # Update build.gradle files
-          sed -i "s/^version .*/version '$VERSION'/" appstack_plugin/android/build.gradle
-
-          # Update wrapper version constant
-          sed -i "s/const _kWrapperVersion = 'flutter-[^']*'/const _kWrapperVersion = 'flutter-$VERSION'/" appstack_plugin/lib/src/method_channel_appstack_plugin.dart
-
-          # Update documentation files
-          sed -i "s/appstack_plugin: \^[0-9]\+\.[0-9]\+\.[0-9]\+/appstack_plugin: ^$VERSION/" appstack_plugin/README.md
-          sed -i "s/appstack_plugin: \^[0-9]\+\.[0-9]\+\.[0-9]\+/appstack_plugin: ^$VERSION/" README.md
-
-          echo "Version updated in all files"
+          if [[ "$CHANNEL" == "rc" ]]; then
+            dart run tool/set_version.dart "$VERSION" --no-changelog
+          else
+            dart run tool/set_version.dart --check "$VERSION"
+          fi
+        working-directory: appstack_plugin
 
       - name: Publish to pub.dev
+        if: ${{ steps.existing.outputs.published == 'false' }}
         run: flutter pub publish -f
         working-directory: appstack_plugin
 
-  # Create a GitHub Release so the changes for each version are visible on the
-  # repo's Releases page and users can see the current latest version. Notes are
-  # pulled from the matching CHANGELOG section. Runs only after the publish job
-  # succeeds (needs: publish), and is the only job granted contents: write.
+  # Create the X.Y.Z tag and a GitHub Release so the changes for each version
+  # are visible on the repo's Releases page and users can see the current latest
+  # version. Notes are pulled from the matching CHANGELOG section. Runs only
+  # after the publish job succeeds (needs: publish), and is the only job granted
+  # contents: write. Tags created with GITHUB_TOKEN don't trigger workflows, so
+  # this can't start another run.
   #
   # Skipped for release candidates (channel == rc): those still publish to
   # pub.dev but do not get a GitHub Release.
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: publish
-    if: ${{ needs.publish.outputs.channel == 'stable' }}
+    needs: [resolve, publish]
+    if: ${{ needs.resolve.outputs.channel == 'stable' }}
     permissions:
       contents: write   # needed to create the GitHub Release
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        with:
+          persist-credentials: false
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Consume the version as an env value, not inline interpolation.
-          VERSION: ${{ needs.publish.outputs.version }}
+          VERSION: ${{ needs.resolve.outputs.version }}
+          TARGET_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
 
@@ -234,10 +291,11 @@ jobs:
           echo "----- release notes for $VERSION -----"
           cat "$RUNNER_TEMP/release_notes.md"
 
-          # Only stable X.Y.Z tags reach this job (see the job's `if:`), so the
-          # release is always marked latest.
+          # Only stable versions reach this job (see the job's `if:`), so the
+          # release is always marked latest. --target creates the tag on the
+          # merge commit that was just published.
           gh release create "$VERSION" \
             --title "$VERSION" \
             --notes-file "$RUNNER_TEMP/release_notes.md" \
-            --verify-tag \
+            --target "$TARGET_SHA" \
             --latest

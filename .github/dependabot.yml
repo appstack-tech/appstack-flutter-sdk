@@ -4,6 +4,8 @@ updates:
   # receive their security patches despite pinning. Grouped into one PR to cut noise.
   - package-ecosystem: github-actions
     directory: /
+    # Day-to-day changes land on develop; main only takes release PRs.
+    target-branch: develop
     schedule:
       interval: weekly
     groups:
@@ -14,11 +16,13 @@ updates:
   # Dart/Flutter dependencies for the published plugin.
   - package-ecosystem: pub
     directory: /appstack_plugin
+    target-branch: develop
     schedule:
       interval: weekly
 
   # Dart/Flutter dependencies for the integration-test sample app.
   - package-ecosystem: pub
     directory: /sample_app
+    target-branch: develop
     schedule:
       interval: weekly

@@ -1,6 +1,6 @@
 name: appstack_plugin
 description: Track events and revenue with Apple Search Ads attribution for Flutter apps. Supports iOS 15.0+ and Android 5.0+.
-version: 0.0.1
+version: 2.10.1
 homepage: https://appstack.tech
 repository: https://github.com/appstack-tech/appstack-flutter-sdk.git
 issue_tracker: https://github.com/appstack-tech/appstack-flutter-sdk/issues

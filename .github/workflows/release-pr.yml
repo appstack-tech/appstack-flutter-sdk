@@ -1,0 +1,95 @@
+name: Release PR
+
+# Every PR into main is a release PR: merging it runs publish.yml, which
+# publishes the version in appstack_plugin/CHANGELOG.md to pub.dev. This check
+# states that version up front so the approval is an approval of a specific
+# release, and fails early when merging would publish nothing or the wrong
+# thing:
+#
+#   * The head branch must be develop (a release) or hotfix/* (a fix cut from
+#     main). Feature work goes to develop.
+#   * The changelog must add a new "## [X.Y.Z] - YYYY-MM-DD" section, newer than
+#     the latest release. A PR that should merge without releasing (say, a
+#     workflow-only fix on main) needs the `no-release` label.
+#   * Every version copy (pubspec.yaml, the podspec, build.gradle, the wrapper
+#     constant, the READMEs) must carry that same version
+#     (tool/set_version.dart --check), so what is approved is exactly what gets
+#     published.
+#   * Both native pins must be released X.Y.Z versions: no Android -SNAPSHOT
+#     and no iOS `rc` branch (tool/check_release_pins.sh).
+#
+# Make "Release version" a required check on main.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  # Keep in sync with test.yml, integration.yml and publish.yml.
+  FLUTTER_VERSION: '3.44.1'
+
+jobs:
+  version:
+    name: Release version
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        with:
+          # Tags are needed to tell a new version from one already released.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check head branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [[ "$HEAD_REF" != "develop" && "$HEAD_REF" != hotfix/* ]]; then
+            echo "::error::PRs into main come from develop or hotfix/*, not '$HEAD_REF'. Target develop instead."
+            exit 1
+          fi
+
+      - name: Resolve release version
+        id: meta
+        run: .github/scripts/resolve-release-version.sh appstack_plugin/CHANGELOG.md
+
+      - name: Require a new version
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+          RELEASE: ${{ steps.meta.outputs.release }}
+          NO_RELEASE: ${{ contains(github.event.pull_request.labels.*.name, 'no-release') }}
+        run: |
+          if [[ "$RELEASE" == "true" ]]; then
+            echo "Merging this PR publishes **$VERSION** to pub.dev." >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$NO_RELEASE" == "true" ]]; then
+            echo "Labeled \`no-release\`: merging this PR publishes nothing." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::CHANGELOG.md has no new version ($VERSION is already released). Run 'dart run tool/set_version.dart X.Y.Z' in appstack_plugin/ on develop, or label the PR no-release."
+            exit 1
+          fi
+
+      # The rest runs for no-release PRs too: main must never hold disagreeing
+      # copies or candidate native pins.
+      - name: Check native pins are released
+        run: bash appstack_plugin/tool/check_release_pins.sh
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2  # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Check version copies agree
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: dart run tool/set_version.dart --check "$VERSION"
+        working-directory: appstack_plugin

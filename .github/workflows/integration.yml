@@ -7,12 +7,13 @@ name: Build and runtime checks
 # block a PR.
 #
 # These are heavier than the unit-test workflow (macOS runners, simulators), so
-# they run on PRs into main and on demand rather than on every push.
+# they run on PRs into main and develop and on demand rather than on every push.
 
 on:
   pull_request:
     branches:
       - main
+      - develop
   workflow_dispatch:
   workflow_call:
 
@@ -21,9 +22,12 @@ on:
 permissions:
   contents: read
 
+# A new commit on a PR cancels its stale run. Release runs (workflow_call from
+# publish.yml) and manual runs get their own group and are never cancelled: a
+# cancelled release check fails the release.
 concurrency:
-  group: build-runtime-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: build-runtime-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   FLUTTER_VERSION: '3.44.1'
