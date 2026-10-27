@@ -18,14 +18,15 @@
 
 - Add user-facing changes under `## [Unreleased]` in
   `appstack_plugin/CHANGELOG.md`. Don't add a dated version section by hand.
-- Never edit version numbers by hand. Only this command changes them, and only
-  when the user is cutting a release:
+- Never edit version numbers by hand. Only this command, run from
+  `appstack_plugin/`, changes them, and only when the user is cutting a release:
 
   ```bash
-  dart run tool/set_version.dart X.Y.Z
+  cd appstack_plugin && dart run tool/set_version.dart X.Y.Z
   ```
 
-  `dart run tool/set_version.dart --check` shows whether every copy agrees.
+  `dart run tool/set_version.dart --check` (also from `appstack_plugin/`) shows
+  whether every copy agrees.
 
 ## Releases (only when the user asks)
 
