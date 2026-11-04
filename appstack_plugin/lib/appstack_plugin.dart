@@ -258,9 +258,9 @@ class AppstackPlugin {
 
   /// Get attribution parameters from the SDK.
   ///
-  /// Request-response call over the method channel. On Android, runs synchronously
-  /// on the platform thread. Prefer [getAttributionParamsWithCallback] when
-  /// attribution retrieval time may vary.
+  /// Request-response call over the method channel. On both platforms the
+  /// returned future completes once the native attribution match has finished,
+  /// so it is safe to call right after [configure].
   ///
   /// On iOS the map always contains `appstack_match_status`, describing the
   /// attribution outcome: `matched`, `matched_no_params`, `organic`, `skipped`,
@@ -304,8 +304,8 @@ class AppstackPlugin {
   /// Get attribution parameters via a push-style stream backed by a native background thread.
   ///
   /// On iOS, the native SDK is called inside a detached Swift Task. On Android, it runs
-  /// on a dedicated Thread — freeing the platform thread immediately rather than blocking
-  /// it until the SDK responds. The stream emits exactly one value then closes.
+  /// in a background coroutine that waits for the attribution match, without blocking
+  /// the platform thread. The stream emits exactly one value then closes.
   ///
   /// Example:
   /// ```dart

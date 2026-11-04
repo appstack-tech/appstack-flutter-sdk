@@ -21,6 +21,10 @@ This release narrows the public API and is a **major version**. Migration:
 
 - `AppstackPluginPlatform` is documented as the supported way to fake the plugin in an app's unit tests.
 
+### Fixed
+
+- **Android:** `getAttributionParams()` and `getAttributionParamsWithCallback()` now wait for the attribution match to finish, as they already do on iOS. They previously returned an empty map when called shortly after `configure()`, before the match response was cached, so `appstack_adnetwork` and `appstack_campaign` were missing on Android (and never reached integrations such as RevenueCat). No Dart API change.
+
 ### Removed
 
 - **Breaking:** `EventTypeExtension`. Its `name` getter shadowed Dart's built-in `Enum.name`, so the same expression returned `"ADD_TO_CART"` or `"addToCart"` depending on the variable's static type and imports (for example through an `Enum`-typed variable, a generic helper, or `import ... show EventType`), and `EventType.values.byName(e.name)` threw. `EventType.x.name` is now Dart's built-in enum name; use `rawValue` for the wire value.
