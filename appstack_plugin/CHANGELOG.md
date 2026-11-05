@@ -23,7 +23,7 @@ This release narrows the public API and is a **major version**. Migration:
 
 ### Fixed
 
-- **Android:** `getAttributionParams()` and `getAttributionParamsWithCallback()` now wait for the attribution match to finish, as they already do on iOS. They previously returned an empty map when called shortly after `configure()`, before the match response was cached, so `appstack_adnetwork` and `appstack_campaign` were missing on Android (and never reached integrations such as RevenueCat). No Dart API change.
+- **Android:** Attribution params could sometimes be missing. When `getAttributionParams()` or `getAttributionParamsWithCallback()` was called shortly after `configure()`, it could return an empty map before the attribution match had finished, so values such as `appstack_adnetwork` and `appstack_campaign` were missed and never reached integrations like RevenueCat. Both now wait for the match to finish before returning, as they already do on iOS. No Dart API change.
 
 ### Removed
 
