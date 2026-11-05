@@ -67,6 +67,7 @@ void main() {
     var sdkDisabled = true;
     var attributionCompleted = false;
     var attributionValidated = false;
+    var firstCallAttributionValidated = false;
     var customEventAccepted = false;
     var standardEventAccepted = false;
     Map<String, Object?> preConfigureLink = <String, Object?>{};
@@ -93,6 +94,17 @@ void main() {
         customerUserId: _customerUserId,
       );
       configured = true;
+
+      // Documented guarantee: both attribution APIs wait for the native match,
+      // so the very first calls right after configure() return the real params.
+      // Android used to return {} here until the match response was cached;
+      // the retry loop further down would hide that, so this runs first and
+      // without retries.
+      final firstCalls = await Future.wait([
+        AppstackPlugin.getAttributionParams(),
+        AppstackPlugin.getAttributionParamsWithCallback().first,
+      ]).timeout(const Duration(seconds: 20));
+      firstCallAttributionValidated = firstCalls.every(_validAttribution);
 
       // Universal/App Link parsing matrix, executed against the native parser.
       linkCases.addAll(<Map<String, Object?>>[
@@ -207,6 +219,7 @@ void main() {
       'sdkDisabled': sdkDisabled,
       'attributionCompleted': attributionCompleted,
       'attributionValidated': attributionValidated,
+      'firstCallAttributionValidated': firstCallAttributionValidated,
       'customEventAccepted': customEventAccepted,
       'standardEventAccepted': standardEventAccepted,
       'preConfigureLink': preConfigureLink,
@@ -225,6 +238,13 @@ void main() {
     expect(sdkDisabled, isFalse);
     expect(attributionCompleted, isTrue);
     expect(attributionValidated, isTrue);
+    expect(
+      firstCallAttributionValidated,
+      isTrue,
+      reason:
+          'attribution params called right after configure() must wait '
+          'for the native match instead of returning an empty map',
+    );
     expect(customEventAccepted, isTrue);
     expect(standardEventAccepted, isTrue);
 
