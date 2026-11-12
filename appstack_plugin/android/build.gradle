@@ -1,5 +1,5 @@
 group 'com.appstack.plugin'
-version '2.10.1'
+version '3.0.0'
 
 buildscript {
     ext.kotlin_version = '1.9.0'
@@ -89,6 +89,7 @@ android {
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
+        test.java.srcDirs += 'src/test/kotlin'
     }
 
     defaultConfig {
@@ -102,4 +103,6 @@ android {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "tech.appstack.android-sdk:appstack-android-sdk:$appstackAndroidSdkVersion"
+
+    testImplementation 'junit:junit:4.13.2'
 }

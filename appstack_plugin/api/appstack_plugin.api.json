@@ -160,24 +160,6 @@
                 "isExperimental": false,
                 "typeName": "String?",
                 "relativePath": "lib/appstack_plugin.dart"
-              },
-              {
-                "isRequired": false,
-                "isNamed": true,
-                "name": "isDebug",
-                "isDeprecated": true,
-                "isExperimental": false,
-                "typeName": "bool",
-                "relativePath": "lib/appstack_plugin.dart"
-              },
-              {
-                "isRequired": false,
-                "isNamed": true,
-                "name": "endpointBaseUrl",
-                "isDeprecated": true,
-                "isExperimental": false,
-                "typeName": "String?",
-                "relativePath": "lib/appstack_plugin.dart"
               }
             ],
             "typeParameterNames": [],
@@ -221,7 +203,7 @@
             "relativePath": "lib/appstack_plugin.dart"
           },
           {
-            "returnTypeName": "Future<bool>",
+            "returnTypeName": "Future<void>",
             "name": "sendEvent",
             "isDeprecated": false,
             "isExperimental": false,
@@ -297,7 +279,7 @@
             "relativePath": "lib/appstack_plugin.dart"
           },
           {
-            "returnTypeName": "Future<Map<String, dynamic>?>",
+            "returnTypeName": "Future<Map<String, dynamic>>",
             "name": "getAttributionParams",
             "isDeprecated": false,
             "isExperimental": false,
@@ -333,18 +315,6 @@
                 "relativePath": "lib/appstack_plugin.dart"
               }
             ],
-            "typeParameterNames": [],
-            "type": "method",
-            "isStatic": true,
-            "entryPoints": [],
-            "relativePath": "lib/appstack_plugin.dart"
-          },
-          {
-            "returnTypeName": "Stream<Map<String, dynamic>?>",
-            "name": "getAttributionParamsWithCallback",
-            "isDeprecated": false,
-            "isExperimental": false,
-            "parameters": [],
             "typeParameterNames": [],
             "type": "method",
             "isStatic": true,
@@ -445,7 +415,7 @@
             "relativePath": "lib/appstack_plugin_platform_interface.dart"
           },
           {
-            "returnTypeName": "Future<bool>",
+            "returnTypeName": "Future<void>",
             "name": "sendEvent",
             "isDeprecated": false,
             "isExperimental": false,
@@ -521,7 +491,7 @@
             "relativePath": "lib/appstack_plugin_platform_interface.dart"
           },
           {
-            "returnTypeName": "Future<Map<String, dynamic>?>",
+            "returnTypeName": "Future<Map<String, dynamic>>",
             "name": "getAttributionParams",
             "isDeprecated": false,
             "isExperimental": false,
@@ -557,18 +527,6 @@
                 "relativePath": "lib/appstack_plugin_platform_interface.dart"
               }
             ],
-            "typeParameterNames": [],
-            "type": "method",
-            "isStatic": false,
-            "entryPoints": [],
-            "relativePath": "lib/appstack_plugin_platform_interface.dart"
-          },
-          {
-            "returnTypeName": "Stream<Map<String, dynamic>?>",
-            "name": "getAttributionParamsWithCallback",
-            "isDeprecated": false,
-            "isExperimental": false,
-            "parameters": [],
             "typeParameterNames": [],
             "type": "method",
             "isStatic": false,

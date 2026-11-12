@@ -3,34 +3,52 @@ package com.appstack.plugin
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.NonNull
 import com.appstack.attribution.AppstackAttributionSdk
 import com.appstack.attribution.EventType
 import com.appstack.attribution.LogLevel
 import com.appstack.attribution.LinkOptions
 import io.flutter.embedding.engine.plugins.FlutterPlugin
-import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 
 /** AppstackPlugin */
-class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandler {
+class AppstackPlugin internal constructor(
+  private val awaitAttributionParams: suspend () -> Map<String, String>,
+  private val postToMainThread: (Runnable) -> Unit,
+  backgroundDispatcher: CoroutineDispatcher,
+) : FlutterPlugin, MethodCallHandler {
+
+  /** Used by Flutter's plugin registrant. */
+  constructor() : this(
+    awaitAttributionParams = { AppstackAttributionSdk.awaitAttributionParams(rawReferrer = null) },
+    postToMainThread = { runnable -> Handler(Looper.getMainLooper()).post(runnable) },
+    backgroundDispatcher = Dispatchers.IO,
+  )
+
   private lateinit var channel: MethodChannel
-  private lateinit var attributionEventChannel: EventChannel
   private lateinit var context: Context
-  private var attributionEventSink: EventChannel.EventSink? = null
+
+  // Work that outlives a single platform-channel call. Children are cancelled
+  // when the plugin detaches from its engine, so no reply is sent to a dead
+  // messenger. SupervisorJob: one failed request doesn't cancel the others.
+  private val scope = CoroutineScope(SupervisorJob() + backgroundDispatcher)
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     context = flutterPluginBinding.applicationContext
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "appstack_plugin")
     channel.setMethodCallHandler(this)
-    attributionEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "appstack_plugin/attribution_params")
-    attributionEventChannel.setStreamHandler(this)
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -170,7 +188,7 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandl
       // Send the event
       AppstackAttributionSdk.sendEvent(eventType, eventName, parameters)
 
-      result.success(true)
+      result.success(null)
     } catch (e: Exception) {
       result.error("EVENT_SEND_ERROR", "Failed to send event: ${e.message}", null)
     }
@@ -194,12 +212,26 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandl
     }
   }
 
+  /**
+   * awaitAttributionParams waits for the native match phase, like the iOS
+   * plugin's async getAttributionParams. The non-suspending getAttributionParams
+   * returns an empty map when called before the /match response is cached, which
+   * is the case right after configure(). Runs off the platform thread and
+   * replies on it.
+   */
   private fun handleGetAttributionParams(result: Result) {
-    try {
-      val attributionParams = AppstackAttributionSdk.getAttributionParams(rawReferrer = null)
-      result.success(attributionParams)
-    } catch (e: Exception) {
-      result.error("GET_ATTRIBUTION_PARAMS_ERROR", "Failed to get attribution params: ${e.message}", null)
+    scope.launch {
+      try {
+        val params = awaitAttributionParams()
+        postToMainThread { result.success(params) }
+      } catch (e: CancellationException) {
+        // The plugin detached from its engine: there is no one left to reply to.
+        throw e
+      } catch (e: Exception) {
+        postToMainThread {
+          result.error("GET_ATTRIBUTION_PARAMS_ERROR", "Failed to get attribution params: ${e.message}", null)
+        }
+      }
     }
   }
 
@@ -250,31 +282,8 @@ class AppstackPlugin: FlutterPlugin, MethodCallHandler, EventChannel.StreamHandl
     }
   }
 
-  override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
-    attributionEventSink = events
-    Thread {
-      try {
-        val params = AppstackAttributionSdk.getAttributionParams(rawReferrer = null)
-        android.os.Handler(android.os.Looper.getMainLooper()).post {
-          events?.success(params)
-          events?.endOfStream()
-          attributionEventSink = null
-        }
-      } catch (e: Exception) {
-        android.os.Handler(android.os.Looper.getMainLooper()).post {
-          events?.error("GET_ATTRIBUTION_PARAMS_ERROR", "Failed to get attribution params: ${e.message}", null)
-          attributionEventSink = null
-        }
-      }
-    }.start()
-  }
-
-  override fun onCancel(arguments: Any?) {
-    attributionEventSink = null
-  }
-
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
-    attributionEventChannel.setStreamHandler(null)
+    scope.coroutineContext.cancelChildren()
   }
 }

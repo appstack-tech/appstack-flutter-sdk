@@ -3,9 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../appstack_plugin_platform_interface.dart';
 
-const _attributionParamsEventChannel =
-    EventChannel('appstack_plugin/attribution_params');
-const _kWrapperVersion = 'flutter-2.10.1';
+const _kWrapperVersion = 'flutter-3.0.0';
 
 /// An implementation of [AppstackPluginPlatform] that uses method channels.
 class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
@@ -41,17 +39,16 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
   }
 
   @override
-  Future<bool> sendEvent(
+  Future<void> sendEvent(
     String eventType,
     String? eventName,
     Map<String, dynamic>? parameters,
   ) async {
-    final result = await methodChannel.invokeMethod<bool>('sendEvent', {
+    await methodChannel.invokeMethod<void>('sendEvent', {
       'eventType': eventType,
       'eventName': eventName,
       'parameters': parameters,
     });
-    return result ?? false;
   }
 
   @override
@@ -80,14 +77,13 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
   }
 
   @override
-  Future<Map<String, dynamic>?> getAttributionParams() async {
+  Future<Map<String, dynamic>> getAttributionParams() async {
     final result = await methodChannel.invokeMethod<Map<dynamic, dynamic>?>(
       'getAttributionParams',
     );
-    if (result == null) {
-      return null;
-    }
-    return Map<String, dynamic>.from(result);
+    return result == null
+        ? <String, dynamic>{}
+        : Map<String, dynamic>.from(result);
   }
 
   @override
@@ -100,12 +96,5 @@ class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
       {'url': url, 'allowedHosts': allowedHosts},
     );
     return result == null ? null : Map<String, dynamic>.from(result);
-  }
-
-  @override
-  Stream<Map<String, dynamic>?> getAttributionParamsWithCallback() {
-    return _attributionParamsEventChannel.receiveBroadcastStream().map(
-        (event) =>
-            event != null ? Map<String, dynamic>.from(event as Map) : null);
   }
 }

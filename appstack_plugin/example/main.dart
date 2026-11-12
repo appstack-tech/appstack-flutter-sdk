@@ -72,7 +72,7 @@ class _MyAppState extends State<MyApp> {
     }
 
     try {
-      final success = await AppstackPlugin.sendEvent(
+      await AppstackPlugin.sendEvent(
         eventType,
         eventName: eventName,
         parameters: revenue != null
@@ -81,9 +81,8 @@ class _MyAppState extends State<MyApp> {
       );
 
       setState(() {
-        _status = success
-            ? 'Event sent: ${eventType.rawValue}${eventName != null ? ' ($eventName)' : ''}${revenue != null ? ' (Revenue: \$${revenue.toStringAsFixed(2)})' : ''}'
-            : 'Failed to send event';
+        _status =
+            'Event sent: ${eventType.rawValue}${eventName != null ? ' ($eventName)' : ''}${revenue != null ? ' (Revenue: \$${revenue.toStringAsFixed(2)})' : ''}';
       });
     } catch (e) {
       setState(() {
