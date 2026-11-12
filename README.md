@@ -35,7 +35,7 @@ The Appstack Flutter plugin tracks installs and in-app events, attributes them t
 
 ```yaml
 dependencies:
-  appstack_plugin: ^2.10.1
+  appstack_plugin: ^3.0.0
 ```
 
 Then run `flutter pub get`. iOS (Swift Package Manager or CocoaPods) and Android setup are covered in the [documentation](https://docs.appstack.tech/SDKs/flutter).
