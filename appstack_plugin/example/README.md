@@ -84,26 +84,26 @@ The plugin supports the following event types:
 - ✅ Android
 - ✅ Web (basic functionality)
 
-## Debug Mode
+## Verbose logging
 
-The example enables debug mode by default. In production, you should set `isDebug: false` when configuring the SDK.
+Pass `logLevel: 0` (DEBUG) to `configure` while developing. Use the default
+(`1`, INFO) or higher in production.
 
 ## Error Handling
 
-The plugin methods return `Future<bool>` indicating success/failure. Always wrap calls in try-catch blocks to handle potential exceptions:
+Plugin methods throw an `Exception` when the native call fails. Wrap calls in
+try-catch blocks:
 
 ```dart
 try {
-  final success = await AppstackPlugin.sendEvent(EventType.purchase);
-  if (success) {
-    print('Event sent successfully');
-  } else {
-    print('Failed to send event');
-  }
+  await AppstackPlugin.sendEvent(EventType.purchase);
 } catch (e) {
   print('Error: $e');
 }
 ```
+
+`sendEvent` completing means the event was handed to the native SDK, not that
+it was delivered.
 
 ## Learn More
 

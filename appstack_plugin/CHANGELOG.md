@@ -12,6 +12,10 @@ This release narrows the public API and is a **major version**. Migration:
 - Use `EventType.rawValue` for the SNAKE_CASE wire value. `EventType.x.name` now returns the Dart enum name (`"addToCart"`), and code that relied on `name` compiles unchanged but gets the camelCase value.
 - Remove any `import 'package:appstack_plugin/appstack_plugin_method_channel.dart'`. To fake the plugin in tests, extend `AppstackPluginPlatform` with `MockPlatformInterfaceMixin` and set `AppstackPluginPlatform.instance`.
 - `AppstackPlugin()` no longer compiles. Call the static methods directly.
+- Remove `isDebug:` and `endpointBaseUrl:` from `configure()` calls. Neither had any effect. Use `logLevel: 0` for verbose logging.
+- `sendEvent()` returns `Future<void>`. Stop branching on its result; `await` works unchanged.
+- Replace `getAttributionParamsWithCallback()` with `await getAttributionParams()`, which now waits for the attribution match on both platforms.
+- `getAttributionParams()` never returns null. Drop null checks and treat an empty map as "no attribution".
 
 ### Added
 
@@ -20,16 +24,22 @@ This release narrows the public API and is a **major version**. Migration:
 ### Changed
 
 - `AppstackPluginPlatform` is documented as the supported way to fake the plugin in an app's unit tests.
+- **Breaking:** `sendEvent()` returns `Future<void>` instead of `Future<bool>`. Both platforms always returned `true`, even when the native SDK went on to drop the event (a manual install, a disabled SDK), so the value implied a delivery guarantee it never had. React Native made the same change in 3.0.0.
+- **Breaking:** `getAttributionParams()` returns `Future<Map<String, dynamic>>` instead of `Future<Map<String, dynamic>?>`. When there is nothing to report it returns an empty map, so callers no longer need to handle both null and empty.
+- **Breaking:** `AppstackPluginPlatform.sendEvent` and `AppstackPluginPlatform.getAttributionParams` changed the same way, so test fakes that override them need the new return types.
 
 ### Fixed
 
-- **Android:** Attribution params could sometimes be missing. When `getAttributionParams()` or `getAttributionParamsWithCallback()` was called shortly after `configure()`, it could return an empty map before the attribution match had finished, so values such as `appstack_adnetwork` and `appstack_campaign` were missed and never reached your integrations. Both now wait for the match to finish before returning, as they already do on iOS. No Dart API change.
+- **Android:** Attribution params could sometimes be missing. When `getAttributionParams()` was called shortly after `configure()`, it could return an empty map before the attribution match had finished, so values such as `appstack_adnetwork` and `appstack_campaign` were missed and never reached your integrations. It now waits for the match to finish before returning, as it already did on iOS.
+- **iOS:** `configure(logLevel:)` now means the same on iOS as on Android and in the docs (0=DEBUG, 1=INFO, 2=WARN, 3=ERROR). iOS mapped the numbers in the wrong order: `logLevel: 0` turned logging off, the default `1` showed only errors, `2` was debug and `3` was info. iOS has no warn level, so `2` and `3` both show errors only. If you passed a `logLevel` to get specific iOS output, check it against the levels above.
 
 ### Removed
 
 - **Breaking:** `EventTypeExtension`. Its `name` getter shadowed Dart's built-in `Enum.name`, so the same expression returned `"ADD_TO_CART"` or `"addToCart"` depending on the variable's static type and imports (for example through an `Enum`-typed variable, a generic helper, or `import ... show EventType`), and `EventType.values.byName(e.name)` threw. `EventType.x.name` is now Dart's built-in enum name; use `rawValue` for the wire value.
 - **Breaking:** `package:appstack_plugin/appstack_plugin_method_channel.dart`. The method-channel implementation moved to `lib/src/` and is no longer importable.
 - **Breaking:** the implicit public `AppstackPlugin()` constructor. The class is static-only.
+- **Breaking:** `configure()`'s `isDebug` and `endpointBaseUrl` parameters. Both were deprecated and had no effect. React Native removed them in 3.0.0.
+- **Breaking:** `getAttributionParamsWithCallback()`, and the `appstack_plugin/attribution_params` event channel behind it. It existed because Android's `getAttributionParams()` used not to wait for the attribution match. Now that it does, the stream returned the same value as `getAttributionParams()`.
 
 ## [2.10.1] - 2026-09-22
 
