@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-11-12
+
 This release narrows the public API and is a **major version**. Migration:
 
 - Use `EventType.rawValue` for the SNAKE_CASE wire value. `EventType.x.name` now returns the Dart enum name (`"addToCart"`), and code that relied on `name` compiles unchanged but gets the camelCase value.
