@@ -95,14 +95,14 @@ void main() {
       );
       configured = true;
 
-      // Documented guarantee: both attribution APIs wait for the native match,
+      // Documented guarantee: getAttributionParams waits for the native match,
       // so the very first calls right after configure() return the real params.
       // Android used to return {} here until the match response was cached;
       // the retry loop further down would hide that, so this runs first and
-      // without retries.
+      // without retries. Two concurrent calls also cover overlapping requests.
       final firstCalls = await Future.wait([
         AppstackPlugin.getAttributionParams(),
-        AppstackPlugin.getAttributionParamsWithCallback().first,
+        AppstackPlugin.getAttributionParams(),
       ]).timeout(const Duration(seconds: 20));
       firstCallAttributionValidated = firstCalls.every(_validAttribution);
 
@@ -165,7 +165,7 @@ void main() {
       // Remote configuration completes asynchronously in the native SDKs. The
       // mock's distinctive attribution payload is the observable readiness
       // boundary shared by iOS and Android.
-      Map<String, dynamic>? directAttribution;
+      Map<String, dynamic> directAttribution = const {};
       for (var attempt = 0; attempt < 40; attempt++) {
         directAttribution = await AppstackPlugin.getAttributionParams();
         if (_validAttribution(directAttribution)) break;
@@ -174,19 +174,12 @@ void main() {
         );
       }
 
-      final streamedAttribution =
-          await AppstackPlugin.getAttributionParamsWithCallback().first.timeout(
-            const Duration(seconds: 10),
-          );
-      attributionCompleted =
-          directAttribution != null && streamedAttribution != null;
-      attributionValidated =
-          _validAttribution(directAttribution) &&
-          _validAttribution(streamedAttribution);
+      attributionCompleted = true;
+      attributionValidated = _validAttribution(directAttribution);
 
       sdkDisabled = await AppstackPlugin.isSdkDisabled();
 
-      customEventAccepted = await AppstackPlugin.sendEvent(
+      await AppstackPlugin.sendEvent(
         EventType.custom,
         eventName: 'runtime_validation_custom',
         parameters: {
@@ -197,10 +190,12 @@ void main() {
           'nested': {'enabled': true, 'value': 7},
         },
       );
-      standardEventAccepted = await AppstackPlugin.sendEvent(
+      customEventAccepted = true;
+      await AppstackPlugin.sendEvent(
         EventType.login,
         parameters: {'state': 'ready', 'sequence': 2},
       );
+      standardEventAccepted = true;
 
       // Event submission is fire-and-forget. The host validator polls the
       // recording backend, while this short window lets queued native work start

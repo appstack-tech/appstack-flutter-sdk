@@ -1,19 +1,17 @@
 package com.appstack.plugin
 
-import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * getAttributionParams and the attribution event channel must wait for the
- * native attribution match instead of returning whatever is cached at call time.
+ * getAttributionParams must wait for the native attribution match instead of
+ * returning whatever is cached at call time.
  */
 class AppstackPluginAttributionParamsTest {
 
@@ -74,60 +72,6 @@ class AppstackPluginAttributionParamsTest {
     assertFalse(result.replied)
   }
 
-  @Test
-  fun `stream emits once after the match completes, then ends`() {
-    val sink = FakeSink()
-    plugin.onListen(null, sink)
-
-    drainMainThread()
-    assertTrue(sink.events.isEmpty())
-
-    match.complete(matched)
-    drainMainThread()
-
-    assertEquals(listOf<Any?>(matched), sink.events)
-    assertTrue(sink.ended)
-  }
-
-  @Test
-  fun `stream sends nothing after Dart cancels`() {
-    val sink = FakeSink()
-    plugin.onListen(null, sink)
-    plugin.onCancel(null)
-
-    match.complete(matched)
-    drainMainThread()
-
-    assertTrue(sink.events.isEmpty())
-    assertFalse(sink.ended)
-    assertNull(sink.errorCode)
-  }
-
-  @Test
-  fun `stream re-listen only delivers to the latest sink`() {
-    val first = FakeSink()
-    val second = FakeSink()
-    plugin.onListen(null, first)
-    plugin.onListen(null, second)
-
-    match.complete(matched)
-    drainMainThread()
-
-    assertTrue(first.events.isEmpty())
-    assertEquals(listOf<Any?>(matched), second.events)
-  }
-
-  @Test
-  fun `stream reports native errors`() {
-    val sink = FakeSink()
-    plugin.onListen(null, sink)
-
-    match.completeExceptionally(IllegalStateException("boom"))
-    drainMainThread()
-
-    assertEquals("GET_ATTRIBUTION_PARAMS_ERROR", sink.errorCode)
-  }
-
   private class FakeResult : MethodChannel.Result {
     var replied = false
     var success: Any? = null
@@ -150,21 +94,4 @@ class AppstackPluginAttributionParamsTest {
     }
   }
 
-  private class FakeSink : EventChannel.EventSink {
-    val events = mutableListOf<Any?>()
-    var ended = false
-    var errorCode: String? = null
-
-    override fun success(event: Any?) {
-      events.add(event)
-    }
-
-    override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
-      this.errorCode = errorCode
-    }
-
-    override fun endOfStream() {
-      ended = true
-    }
-  }
 }

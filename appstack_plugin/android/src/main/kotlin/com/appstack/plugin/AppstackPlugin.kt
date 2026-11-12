@@ -11,7 +11,6 @@ import com.appstack.attribution.EventType
 import com.appstack.attribution.LogLevel
 import com.appstack.attribution.LinkOptions
 import io.flutter.embedding.engine.plugins.FlutterPlugin
-import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
@@ -20,7 +19,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
@@ -30,7 +28,7 @@ class AppstackPlugin internal constructor(
   private val awaitAttributionParams: suspend () -> Map<String, String>,
   private val postToMainThread: (Runnable) -> Unit,
   backgroundDispatcher: CoroutineDispatcher,
-) : FlutterPlugin, MethodCallHandler, EventChannel.StreamHandler {
+) : FlutterPlugin, MethodCallHandler {
 
   /** Used by Flutter's plugin registrant. */
   constructor() : this(
@@ -40,7 +38,6 @@ class AppstackPlugin internal constructor(
   )
 
   private lateinit var channel: MethodChannel
-  private lateinit var attributionEventChannel: EventChannel
   private lateinit var context: Context
 
   // Work that outlives a single platform-channel call. Children are cancelled
@@ -48,16 +45,10 @@ class AppstackPlugin internal constructor(
   // messenger. SupervisorJob: one failed request doesn't cancel the others.
   private val scope = CoroutineScope(SupervisorJob() + backgroundDispatcher)
 
-  // Read and written on the platform (main) thread only.
-  private var attributionEventSink: EventChannel.EventSink? = null
-  private var attributionStreamJob: Job? = null
-
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     context = flutterPluginBinding.applicationContext
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "appstack_plugin")
     channel.setMethodCallHandler(this)
-    attributionEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "appstack_plugin/attribution_params")
-    attributionEventChannel.setStreamHandler(this)
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -197,7 +188,7 @@ class AppstackPlugin internal constructor(
       // Send the event
       AppstackAttributionSdk.sendEvent(eventType, eventName, parameters)
 
-      result.success(true)
+      result.success(null)
     } catch (e: Exception) {
       result.error("EVENT_SEND_ERROR", "Failed to send event: ${e.message}", null)
     }
@@ -291,51 +282,8 @@ class AppstackPlugin internal constructor(
     }
   }
 
-  /**
-   * One-shot stream behind getAttributionParamsWithCallback: emits the params
-   * once the native match phase is done, then ends. Called on the platform thread.
-   */
-  override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
-    attributionStreamJob?.cancel()
-    attributionEventSink = events
-    attributionStreamJob = scope.launch {
-      try {
-        val params = awaitAttributionParams()
-        postToMainThread {
-          // Skip if Dart cancelled or re-listened while we were waiting.
-          if (attributionEventSink === events) {
-            events?.success(params)
-            events?.endOfStream()
-            attributionEventSink = null
-            attributionStreamJob = null
-          }
-        }
-      } catch (e: CancellationException) {
-        // onCancel or detach: Dart is no longer listening.
-        throw e
-      } catch (e: Exception) {
-        postToMainThread {
-          if (attributionEventSink === events) {
-            events?.error("GET_ATTRIBUTION_PARAMS_ERROR", "Failed to get attribution params: ${e.message}", null)
-            attributionEventSink = null
-            attributionStreamJob = null
-          }
-        }
-      }
-    }
-  }
-
-  override fun onCancel(arguments: Any?) {
-    attributionStreamJob?.cancel()
-    attributionStreamJob = null
-    attributionEventSink = null
-  }
-
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
-    attributionEventChannel.setStreamHandler(null)
-    attributionStreamJob = null
-    attributionEventSink = null
     scope.coroutineContext.cancelChildren()
   }
 }
