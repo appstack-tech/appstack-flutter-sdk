@@ -57,18 +57,18 @@ public class AppstackPlugin: NSObject, FlutterPlugin {
     let customerUserId = args["customerUserId"] as? String
     let wrapperVersion = args["wrapperVersion"] as? String
 
-    // Map log level to AppstackSDK.LogLevel
-    // SDK supports: .off (0), .error (1), .debug (2), .info (3)
+    // Translate the Dart logLevel contract (0=DEBUG, 1=INFO, 2=WARN, 3=ERROR;
+    // verbosity descending) into AppstackSDK.LogLevel (off/error/info/debug;
+    // verbosity ascending), matching Android and the React Native bridge.
+    // iOS has no WARN tier, so WARN folds down to .error.
     let sdkLogLevel: AppstackSDK.LogLevel
     switch logLevel {
     case 0:
-      sdkLogLevel = .off
-    case 1:
-      sdkLogLevel = .error
-    case 2:
       sdkLogLevel = .debug
-    case 3:
+    case 1:
       sdkLogLevel = .info
+    case 2, 3:
+      sdkLogLevel = .error
     default:
       sdkLogLevel = .info
     }

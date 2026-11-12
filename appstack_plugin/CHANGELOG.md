@@ -31,6 +31,7 @@ This release narrows the public API and is a **major version**. Migration:
 ### Fixed
 
 - **Android:** Attribution params could sometimes be missing. When `getAttributionParams()` was called shortly after `configure()`, it could return an empty map before the attribution match had finished, so values such as `appstack_adnetwork` and `appstack_campaign` were missed and never reached your integrations. It now waits for the match to finish before returning, as it already did on iOS.
+- **iOS:** `configure(logLevel:)` now means the same on iOS as on Android and in the docs (0=DEBUG, 1=INFO, 2=WARN, 3=ERROR). iOS mapped the numbers in the wrong order: `logLevel: 0` turned logging off, the default `1` showed only errors, `2` was debug and `3` was info. iOS has no warn level, so `2` and `3` both show errors only. If you passed a `logLevel` to get specific iOS output, check it against the levels above.
 
 ### Removed
 
