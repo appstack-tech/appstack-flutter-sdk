@@ -73,7 +73,7 @@ if (appstackAndroidSdkIsSnapshot) {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdk 34
+    compileSdkVersion 34
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -81,7 +81,7 @@ android {
     }
 
     defaultConfig {
-        minSdk 21
+        minSdkVersion 21
     }
 
     namespace 'com.appstack.plugin'
