@@ -7,10 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- **Android:** The plugin's Android code is now written in Java and no longer applies the Kotlin Gradle Plugin. Apps on recent Flutter versions no longer see the "plugins that apply Kotlin Gradle Plugin (KGP)" warning for this plugin, and it keeps building once Android Gradle Plugin 10 removes the option to opt out of built-in Kotlin. Behavior and the Dart API are unchanged, and the plugin still builds on Flutter 3.24.
-
 ## [3.0.0] - 2026-11-12
 
 This release narrows the public API and is a **major version**. Migration:
@@ -33,6 +29,7 @@ This release narrows the public API and is a **major version**. Migration:
 - **Breaking:** `sendEvent()` returns `Future<void>` instead of `Future<bool>`. Both platforms always returned `true`, even when the native SDK went on to drop the event (a manual install, a disabled SDK), so the value implied a delivery guarantee it never had. React Native made the same change in 3.0.0.
 - **Breaking:** `getAttributionParams()` returns `Future<Map<String, dynamic>>` instead of `Future<Map<String, dynamic>?>`. When there is nothing to report it returns an empty map, so callers no longer need to handle both null and empty.
 - **Breaking:** `AppstackPluginPlatform.sendEvent` and `AppstackPluginPlatform.getAttributionParams` changed the same way, so test fakes that override them need the new return types.
+- **Android:** The plugin's Android code is now written in Java and no longer applies the Kotlin Gradle Plugin. Apps on recent Flutter versions no longer see the "plugins that apply Kotlin Gradle Plugin (KGP)" warning for this plugin, and it keeps building once Android Gradle Plugin 10 removes the option to opt out of built-in Kotlin. Behavior and the Dart API are unchanged, and the plugin still builds on Flutter 3.24.
 
 ### Fixed
 
