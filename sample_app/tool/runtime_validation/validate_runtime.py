@@ -167,6 +167,16 @@ def main() -> None:
         result.get("attributionValidated") is True,
         "attribution payload was corrupted",
     )
+    metadata = result.get("attributionMetadata") or {}
+    expected_metadata = {
+        "deeplink_id": "runtime-validation-deeplink",
+        "confidence_tier": "high",
+        "appstack_match_status": "matched",
+    }
+    require(
+        metadata == expected_metadata,
+        f"attribution metadata did not reach Dart: expected {expected_metadata}, got {metadata}",
+    )
     require(
         result.get("customEventAccepted") is True,
         "custom event call did not complete successfully",
