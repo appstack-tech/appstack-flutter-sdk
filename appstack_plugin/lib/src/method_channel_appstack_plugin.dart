@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../appstack_plugin_platform_interface.dart';
 
-const _kWrapperVersion = 'flutter-3.0.0';
+const _kWrapperVersion = 'flutter-3.1.0';
 
 /// An implementation of [AppstackPluginPlatform] that uses method channels.
 class MethodChannelAppstackPlugin extends AppstackPluginPlatform {
