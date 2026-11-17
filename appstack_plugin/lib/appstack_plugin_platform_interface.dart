@@ -12,9 +12,8 @@ import 'src/method_channel_appstack_plugin.dart';
 /// class FakeAppstack extends AppstackPluginPlatform
 ///     with MockPlatformInterfaceMixin {
 ///   @override
-///   Future<bool> sendEvent(String eventType, String? eventName,
-///           Map<String, dynamic>? parameters) async =>
-///       true;
+///   Future<void> sendEvent(String eventType, String? eventName,
+///       Map<String, dynamic>? parameters) async {}
 /// }
 ///
 /// setUp(() => AppstackPluginPlatform.instance = FakeAppstack());
@@ -65,7 +64,7 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
   }
 
   /// Send an event with optional parameters
-  Future<bool> sendEvent(
+  Future<void> sendEvent(
     String eventType,
     String? eventName,
     Map<String, dynamic>? parameters,
@@ -96,8 +95,9 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
 
   /// Get attribution parameters
   ///
-  /// Returns a map containing attribution parameters from the SDK
-  Future<Map<String, dynamic>?> getAttributionParams() {
+  /// Returns a map containing attribution parameters from the SDK, empty when
+  /// there are none.
+  Future<Map<String, dynamic>> getAttributionParams() {
     throw UnimplementedError(
       'getAttributionParams() has not been implemented.',
     );
@@ -108,15 +108,5 @@ abstract class AppstackPluginPlatform extends PlatformInterface {
     List<String>? allowedHosts,
   ) {
     throw UnimplementedError('handleUniversalLink() has not been implemented.');
-  }
-
-  /// Get attribution parameters via a background-native stream
-  ///
-  /// Spawns a native background thread and emits a single result when ready,
-  /// then closes. Use this when attribution retrieval time may vary.
-  Stream<Map<String, dynamic>?> getAttributionParamsWithCallback() {
-    throw UnimplementedError(
-      'getAttributionParamsWithCallback() has not been implemented.',
-    );
   }
 }

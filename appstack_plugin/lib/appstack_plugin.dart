@@ -59,32 +59,12 @@ class AppstackPlugin {
   /// - [apiKey]: Your Appstack API key obtained from the dashboard
   /// - [logLevel]: Log level: 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR (optional, default 1)
   /// - [customerUserId]: Optional customer user ID to pass to the native SDKs
-  /// - [isDebug]: **Deprecated** — no longer has any effect. The native debug
-  ///   overlay was removed from the Appstack SDKs; use [logLevel] `0` (DEBUG)
-  ///   for verbose logging instead. Will be removed in a future release.
-  /// - [endpointBaseUrl]: **Deprecated** — no longer has any effect. The custom
-  ///   endpoint / dev-proxy override was removed from the public API; it is now
-  ///   applied natively only from a repo-only host-app key (`APPSTACK_DEV_PROXY_URL`
-  ///   in the iOS Info.plist / Android manifest). Will be removed in a future
-  ///   release.
   ///
   /// Returns: Future that completes when configuration is done
   static Future<void> configure(
     String apiKey, {
     int logLevel = 1,
     String? customerUserId,
-    @Deprecated(
-      'Has no effect: the native debug overlay was removed. '
-      'Use logLevel: 0 (DEBUG) for verbose logging. '
-      'Will be removed in a future release.',
-    )
-    bool isDebug = false,
-    @Deprecated(
-      'Has no effect: the custom endpoint override was removed from the public '
-      'API. The dev proxy is applied natively from the repo-only '
-      'APPSTACK_DEV_PROXY_URL host-app key. Will be removed in a future release.',
-    )
-    String? endpointBaseUrl,
   }) async {
     if (apiKey.isEmpty) {
       throw ArgumentError('API key must be a non-empty string');
@@ -92,20 +72,6 @@ class AppstackPlugin {
 
     if (logLevel < 0 || logLevel > 3) {
       throw ArgumentError('logLevel must be a number between 0 and 3');
-    }
-
-    if (isDebug) {
-      debugPrint(
-        '[AppstackPlugin] ⚠️  configure(isDebug:) is deprecated and has no '
-        'effect. Use logLevel: 0 (DEBUG) for verbose logging.',
-      );
-    }
-    if (endpointBaseUrl != null) {
-      debugPrint(
-        '[AppstackPlugin] ⚠️  configure(endpointBaseUrl:) is deprecated and has '
-        'no effect. The dev proxy is applied natively from the repo-only '
-        'APPSTACK_DEV_PROXY_URL host-app key.',
-      );
     }
 
     try {
@@ -189,14 +155,17 @@ class AppstackPlugin {
   /// the backend needs in the clear (`currency`, `revenue`, campaign fields)
   /// are excluded. Revenue reporting is unaffected.
   ///
-  /// Returns: Future that resolves to true if event was sent successfully
-  static Future<bool> sendEvent(
+  /// The future completes once the event has been handed to the native SDK.
+  /// That doesn't mean it was delivered: the native SDK queues events, and may
+  /// still drop one (for example a manual [EventType.install], or while the SDK
+  /// is disabled). Delivery is not observable from Dart.
+  static Future<void> sendEvent(
     EventType eventType, {
     String? eventName,
     Map<String, dynamic>? parameters,
   }) async {
     try {
-      return await AppstackPluginPlatform.instance.sendEvent(
+      await AppstackPluginPlatform.instance.sendEvent(
         eventType.rawValue,
         eventName,
         parameters,
@@ -258,23 +227,23 @@ class AppstackPlugin {
 
   /// Get attribution parameters from the SDK.
   ///
-  /// Request-response call over the method channel. On Android, runs synchronously
-  /// on the platform thread. Prefer [getAttributionParamsWithCallback] when
-  /// attribution retrieval time may vary.
+  /// Request-response call over the method channel. On both platforms the
+  /// returned future completes once the native attribution match has finished,
+  /// so it is safe to call right after [configure].
+  ///
+  /// Never null: when there is nothing to report the map is empty.
   ///
   /// On iOS the map always contains `appstack_match_status`, describing the
   /// attribution outcome: `matched`, `matched_no_params`, `organic`, `skipped`,
   /// `failed` or `not_configured`. Only `failed` is worth retrying. Android does
-  /// not send that key yet, so keep handling an empty map as "nothing yet".
+  /// not send that key yet, so treat an empty map as "no attribution".
   ///
   /// Example:
   /// ```dart
   /// final params = await AppstackPlugin.getAttributionParams();
-  /// if (params != null) {
-  ///   print('Attribution params: $params');
-  /// }
+  /// print('Attribution params: $params');
   /// ```
-  static Future<Map<String, dynamic>?> getAttributionParams() async {
+  static Future<Map<String, dynamic>> getAttributionParams() async {
     try {
       return await AppstackPluginPlatform.instance.getAttributionParams();
     } catch (error) {
@@ -299,22 +268,5 @@ class AppstackPlugin {
       allowedHosts?.map((host) => host.trim()).toList(),
     );
     return value == null ? null : AppstackLinkResult.fromMap(value);
-  }
-
-  /// Get attribution parameters via a push-style stream backed by a native background thread.
-  ///
-  /// On iOS, the native SDK is called inside a detached Swift Task. On Android, it runs
-  /// on a dedicated Thread — freeing the platform thread immediately rather than blocking
-  /// it until the SDK responds. The stream emits exactly one value then closes.
-  ///
-  /// Example:
-  /// ```dart
-  /// AppstackPlugin.getAttributionParamsWithCallback().listen(
-  ///   (params) => print('Attribution params: $params'),
-  ///   onError: (e) => print('Error: $e'),
-  /// );
-  /// ```
-  static Stream<Map<String, dynamic>?> getAttributionParamsWithCallback() {
-    return AppstackPluginPlatform.instance.getAttributionParamsWithCallback();
   }
 }

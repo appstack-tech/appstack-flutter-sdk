@@ -12,14 +12,9 @@ void main() {
     platform = MethodChannelAppstackPlugin();
   });
 
-  const EventChannel attributionParamsEventChannel =
-      EventChannel('appstack_plugin/attribution_params');
-
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockStreamHandler(attributionParamsEventChannel, null);
   });
 
   group('configure', () {
@@ -218,32 +213,30 @@ void main() {
   });
 
   group('sendEvent', () {
-    test('returns true when native returns true', () async {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-        if (methodCall.method == 'sendEvent') return true;
-        return null;
-      });
+    test('completes whatever native replies', () async {
+      for (final reply in <Object?>[null, true, false]) {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+          if (methodCall.method == 'sendEvent') return reply;
+          return null;
+        });
 
-      expect(
-        await platform.sendEvent('PURCHASE', 'test-event', {
-          'revenue': 9.99,
-          'currency': 'USD',
-        }),
-        true,
-      );
+        await expectLater(
+          platform.sendEvent('PURCHASE', null, {'revenue': 9.99}),
+          completes,
+        );
+      }
     });
 
-    test('returns false when native returns null', () async {
+    test('surfaces native errors', () async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-        if (methodCall.method == 'sendEvent') return null;
-        return null;
+        throw PlatformException(code: 'EVENT_SEND_ERROR');
       });
 
-      expect(
-        await platform.sendEvent('LOGIN', null, null),
-        false,
+      await expectLater(
+        platform.sendEvent('LOGIN', null, null),
+        throwsA(isA<PlatformException>()),
       );
     });
 
@@ -373,14 +366,14 @@ void main() {
       expect(result, {'source': 'apple', 'campaign_id': '123'});
     });
 
-    test('returns null when native returns null', () async {
+    test('returns an empty map when native returns null', () async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
         if (methodCall.method == 'getAttributionParams') return null;
         return null;
       });
 
-      expect(await platform.getAttributionParams(), isNull);
+      expect(await platform.getAttributionParams(), isEmpty);
     });
 
     test('converts dynamic map to Map<String, dynamic>', () async {
@@ -394,66 +387,8 @@ void main() {
 
       final result = await platform.getAttributionParams();
       expect(result, isA<Map<String, dynamic>>());
-      expect(result!['key'], 42);
+      expect(result['key'], 42);
       expect(result['nested'], true);
-    });
-  });
-
-  group('getAttributionParamsWithCallback', () {
-    test('emits a single mapped value then closes', () async {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        attributionParamsEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, sink) {
-            sink.success(<dynamic, dynamic>{
-              'source': 'apple',
-              'campaign': 'x',
-            });
-            sink.endOfStream();
-          },
-        ),
-      );
-
-      final events = await platform.getAttributionParamsWithCallback().toList();
-
-      expect(events, hasLength(1));
-      expect(events.first, isA<Map<String, dynamic>>());
-      expect(events.first, {'source': 'apple', 'campaign': 'x'});
-    });
-
-    test('maps a null event to null', () async {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        attributionParamsEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, sink) {
-            sink.success(null);
-            sink.endOfStream();
-          },
-        ),
-      );
-
-      final events = await platform.getAttributionParamsWithCallback().toList();
-
-      expect(events, [null]);
-    });
-
-    test('forwards platform errors on the stream', () async {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockStreamHandler(
-        attributionParamsEventChannel,
-        MockStreamHandler.inline(
-          onListen: (arguments, sink) {
-            sink.error(code: 'ERR', message: 'boom', details: null);
-          },
-        ),
-      );
-
-      expect(
-        platform.getAttributionParamsWithCallback(),
-        emitsError(isA<PlatformException>()),
-      );
     });
   });
 }

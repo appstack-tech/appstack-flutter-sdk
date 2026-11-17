@@ -36,13 +36,12 @@ class MockAppstackPluginPlatform
   final List<String> sentEventTypes = [];
 
   @override
-  Future<bool> sendEvent(
+  Future<void> sendEvent(
     String eventType,
     String? eventName,
     Map<String, dynamic>? parameters,
-  ) {
+  ) async {
     sentEventTypes.add(eventType);
-    return Future.value(true);
   }
 
   @override
@@ -55,11 +54,7 @@ class MockAppstackPluginPlatform
   Future<bool> isSdkDisabled() => Future.value(false);
 
   @override
-  Future<Map<String, dynamic>?> getAttributionParams() => Future.value(null);
-
-  @override
-  Stream<Map<String, dynamic>?> getAttributionParamsWithCallback() =>
-      Stream.value(null);
+  Future<Map<String, dynamic>> getAttributionParams() => Future.value({});
 
   @override
   Future<Map<String, dynamic>?> handleUniversalLink(
@@ -100,25 +95,6 @@ void main() {
 
       await AppstackPlugin.configure(
         'test-api-key',
-        logLevel: 2,
-        customerUserId: 'user-123',
-      );
-    });
-
-    test('still accepts the deprecated isDebug/endpointBaseUrl no-ops',
-        () async {
-      final fakePlatform = MockAppstackPluginPlatform();
-      AppstackPluginPlatform.instance = fakePlatform;
-
-      // Passing the deprecated params must remain a compile-safe no-op during
-      // the deprecation window.
-      // ignore: deprecated_member_use_from_same_package
-      await AppstackPlugin.configure(
-        'test-api-key',
-        // ignore: deprecated_member_use_from_same_package
-        isDebug: true,
-        // ignore: deprecated_member_use_from_same_package
-        endpointBaseUrl: 'https://custom.endpoint',
         logLevel: 2,
         customerUserId: 'user-123',
       );
@@ -355,31 +331,27 @@ void main() {
   });
 
   group('AppstackPlugin.sendEvent', () {
-    test('returns true when platform succeeds', () async {
+    test('completes when platform succeeds', () async {
       final fakePlatform = MockAppstackPluginPlatform();
       AppstackPluginPlatform.instance = fakePlatform;
 
-      expect(
-        await AppstackPlugin.sendEvent(
-          EventType.purchase,
-          parameters: {'revenue': 19.99, 'currency': 'USD'},
-        ),
-        true,
+      await AppstackPlugin.sendEvent(
+        EventType.purchase,
+        parameters: {'revenue': 19.99, 'currency': 'USD'},
       );
+      expect(fakePlatform.sentEventTypes, ['PURCHASE']);
     });
 
     test('sends with eventName for custom events', () async {
       final fakePlatform = MockAppstackPluginPlatform();
       AppstackPluginPlatform.instance = fakePlatform;
 
-      expect(
-        await AppstackPlugin.sendEvent(
-          EventType.custom,
-          eventName: 'my_custom_event',
-          parameters: {'key': 'value'},
-        ),
-        true,
+      await AppstackPlugin.sendEvent(
+        EventType.custom,
+        eventName: 'my_custom_event',
+        parameters: {'key': 'value'},
       );
+      expect(fakePlatform.sentEventTypes, ['CUSTOM']);
     });
 
     // The SNAKE_CASE values every Appstack SDK sends. Written out literally so
@@ -510,11 +482,11 @@ void main() {
   });
 
   group('AppstackPlugin.getAttributionParams', () {
-    test('returns null when platform returns null', () async {
+    test('returns an empty map when there are no params', () async {
       final fakePlatform = MockAppstackPluginPlatform();
       AppstackPluginPlatform.instance = fakePlatform;
 
-      expect(await AppstackPlugin.getAttributionParams(), isNull);
+      expect(await AppstackPlugin.getAttributionParams(), isEmpty);
     });
 
     test('returns map when platform returns data', () async {
@@ -585,13 +557,12 @@ class _ThrowingPlatform extends AppstackPluginPlatform {
   }
 
   @override
-  Future<bool> sendEvent(
+  Future<void> sendEvent(
     String eventType,
     String? eventName,
     Map<String, dynamic>? parameters,
   ) async {
     if (throwOnSendEvent) throw Exception('sendEvent failed');
-    return true;
   }
 
   @override
@@ -615,11 +586,11 @@ class _ThrowingPlatform extends AppstackPluginPlatform {
   }
 
   @override
-  Future<Map<String, dynamic>?> getAttributionParams() async {
+  Future<Map<String, dynamic>> getAttributionParams() async {
     if (throwOnGetAttributionParams) {
       throw Exception('getAttributionParams failed');
     }
-    return null;
+    return {};
   }
 }
 
@@ -634,12 +605,12 @@ class _SdkDisabledPlatform extends AppstackPluginPlatform {
       Future.value();
 
   @override
-  Future<bool> sendEvent(
+  Future<void> sendEvent(
     String eventType,
     String? eventName,
     Map<String, dynamic>? parameters,
   ) =>
-      Future.value(true);
+      Future.value();
 
   @override
   Future<bool> enableAppleAdsAttribution() => Future.value(true);
@@ -651,7 +622,7 @@ class _SdkDisabledPlatform extends AppstackPluginPlatform {
   Future<bool> isSdkDisabled() => Future.value(true);
 
   @override
-  Future<Map<String, dynamic>?> getAttributionParams() => Future.value(null);
+  Future<Map<String, dynamic>> getAttributionParams() => Future.value({});
 }
 
 /// Platform that returns non-null attribution params.
@@ -665,12 +636,12 @@ class _AttributionParamsPlatform extends AppstackPluginPlatform {
       Future.value();
 
   @override
-  Future<bool> sendEvent(
+  Future<void> sendEvent(
     String eventType,
     String? eventName,
     Map<String, dynamic>? parameters,
   ) =>
-      Future.value(true);
+      Future.value();
 
   @override
   Future<bool> enableAppleAdsAttribution() => Future.value(true);
@@ -682,6 +653,6 @@ class _AttributionParamsPlatform extends AppstackPluginPlatform {
   Future<bool> isSdkDisabled() => Future.value(false);
 
   @override
-  Future<Map<String, dynamic>?> getAttributionParams() =>
+  Future<Map<String, dynamic>> getAttributionParams() =>
       Future.value({'source': 'apple', 'campaign': 'test'});
 }

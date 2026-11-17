@@ -2,17 +2,13 @@ import Flutter
 import UIKit
 @_spi(AppstackInternal) import AppstackSDK
 
-public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
+public class AppstackPlugin: NSObject, FlutterPlugin {
   private let sdkQueue = DispatchQueue(label: "com.appstack.plugin.sdk", qos: .userInitiated)
-  private var attributionEventSink: FlutterEventSink?
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "appstack_plugin", binaryMessenger: registrar.messenger())
     let instance = AppstackPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
-
-    let eventChannel = FlutterEventChannel(name: "appstack_plugin/attribution_params", binaryMessenger: registrar.messenger())
-    eventChannel.setStreamHandler(instance)
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -61,18 +57,18 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     let customerUserId = args["customerUserId"] as? String
     let wrapperVersion = args["wrapperVersion"] as? String
 
-    // Map log level to AppstackSDK.LogLevel
-    // SDK supports: .off (0), .error (1), .debug (2), .info (3)
+    // Translate the Dart logLevel contract (0=DEBUG, 1=INFO, 2=WARN, 3=ERROR;
+    // verbosity descending) into AppstackSDK.LogLevel (off/error/info/debug;
+    // verbosity ascending), matching Android and the React Native bridge.
+    // iOS has no WARN tier, so WARN folds down to .error.
     let sdkLogLevel: AppstackSDK.LogLevel
     switch logLevel {
     case 0:
-      sdkLogLevel = .off
-    case 1:
-      sdkLogLevel = .error
-    case 2:
       sdkLogLevel = .debug
-    case 3:
+    case 1:
       sdkLogLevel = .info
+    case 2, 3:
+      sdkLogLevel = .error
     default:
       sdkLogLevel = .info
     }
@@ -96,9 +92,7 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         }
 
         // Configure the SDK via the SPI overload so the wrapper version is
-        // reported. isDebug/endpointBaseUrl are no longer forwarded to the SDK
-        // (the public API dropped them); they remain parsed above for the
-        // unchanged Dart-facing API.
+        // reported.
         AppstackAttributionSdk.shared.configure(apiKey: apiKey, logLevel: sdkLogLevel, customerUserId: customerUserId, wrapperVersion: wrapperVersion)
 
         // Always return success on the main thread to prevent hanging
@@ -167,14 +161,14 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         // Send the event
         AppstackAttributionSdk.shared.sendEvent(event: eventType, name: eventName, parameters: parameters)
 
-        // Always return success on the main thread to prevent hanging
-        self.deliverResult(result, true)
+        // Always reply on the main thread to prevent hanging
+        self.deliverResult(result, nil)
       } catch {
-        // Log the error but don't crash - return success to prevent hanging
+        // Log the error but don't crash - always reply to prevent hanging
         print("[AppstackPlugin] Error sending event: \(error.localizedDescription)")
 
-        // Always return success on the main thread to prevent hanging
-        self.deliverResult(result, true)
+        // Always reply on the main thread to prevent hanging
+        self.deliverResult(result, nil)
       }
     }
   }
@@ -241,7 +235,7 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   private func handleGetAttributionParams(result: @escaping FlutterResult) {
     Task { [weak self] in
       guard let self = self else { return }
-      let attributionParams = await AppstackAttributionSdk.shared.getAttributionParams()
+      let attributionParams = await AppstackAttributionSdk.shared.getAttributionParams() ?? [:]
       self.deliverResult(result, attributionParams)
     }
   }
@@ -273,29 +267,6 @@ public class AppstackPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     result(payload)
   }
 
-  public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-    attributionEventSink = events
-    // Detached (off the main thread, so it never blocks UI/startup) but at the
-    // default priority — matching the direct getAttributionParams path, which
-    // calls the same SDK method and returns promptly. The previous .background
-    // QoS could be starved under load, stalling the stream (a >10s hang in CI).
-    Task.detached { [weak self] in
-      let params = await AppstackAttributionSdk.shared.getAttributionParams()
-      await MainActor.run { [weak self] in
-        guard let self = self else { return }
-        self.attributionEventSink?(params)
-        self.attributionEventSink?(FlutterEndOfEventStream)
-        self.attributionEventSink = nil
-      }
-    }
-    return nil
-  }
-
-  public func onCancel(withArguments arguments: Any?) -> FlutterError? {
-    attributionEventSink = nil
-    return nil
-  }
-  
   private func stringToEventType(_ string: String) -> AppstackSDK.EventType? {
     switch string {
     case "INSTALL":
