@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Android:** The plugin's Android code is now written in Java and no longer applies the Kotlin Gradle Plugin. Apps on recent Flutter versions no longer see the "plugins that apply Kotlin Gradle Plugin (KGP)" warning for this plugin, and it keeps building once Android Gradle Plugin 10 removes the option to opt out of built-in Kotlin. Behavior and the Dart API are unchanged, and the plugin still builds on Flutter 3.24.
+
 ## [3.0.0] - 2026-11-12
 
 This release narrows the public API and is a **major version**. Migration:

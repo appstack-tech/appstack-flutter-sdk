@@ -817,7 +817,7 @@
     "androidPlatformConstraints": {
       "minSdkVersion": 21,
       "compileSdkVersion": 34,
-      "targetSdkVersion": 34
+      "targetSdkVersion": null
     },
     "sdkType": "flutter",
     "minSdkVersion": "2.18.0",
