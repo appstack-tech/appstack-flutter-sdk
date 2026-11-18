@@ -233,10 +233,14 @@ class AppstackPlugin {
   ///
   /// Never null: when there is nothing to report the map is empty.
   ///
-  /// On iOS the map always contains `appstack_match_status`, describing the
-  /// attribution outcome: `matched`, `matched_no_params`, `organic`, `skipped`,
-  /// `failed` or `not_configured`. Only `failed` is worth retrying. Android does
-  /// not send that key yet, so treat an empty map as "no attribution".
+  /// On both platforms the map always contains `appstack_match_status`,
+  /// describing the attribution outcome: `matched`, `matched_no_params`,
+  /// `organic`, `skipped`, `failed` or `not_configured`. Only `failed` is worth
+  /// re-reading later. Check this key rather than whether the map has content.
+  ///
+  /// An attributed install also carries `deeplink_id`, the ID of the matched
+  /// link, and `confidence_tier` (`high`, `medium` or `low`), the confidence of
+  /// the match. Neither is returned for an organic install.
   ///
   /// Example:
   /// ```dart

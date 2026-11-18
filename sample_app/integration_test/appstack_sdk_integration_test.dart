@@ -68,6 +68,7 @@ void main() {
     var attributionCompleted = false;
     var attributionValidated = false;
     var firstCallAttributionValidated = false;
+    Map<String, Object?> attributionMetadata = const {};
     var customEventAccepted = false;
     var standardEventAccepted = false;
     Map<String, Object?> preConfigureLink = <String, Object?>{};
@@ -176,6 +177,17 @@ void main() {
 
       attributionCompleted = true;
       attributionValidated = _validAttribution(directAttribution);
+      // Metadata the native SDKs add next to the link's query params. The host
+      // validator checks the exact values, so a wrapper that drops or renames a
+      // key fails.
+      attributionMetadata = {
+        for (final key in const [
+          'deeplink_id',
+          'confidence_tier',
+          'appstack_match_status',
+        ])
+          key: directAttribution[key],
+      };
 
       sdkDisabled = await AppstackPlugin.isSdkDisabled();
 
@@ -215,6 +227,7 @@ void main() {
       'attributionCompleted': attributionCompleted,
       'attributionValidated': attributionValidated,
       'firstCallAttributionValidated': firstCallAttributionValidated,
+      'attributionMetadata': attributionMetadata,
       'customEventAccepted': customEventAccepted,
       'standardEventAccepted': standardEventAccepted,
       'preConfigureLink': preConfigureLink,
